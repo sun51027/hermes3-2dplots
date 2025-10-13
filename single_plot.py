@@ -134,16 +134,17 @@ def make_plot(cs):
         "Density": ["Ne", "Nd", "Nd+"],
         "Pressure": ["Pe", "Pd", "Pd+"],
         "Ionisation": ["Sd+_iz"],
-        "Recombination": ["Sd+_rec"]
-        "Charge_exchange": ["Fdd+_cx"]
-        "Impurity": ["Sd_pump"]
+        "Recombination": ["Sd+_rec"],
+        "Charge_exchange": ["Fdd+_cx"],
+        "Impurity": ["Sd_pump"],
+        
     }
     
     ds = cs["MAST-U"].ds.isel(t=-1)
     
     for coord in coord_list:
         for group_name, param_list in param_groups.items():
-            print(f"Plotting ... {group_name}")
+            print(f"Plotting ... {coord} {group_name}")
             fig, ax = plt.subplots(figsize=(4, 4))
 
             # Get the right dataframe depending on coordinate
@@ -151,16 +152,22 @@ def make_plot(cs):
                 df = get_1d_poloidal_data(ds, params=param_list, region="outer_lower", sepdist=0.001)
                 x_label = "$S_{\\parallel}$ [m]"
                 x_key = "Spar"
+                x_name = "fieldline"
             else:
                 if group_name == "Ionisation" or group_name == "Charge_exchange" or group_name == "Recombination":
                     continue
                 df = get_1d_radial_data(ds, params=param_list, region="omp")
                 x_label = "$X-X_{sep}$ [m]"
                 x_key = "Srad"
+                x_name = "radial"
     
             # Plot all parameters in this group
             for param in param_list:
-                ax.plot(df[x_key], df[param], label=param)
+                if coord == "Spar":
+                    ax.plot(df[x_key].values[::-1], np.abs(df[param]), label=param)
+                    # ax.set_yscale("log")
+                else: 
+                    ax.plot(df[x_key], df[param], label=param)
     
             # Axis and labels
             ax.set_xlabel(x_label)
@@ -180,13 +187,13 @@ def make_plot(cs):
                 ax.set_ylabel("Momentum transfer rate [$kg \cdot m^{-2}s^{-2}$]")
                 ax.set_title("Charge exchange")
     
-            ax.set_title(f"{group_name.capitalize()}s vs {coord}")
             ax.legend()
             fig.tight_layout()
     
             # Save with descriptive name
-            fig.savefig(f"figures/{coord}_{group_name}.png")
+            fig.savefig(f"figures/{x_name}_{group_name}.pdf")
             plt.close(fig)
+
 
 
 def main():
