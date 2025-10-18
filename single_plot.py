@@ -124,7 +124,7 @@ def make_plot_spar(cs):
     fig.savefig("figures/fieldline_density.png")
 
 
-def make_plot(cs):
+def make_plot(cs, region_rad, region_pol):
     
     coord_list = ["Spar", "Srad"]
     
@@ -149,14 +149,17 @@ def make_plot(cs):
 
             # Get the right dataframe depending on coordinate
             if coord == "Spar":
-                df = get_1d_poloidal_data(ds, params=param_list, region="outer_lower", sepdist=0.001)
+                # Fieldline
+                df = get_1d_poloidal_data(ds, params=param_list, region=region_pol , sepdist=0.001)
                 x_label = "$S_{\\parallel}$ [m]"
                 x_key = "Spar"
                 x_name = "fieldline"
             else:
                 if group_name == "Ionisation" or group_name == "Charge_exchange" or group_name == "Recombination":
                     continue
-                df = get_1d_radial_data(ds, params=param_list, region="omp")
+                # Radial profile
+                df = get_1d_radial_data(ds, params=param_list, region=region_rad)
+                # df = get_1d_radial_data(ds, params=param_list, region="omp")
                 x_label = "$X-X_{sep}$ [m]"
                 x_key = "Srad"
                 x_name = "radial"
@@ -191,16 +194,71 @@ def make_plot(cs):
             fig.tight_layout()
     
             # Save with descriptive name
-            fig.savefig(f"figures/{x_name}_{group_name}.pdf")
+            fig.savefig(f"figures_png/{x_name}_{group_name}.png")
+            fig.savefig(f"figures_pdf/{x_name}_{group_name}.pdf")
             plt.close(fig)
 
+def make_plot_diff_coeff(cs):
 
+    ds = cs["MAST-U"].ds.isel(t=-1)
+    fig, ax = plt.subplots(figsize = (4,4))
+    df_fieldline = get_1d_poloidal_data(ds, 
+            params = ["anomalous_Chi_d+","anomalous_Chi_e", "anomalous_D_d+", "anomalous_D_e", "anomalous_nu_d+", "anomalous_nu_e"], 
+            region = "outer_lower", sepdist =  0.001)
+
+    print(f"Chi_d+ = {df_fieldline["anomalous_Chi_d+"]}")
+    print(f"Chi_e  = {df_fieldline["anomalous_Chi_e"]}")
+    print(f"D_d+   = {df_fieldline["anomalous_D_d+"]}")
+    print(f"D_e    = {df_fieldline["anomalous_D_e"]}")
+    print(f"nu_d+  = {df_fieldline["anomalous_nu_d+"]}")
+    print(f"nu_e   = {df_fieldline["anomalous_nu_e"]}")
+    ax.plot(df_fieldline["Spar"], df_fieldline["anomalous_Chi_d+"], label = "$\\chi_{d+}$")
+    ax.plot(df_fieldline["Spar"], df_fieldline["anomalous_Chi_e"], label = "$\\chi_{e}$")
+    ax.plot(df_fieldline["Spar"], df_fieldline["anomalous_D_d+"], label = "$D_{d+}$")
+    ax.plot(df_fieldline["Spar"], df_fieldline["anomalous_D_e"], label = "$D_{e}$")
+    ax.plot(df_fieldline["Spar"], df_fieldline["anomalous_nu_d+"], label = "$\\nu_{d+}$")
+    ax.plot(df_fieldline["Spar"], df_fieldline["anomalous_nu_e"], label = "$\\nu_{e}$")
+    ax.set_xlabel("$S_{\\parallel}$ [m]")
+    ax.set_ylabel("Anomalous coefficient [m/s]")
+    ax.set_title("")
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig("figures_png/fieldline_diff_coeff.png")
+    fig.savefig("figures_pdf/fieldline_diff_coeff.pdf")
+
+
+    df_midplane = get_1d_radial_data(ds, 
+            params = ["anomalous_Chi_d+","anomalous_Chi_e", "anomalous_D_d+", "anomalous_D_e", "anomalous_nu_d+", "anomalous_nu_e"], 
+            region = "omp")
+
+    print(f"Chi_d+ = {df_midplane["anomalous_Chi_d+"]}")
+    print(f"Chi_e  = {df_midplane["anomalous_Chi_e"]}")
+    print(f"D_d+   = {df_midplane["anomalous_D_d+"]}")
+    print(f"D_e    = {df_midplane["anomalous_D_e"]}")
+    print(f"nu_d+  = {df_midplane["anomalous_nu_d+"]}")
+    print(f"nu_e   = {df_midplane["anomalous_nu_e"]}")
+    ax.plot(df_midplane["Spar"], df_midplane["anomalous_Chi_d+"], label = "$\\chi_{d+}$")
+    ax.plot(df_midplane["Spar"], df_midplane["anomalous_Chi_e"], label = "$\\chi_{e}$")
+    ax.plot(df_midplane["Spar"], df_midplane["anomalous_D_d+"], label = "$D_{d+}$")
+    ax.plot(df_midplane["Spar"], df_midplane["anomalous_D_e"], label = "$D_{e}$")
+    ax.plot(df_midplane["Spar"], df_midplane["anomalous_nu_d+"], label = "$\\nu_{d+}$")
+    ax.plot(df_midplane["Spar"], df_midplane["anomalous_nu_e"], label = "$\\nu_{e}$")
+    ax.set_xlabel("$S_{\\parallel}$ [m]")
+    ax.set_ylabel("Anomalous coefficient [m/s]")
+    ax.set_title("")
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig("figures_png/midplane_diff_coeff.png")
+    fig.savefig("figures_pdf/midplane_diff_coeff.pdf")
 
 def main():
     case = read_file()
     # make_plot_srad(case)
     # make_plot_spar(case)
-    make_plot(case)
+    region_rad = "omp"
+    region_pol = "inner_lower"
+    make_plot(case, region_rad, region_pol)
+    # make_plot_diff_coeff(case)
 
 if __name__ == "__main__":
     
