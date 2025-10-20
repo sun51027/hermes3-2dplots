@@ -1,4 +1,4 @@
-
+import xarray as xr
 import matplotlib
 import pandas as pd
 import numpy as np
@@ -44,6 +44,7 @@ def read_file():
     )
     
     toload = [
+        # dict(name="MAST-U", id="250929-shorter-test", unnormalise_geom = True, use_xhermes = True, squash = True)
         dict(name="MAST-U", id="251007-2D-MASTU", unnormalise_geom = True, use_xhermes = True, squash = True)
     ]
     cs = {}
@@ -51,8 +52,25 @@ def read_file():
         cs[case["name"]] = db.load_case_2D(case["id"], use_squash = case["squash"], verbose = True)
         cs[case["name"]].extract_2d_tokamak_geometry()
     m = cs["MAST-U"].ds.metadata
-    print(f'Species in model: \n {m["species"]}')
-    print(f'\nCharged species: \n {m["charged_species"]}')
+    # print(f'Species in model: \n {m["species"]}')
+    # print(f'\nCharged species: \n {m["charged_species"]}')
+
+    ds = cs["MAST-U"].ds.isel(t=-1)
+    # print(list(ds.data_vars))
+    # print(ds)
+
+    ''' All variable list'''
+    # print("All variable list")
+    # for name, da in ds.data_vars.items():
+    #     print(f"{name}")
+
+    '''Show specific variable data'''
+    np.set_printoptions(threshold=np.inf)
+    name = "Rc"
+    # print(f"Specific variable's data: {name}")
+    # print(ds[name])
+    # print(ds[name].values)
+    # print(ds[name].load())
 
     return cs
 
@@ -130,13 +148,14 @@ def make_plot(cs, region_rad, region_pol):
     
     # Group parameters by type
     param_groups = {
-        "Temperature": ["Te", "Td", "Td+"],
-        "Density": ["Ne", "Nd", "Nd+"],
-        "Pressure": ["Pe", "Pd", "Pd+"],
-        "Ionisation": ["Sd+_iz"],
-        "Recombination": ["Sd+_rec"],
-        "Charge_exchange": ["Fdd+_cx"],
-        "Impurity": ["Sd_pump"],
+        # "Temperature": ["Te", "Td", "Td+"],
+        # "Density": ["Ne", "Nd", "Nd+"],
+        # "Pressure": ["Pe", "Pd", "Pd+"],
+        # "Ionisation": ["Sd+_iz"],
+        # "Recombination": ["Sd+_rec"],
+        # "Charge_exchange": ["Fdd+_cx"],
+        # "Impurity": ["Sd_pump"],
+        "Radiation_cooling":["Rc"]
         
     }
     
@@ -150,7 +169,7 @@ def make_plot(cs, region_rad, region_pol):
             # Get the right dataframe depending on coordinate
             if coord == "Spar":
                 # Fieldline
-                df = get_1d_poloidal_data(ds, params=param_list, region=region_pol , sepdist=0.001)
+                df = get_1d_poloidal_data(ds, params=param_list, region=region_pol , sepdist=0.005)
                 x_label = "$S_{\\parallel}$ [m]"
                 x_key = "Spar"
                 x_name = "fieldline"
@@ -191,6 +210,7 @@ def make_plot(cs, region_rad, region_pol):
                 ax.set_title("Charge exchange")
     
             ax.legend()
+            ax.grid(true, alpha=0.5)
             fig.tight_layout()
     
             # Save with descriptive name
@@ -251,6 +271,41 @@ def make_plot_diff_coeff(cs):
     fig.savefig("figures_png/midplane_diff_coeff.png")
     fig.savefig("figures_pdf/midplane_diff_coeff.pdf")
 
+# def plot_radiation_loss_func(cs):
+
+#     ds = cs["MAST-U"].ds["Rc"].isel(t=-1, x=39, theta=-1)
+#     fig, ax = plt.subplots(figsize = (4,4))
+#     ax.plot(ds["Rc"], 0.02)
+#     ax.grid(alpha=0.5)
+#     ax.set_xlabel("Radiation loss carbon")
+#     ax.set_ylabel("fixed fraction carbon")
+#     fig.savefig("Rc_fraction.pdf")
+
+
+# def plot_radiation_loss_func(cs):
+#     da = cs["MAST-U"].ds["Rc"].isel(t=-1, x=39)  # keep theta
+#     fig, ax = plt.subplots(figsize=(4,4))
+#     ax.plot(da.theta.values, da.values)          # Rc(θ)
+#     ax.grid(alpha=0.5)
+#     ax.set_xlabel("theta")
+#     ax.set_ylabel("Radiation loss carbon Rc")
+#     fig.tight_layout()
+#     fig.savefig("Rc_vs_theta.pdf")
+# def plot_radiation_loss_frac(cs):
+
+    # ds = cs["MAST-U"].ds.isel(t=-1, 
+    # df = get_1d_poloidal_data(ds, params = ["Ne", "Rc"], region = "outer_lower", sepdist = 0.001)
+
+    # fig, ax = plt.subplots(figsize=(4,4))
+    # ax.plot(df["Ne"] * df["Ne"] * 0.02, df["Rc"])                     # matplotlib broadcasts y
+    # ax.grid(alpha=0.5)
+    # ax.set_ylabel("Radiation loss carbon Rc")
+    # ax.set_xlabel("fixed fraction carbon")
+    # fig.tight_layout()
+    # fig.savefig("Rc_fraction.pdf")
+
+
+
 def main():
     case = read_file()
     # make_plot_srad(case)
@@ -259,6 +314,8 @@ def main():
     region_pol = "inner_lower"
     make_plot(case, region_rad, region_pol)
     # make_plot_diff_coeff(case)
+    # plot_radiation_loss_func(case)
+    # plot_radiation_loss_frac(case)
 
 if __name__ == "__main__":
     
