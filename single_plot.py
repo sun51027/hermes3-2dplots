@@ -148,13 +148,13 @@ def make_plot(cs, region_rad, region_pol):
     
     # Group parameters by type
     param_groups = {
-        # "Temperature": ["Te", "Td", "Td+"],
-        # "Density": ["Ne", "Nd", "Nd+"],
-        # "Pressure": ["Pe", "Pd", "Pd+"],
-        # "Ionisation": ["Sd+_iz"],
-        # "Recombination": ["Sd+_rec"],
-        # "Charge_exchange": ["Fdd+_cx"],
-        # "Impurity": ["Sd_pump"],
+        "Temperature": ["Te", "Td", "Td+"],
+        "Density": ["Ne", "Nd", "Nd+"],
+        "Pressure": ["Pe", "Pd", "Pd+"],
+        "Ionisation": ["Sd+_iz"],
+        "Recombination": ["Sd+_rec"],
+        "Charge_exchange": ["Fdd+_cx"],
+        "Impurity": ["Sd_pump"],
         "Radiation_cooling":["Rc"]
         
     }
@@ -271,40 +271,26 @@ def make_plot_diff_coeff(cs):
     fig.savefig("figures_png/midplane_diff_coeff.png")
     fig.savefig("figures_pdf/midplane_diff_coeff.pdf")
 
-# def plot_radiation_loss_func(cs):
+def plot_Lz_function(cs):
+    ds = cs["MAST-U"].ds.isel(t=-1)
+    fig, ax = plt.subplots(1,2, figsize=(10,4))
+    Lz = abs(ds["Rc"])/(ds["Ne"]*ds["Ne"]*0.02)
+    
+    ax[0].scatter(ds["Te"], Lz, s=5)
+    # ax[0].set_xlim(0,10)
+    ax[0].grid(True, alpha =0.5)
+    ax[0].set_ylabel("L_z function [W/m^3]")
+    ax[0].set_xlabel("$T_e$ [eV]")
 
-#     ds = cs["MAST-U"].ds["Rc"].isel(t=-1, x=39, theta=-1)
-#     fig, ax = plt.subplots(figsize = (4,4))
-#     ax.plot(ds["Rc"], 0.02)
-#     ax.grid(alpha=0.5)
-#     ax.set_xlabel("Radiation loss carbon")
-#     ax.set_ylabel("fixed fraction carbon")
-#     fig.savefig("Rc_fraction.pdf")
+    df_fieldline = get_1d_poloidal_data(ds, params = ["Rc", "Ne", "Te","Spar"], region = "outer_lower", sepadd = 2)
 
+    Lz = abs(df_fieldline["Rc"])/(df_fieldline["Ne"]*df_fieldline["Ne"]*0.02)
+    ax[1].scatter(df_fieldline["Te"], Lz, s=5)
+    ax[1].set_xlim(0,40)
+    ax[1].grid(True, alpha =0.5)
+    ax[1].set_xlabel("$T_e$ [eV]")
 
-# def plot_radiation_loss_func(cs):
-#     da = cs["MAST-U"].ds["Rc"].isel(t=-1, x=39)  # keep theta
-#     fig, ax = plt.subplots(figsize=(4,4))
-#     ax.plot(da.theta.values, da.values)          # Rc(θ)
-#     ax.grid(alpha=0.5)
-#     ax.set_xlabel("theta")
-#     ax.set_ylabel("Radiation loss carbon Rc")
-#     fig.tight_layout()
-#     fig.savefig("Rc_vs_theta.pdf")
-# def plot_radiation_loss_frac(cs):
-
-    # ds = cs["MAST-U"].ds.isel(t=-1, 
-    # df = get_1d_poloidal_data(ds, params = ["Ne", "Rc"], region = "outer_lower", sepdist = 0.001)
-
-    # fig, ax = plt.subplots(figsize=(4,4))
-    # ax.plot(df["Ne"] * df["Ne"] * 0.02, df["Rc"])                     # matplotlib broadcasts y
-    # ax.grid(alpha=0.5)
-    # ax.set_ylabel("Radiation loss carbon Rc")
-    # ax.set_xlabel("fixed fraction carbon")
-    # fig.tight_layout()
-    # fig.savefig("Rc_fraction.pdf")
-
-
+    fig.savefig("figures_pdf/Lz_function.pdf")
 
 def main():
     case = read_file()
@@ -312,10 +298,9 @@ def main():
     # make_plot_spar(case)
     region_rad = "omp"
     region_pol = "inner_lower"
-    make_plot(case, region_rad, region_pol)
+    # make_plot(case, region_rad, region_pol)
     # make_plot_diff_coeff(case)
-    # plot_radiation_loss_func(case)
-    # plot_radiation_loss_frac(case)
+    plot_Lz_function(case)
 
 if __name__ == "__main__":
     
