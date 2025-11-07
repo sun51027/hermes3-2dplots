@@ -277,16 +277,22 @@ def plot_Lz_function(cs):
     Lz = abs(ds["Rc"])/(ds["Ne"]*ds["Ne"]*0.02)
     
     ax[0].scatter(ds["Te"], Lz, s=5)
-    # ax[0].set_xlim(0,10)
+    ax[0].set_xlim(0,40)
+    # ax[0].set_ylim(0,9e-32)
+    ax[0].set_title("The whole domain")
     ax[0].grid(True, alpha =0.5)
+    ax[0].set_yscale("log")
     ax[0].set_ylabel("L_z function [W/m^3]")
     ax[0].set_xlabel("$T_e$ [eV]")
 
     df_fieldline = get_1d_poloidal_data(ds, params = ["Rc", "Ne", "Te","Spar"], region = "outer_lower", sepadd = 2)
 
     Lz = abs(df_fieldline["Rc"])/(df_fieldline["Ne"]*df_fieldline["Ne"]*0.02)
+    ax[1].set_title("2nd SOL ring at outer lower region")
     ax[1].scatter(df_fieldline["Te"], Lz, s=5)
     ax[1].set_xlim(0,40)
+    ax[1].set_yscale("log")
+
     ax[1].grid(True, alpha =0.5)
     ax[1].set_xlabel("$T_e$ [eV]")
 
