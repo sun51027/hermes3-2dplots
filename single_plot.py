@@ -3,7 +3,7 @@ import matplotlib
 import pandas as pd
 import numpy as np
 import matplotlib
-
+import argparse
 import matplotlib.pyplot as plt
 import os, sys, pathlib, shlex, subprocess
 
@@ -29,12 +29,22 @@ from hermes3.selectors import *
 
 import time
 
+p = argparse.ArgumentParser(
+        description = "Assign a input folder and output directory"
+)
+p.add_argument("-i", "--input", required=True, type=str, help="Name of netcdf files folder, not path")
+p.add_argument("-o", "--output", required=True, type=str, help="Path to plots folder, better to use date as note, e.g. YYMMDD")
+p.add_argument("-r", "--region_rad",  type=str, default="omp", help="omp, {inner/outer}_{lower/upper}_target ... for more see doc")
+p.add_argument("-p", "--region_pol",  type=str, default="outer_lower", help="Must specify sepadd/sepdist ... for more see doc")
+p.add_argument("--sepadd",  type=int, default=5, help="Index of the SOL ring based on nx")
 
-#%load_ext autoreload
-#%autoreload 2
-print("Done")
 
-def read_file():
+args = p.parse_args()
+
+figures_pdf_path = args.output + "_figures_pdf"
+figures_png_path = args.output + "_figures_png"
+
+def read_file(input_id):
 
     # Read file 
 
@@ -45,12 +55,16 @@ def read_file():
     
     toload = [
         # dict(name="MAST-U", id="250929-shorter-test", unnormalise_geom = True, use_xhermes = True, squash = True)
-        dict(name="MAST-U", id="251007-2D-MASTU", unnormalise_geom = True, use_xhermes = True, squash = True)
+        # dict(name="MAST-U", id="251007-2D-MASTU", unnormalise_geom = True, use_xhermes = True, squash = True)
+        dict(name="MAST-U", id=input_id , unnormalise_geom = True, use_xhermes = True, squash = True)
+        # dict(name="MAST-U", id="251107-tuned-puff-1e21", unnormalise_geom = True, use_xhermes = True, squash = True)
+
     ]
     cs = {}
     for case in toload:
         cs[case["name"]] = db.load_case_2D(case["id"], use_squash = case["squash"], verbose = True)
         cs[case["name"]].extract_2d_tokamak_geometry()
+
     m = cs["MAST-U"].ds.metadata
     # print(f'Species in model: \n {m["species"]}')
     # print(f'\nCharged species: \n {m["charged_species"]}')
@@ -88,7 +102,8 @@ def make_plot_srad(cs):
     ax.set_title("Midplane temperature")
     ax.legend()
     fig.tight_layout()
-    fig.savefig("figures/midplane_temperature.png")
+    fig.savefig(f"{figures_pdf_path}/midplane_temperature.pdf")
+    fig.savefig(f"{figures_png_path}/midplane_temperature.png")
 
     fig, ax = plt.subplots(figsize = (4,4))
     df_midplane = get_1d_radial_data(ds, params = ["Ne", "Nd+", "Nd"], region = "omp")
@@ -100,7 +115,8 @@ def make_plot_srad(cs):
     ax.set_title("Midplane density")
     ax.legend()
     fig.tight_layout()
-    fig.savefig("figures/midplane_density.png")
+    fig.savefig(f"{figures_pdf_path}/midplane_density.pdf")
+    fig.savefig(f"{figures_png_path}/midplane_density.png")
 
 def make_plot_spar(cs):
 
@@ -118,32 +134,36 @@ def make_plot_spar(cs):
     fig, ax = plt.subplots(figsize = (4,4))
 
 
-    df_fieldline = get_1d_poloidal_data(ds, params = ["Te", "Td+", "Td"], region = "outer_lower", sepdist =  0.001)
-    ax.plot(df_fieldline["Spar"], df_fieldline["Te"], label = "Te")
-    ax.plot(df_fieldline["Spar"], df_fieldline["Td+"], label = "Td+")
-    ax.plot(df_fieldline["Spar"], df_fieldline["Td"], label = "Td")
+    df_fieldline = get_1d_poloidal_data(ds, params = ["Te", "Td+", "Td"], region = "outer_lower", sepadd = 5)
+    ax.plot(df_fieldline["Spar"].values[::-1], df_fieldline["Te"], label = "Te")
+    ax.plot(df_fieldline["Spar"].values[::-1], df_fieldline["Td+"], label = "Td+")
+    ax.plot(df_fieldline["Spar"].values[::-1], df_fieldline["Td"], label = "Td")
     ax.set_xlabel("$S_{\\parallel}$ [m]")
     ax.set_ylabel("Temperature [eV]")
     ax.set_title("Temperatures")
     ax.legend()
     fig.tight_layout()
-    fig.savefig("figures/fieldline_temperature.png")
+    fig.savefig(f"figures_pdf/fieldline_temperature.pdf")
+    # fig.savefig(f"figures_png/fieldline_temperature.png")
 
-    fig, ax = plt.subplots(figsize = (4,4))
-    df_fieldline = get_1d_poloidal_data(ds, params = ["Ne", "Nd+", "Nd"], region = "outer_lower", sepdist =  0.001)
-    ax.plot(df_fieldline["Spar"], df_fieldline["Ne"], label = "Ne")
-    ax.plot(df_fieldline["Spar"], df_fieldline["Nd+"], label = "Nd+")
-    ax.plot(df_fieldline["Spar"], df_fieldline["Nd"], label = "Nd")
-    ax.set_xlabel("$S_{\\parallel}$ [m]")
-    ax.set_ylabel("density [1/m3]")
-    ax.set_title("densitys")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig("figures/fieldline_density.png")
+    # fig, ax = plt.subplots(figsize = (4,4))
+    # df_fieldline = get_1d_poloidal_data(ds, params = ["Ne", "Nd+", "Nd"], region = "outer_lower", sepdist =  0.001)
+    # ax.plot(df_fieldline["Spar"], df_fieldline["Ne"], label = "Ne")
+    # ax.plot(df_fieldline["Spar"], df_fieldline["Nd+"], label = "Nd+")
+    # ax.plot(df_fieldline["Spar"], df_fieldline["Nd"], label = "Nd")
+    # ax.set_xlabel("$S_{\\parallel}$ [m]")
+    # ax.set_ylabel("density [1/m3]")
+    # ax.set_title("densitys")
+    # ax.legend()
+    # fig.tight_layout()
+    # fig.savefig(f"{figures_pdf_path}/fieldline_density.pdf")
+    # fig.savefig(f"{figures_png_path}/fieldline_density.png")
 
 
-def make_plot(cs, region_rad, region_pol):
-    
+def make_plot(cs, region_rad, region_pol, idx_ring):
+   
+    # The X-axis is from target in LHS to upstream RHS
+
     coord_list = ["Spar", "Srad"]
     
     # Group parameters by type
@@ -154,8 +174,8 @@ def make_plot(cs, region_rad, region_pol):
         "Ionisation": ["Sd+_iz"],
         "Recombination": ["Sd+_rec"],
         "Charge_exchange": ["Fdd+_cx"],
-        "Impurity": ["Sd_pump"],
-        "Radiation_cooling":["Rc"]
+        # "Impurity": ["Sd_pump"],
+        # "Radiation_cooling":["Rc"]
         
     }
     
@@ -169,13 +189,13 @@ def make_plot(cs, region_rad, region_pol):
             # Get the right dataframe depending on coordinate
             if coord == "Spar":
                 # Fieldline
-                df = get_1d_poloidal_data(ds, params=param_list, region=region_pol , sepdist=0.005)
+                df = get_1d_poloidal_data(ds, params=param_list, region=region_pol , sepadd=idx_ring)
                 x_label = "$S_{\\parallel}$ [m]"
                 x_key = "Spar"
                 x_name = "fieldline"
             else:
-                if group_name == "Ionisation" or group_name == "Charge_exchange" or group_name == "Recombination":
-                    continue
+                # if group_name == "Ionisation" or group_name == "Charge_exchange" or group_name == "Recombination":
+                #     continue
                 # Radial profile
                 df = get_1d_radial_data(ds, params=param_list, region=region_rad)
                 # df = get_1d_radial_data(ds, params=param_list, region="omp")
@@ -186,9 +206,11 @@ def make_plot(cs, region_rad, region_pol):
             # Plot all parameters in this group
             for param in param_list:
                 if coord == "Spar":
+                    # Fieldline 
                     ax.plot(df[x_key].values[::-1], np.abs(df[param]), label=param)
                     # ax.set_yscale("log")
                 else: 
+                    # Radial profile
                     ax.plot(df[x_key], df[param], label=param)
     
             # Axis and labels
@@ -206,16 +228,16 @@ def make_plot(cs, region_rad, region_pol):
                 ax.set_ylabel("Density transfer rate [$m^{-3}s^{-1}$]")
                 ax.set_title("Recombination")
             elif group_name == "Charge_exchange":
-                ax.set_ylabel("Momentum transfer rate [$kg \cdot m^{-2}s^{-2}$]")
+                ax.set_ylabel("Momentum transfer rate [$kg \\cdot m^{-2}s^{-2}$]")
                 ax.set_title("Charge exchange")
     
             ax.legend()
-            ax.grid(true, alpha=0.5)
+            ax.grid(True, alpha=0.5)
             fig.tight_layout()
     
             # Save with descriptive name
-            fig.savefig(f"figures_png/{x_name}_{group_name}.png")
-            fig.savefig(f"figures_pdf/{x_name}_{group_name}.pdf")
+            fig.savefig(f"{figures_png_path}/{x_name}_{group_name}.png")
+            fig.savefig(f"{figures_pdf_path}/{x_name}_{group_name}.pdf")
             plt.close(fig)
 
 def make_plot_diff_coeff(cs):
@@ -243,8 +265,8 @@ def make_plot_diff_coeff(cs):
     ax.set_title("")
     ax.legend()
     fig.tight_layout()
-    fig.savefig("figures_png/fieldline_diff_coeff.png")
-    fig.savefig("figures_pdf/fieldline_diff_coeff.pdf")
+    fig.savefig(f"{figures_png_path}/fieldline_diff_coeff.png")
+    fig.savefig(f"{figures_pdf_path}/fieldline_diff_coeff.pdf")
 
 
     df_midplane = get_1d_radial_data(ds, 
@@ -268,8 +290,8 @@ def make_plot_diff_coeff(cs):
     ax.set_title("")
     ax.legend()
     fig.tight_layout()
-    fig.savefig("figures_png/midplane_diff_coeff.png")
-    fig.savefig("figures_pdf/midplane_diff_coeff.pdf")
+    fig.savefig(f"{figures_png_path}/midplane_diff_coeff.png")
+    fig.savefig(f"{figures_pdf_path}/midplane_diff_coeff.pdf")
 
 def plot_Lz_function(cs):
     ds = cs["MAST-U"].ds.isel(t=-1)
@@ -296,21 +318,37 @@ def plot_Lz_function(cs):
     ax[1].grid(True, alpha =0.5)
     ax[1].set_xlabel("$T_e$ [eV]")
 
-    fig.savefig("figures_pdf/Lz_function.pdf")
+    fig.savefig(f"{figures_pdf_path}/Lz_function.pdf")
+
+# def plot_polygon(cs):
+
+
+# ------------------ main ---------------------
 
 def main():
-    case = read_file()
-    # make_plot_srad(case)
+
+    case = read_file(args.input)
+
+    '''For test'''
     # make_plot_spar(case)
-    region_rad = "omp"
-    region_pol = "inner_lower"
-    # make_plot(case, region_rad, region_pol)
+
+    '''Plot all function'''
+    # region_rad = "omp"
+    # region_pol = "outer_lower"
+    # idx_ring = 15 # deps on nx, e.g. 0 - 19 
+    idx_ring = args.sepadd
+    make_plot(case, args.region_rad, args.region_pol, idx_ring)
+
     # make_plot_diff_coeff(case)
-    plot_Lz_function(case)
+    # plot_Lz_function(case)
 
 if __name__ == "__main__":
     
     start_time = time.time()
+    if not os.path.exists(f"./{figures_pdf_path}"):
+        os.makedirs(figures_pdf_path)
+    if not os.path.exists(f"./{figures_png_path}"):
+        os.makedirs(figures_png_path)
     main()
     end_time = time.time()
     print(f"Total runtime: {end_time - start_time:.2f} seconds")
