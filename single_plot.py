@@ -36,7 +36,8 @@ p.add_argument("-i", "--input", required=True, type=str, help="Name of netcdf fi
 p.add_argument("-o", "--output", required=True, type=str, help="Path to plots folder, better to use date as note, e.g. YYMMDD")
 p.add_argument("-r", "--region_rad",  type=str, default="omp", help="omp, {inner/outer}_{lower/upper}_target ... for more see doc")
 p.add_argument("-p", "--region_pol",  type=str, default="outer_lower", help="Must specify sepadd/sepdist ... for more see doc")
-p.add_argument("--sepadd",  type=int, default=5, help="Index of the SOL ring based on nx")
+p.add_argument("--sepadd",  type=int, default=1, help="Index of the SOL ring based on nx. Default SOL ring = 1")
+p.add_argument("-s", "--scale",  type=str, default="linear", help="linear or log")
 
 
 args = p.parse_args()
@@ -49,7 +50,8 @@ def read_file(input_id):
     # Read file 
 
     db = CaseDB(
-        case_dir = r"/users/jpm590/2dspace/run/",
+        case_dir = r"/users/jpm590/scratch/",
+        #case_dir = r"/users/jpm590/2dspace/run/",
         grid_dir = r"/users/jpm590/2dspace/hermes-3/build-mc-master"
     )
     
@@ -208,10 +210,17 @@ def make_plot(cs, region_rad, region_pol, idx_ring):
                 if coord == "Spar":
                     # Fieldline 
                     ax.plot(df[x_key].values[::-1], np.abs(df[param]), label=param)
-                    # ax.set_yscale("log")
+                    if args.scale == "log":
+                        ax.set_yscale("log")
+                    else:
+                        ax.set_yscale("linear")
                 else: 
                     # Radial profile
                     ax.plot(df[x_key], df[param], label=param)
+                    if args.scale == "log":
+                        ax.set_yscale("log")
+                    else:
+                        ax.set_yscale("linear")
     
             # Axis and labels
             ax.set_xlabel(x_label)
@@ -296,7 +305,7 @@ def make_plot_diff_coeff(cs):
 def plot_Lz_function(cs):
     ds = cs["MAST-U"].ds.isel(t=-1)
     fig, ax = plt.subplots(1,2, figsize=(10,4))
-    Lz = abs(ds["Rc"])/(ds["Ne"]*ds["Ne"]*0.02)
+    Lz = abs(ds["Rc"].hermesm.clean_guards())/(ds["Ne"].hermesm.clean_guards()*ds["Ne"].hermesm.clean_guards()*0.02)
     
     ax[0].scatter(ds["Te"], Lz, s=5)
     ax[0].set_xlim(0,40)
@@ -327,6 +336,7 @@ def plot_Lz_function(cs):
 
 def main():
 
+    print(args.scale)
     case = read_file(args.input)
 
     '''For test'''
@@ -336,8 +346,8 @@ def main():
     # region_rad = "omp"
     # region_pol = "outer_lower"
     # idx_ring = 15 # deps on nx, e.g. 0 - 19 
-    idx_ring = args.sepadd
-    make_plot(case, args.region_rad, args.region_pol, idx_ring)
+    # idx_ring = args.sepadd
+    # make_plot(case, args.region_rad, args.region_pol, idx_ring)
 
     # make_plot_diff_coeff(case)
     # plot_Lz_function(case)
