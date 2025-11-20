@@ -347,7 +347,7 @@ def main():
     # region_pol = "outer_lower"
     # idx_ring = 15 # deps on nx, e.g. 0 - 19 
     # idx_ring = args.sepadd
-    # make_plot(case, args.region_rad, args.region_pol, idx_ring)
+    make_plot(case, args.region_rad, args.region_pol, args.sepadd)
 
     # make_plot_diff_coeff(case)
     # plot_Lz_function(case)
