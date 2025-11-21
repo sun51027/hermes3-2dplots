@@ -175,7 +175,8 @@ def make_plot(cs, region_rad, region_pol, idx_ring):
         "Pressure": ["Pe", "Pd", "Pd+"],
         "Ionisation": ["Sd+_iz"],
         "Recombination": ["Sd+_rec"],
-        "Charge_exchange": ["Fdd+_cx"],
+        "Charge_exchange_mom": ["Fdd+_cx"],
+        "Charge_exchange_energy": ["Edd+_cx"],
         # "Impurity": ["Sd_pump"],
         # "Radiation_cooling":["Rc"]
         
@@ -236,9 +237,12 @@ def make_plot(cs, region_rad, region_pol, idx_ring):
             elif group_name == "Recombination":
                 ax.set_ylabel("Density transfer rate [$m^{-3}s^{-1}$]")
                 ax.set_title("Recombination")
-            elif group_name == "Charge_exchange":
+            elif group_name == "Charge_exchange_mom":
                 ax.set_ylabel("Momentum transfer rate [$kg \\cdot m^{-2}s^{-2}$]")
-                ax.set_title("Charge exchange")
+                ax.set_title("Charge exchange momentum")
+            elif group_name == "Charge_exchange_energy":
+                ax.set_ylabel("Energy transfer due to CX [$ W/m^{3}$]")
+                ax.set_title("Charge exchange energy")
     
             ax.legend()
             ax.grid(True, alpha=0.5)

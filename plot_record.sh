@@ -9,6 +9,7 @@
 
 ############ Files moved to scratch #############
 
-python3 single_plot.py  -r omp -p outer_lower --sepadd 1 --scale log    -i 251007-2D-MASTU -o MASTU-origin-log
+# python3 single_plot.py  -r omp -p outer_lower --sepadd 1 --scale log    -i 251007-2D-MASTU -o MASTU-origin-log
 # python3 single_plot.py  -r omp -p outer_lower --sepadd 1 --scale linear -i 251007-2D-MASTU -o MASTU-origin-linear
 # python3 single_plot.py -i 251112-tuned-puff-1e22 -o 251112-1e22 -r omp -p outer_lower --sepadd 1 
+python3 single_plot.py  -r omp -p outer_lower --sepadd 1 --scale log    -i 251119-MASTU-newbranch-rerun -o MASTU-neutralrun-log
