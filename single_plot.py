@@ -346,11 +346,15 @@ def main():
     '''For test'''
     # make_plot_spar(case)
 
-    '''Plot all function'''
-    # region_rad = "omp"
-    # region_pol = "outer_lower"
-    # idx_ring = 15 # deps on nx, e.g. 0 - 19 
-    # idx_ring = args.sepadd
+    '''
+    Plot all function
+
+    Usage:
+        region_rad = "omp"
+        region_pol = "outer_lower"
+        idx_ring = 15 # deps on nx, e.g. 0 - 19 
+
+    '''
     make_plot(case, args.region_rad, args.region_pol, args.sepadd)
 
     # make_plot_diff_coeff(case)
