@@ -162,7 +162,7 @@ def make_plot_spar(cs):
     # fig.savefig(f"{figures_png_path}/fieldline_density.png")
 
 
-def make_plot(cs, region_rad, region_pol, idx_ring):
+def plot_single_profiles(cs, region_rad, region_pol, idx_ring):
    
     # The X-axis is from target in LHS to upstream RHS
 
@@ -335,6 +335,43 @@ def plot_Lz_function(cs):
 
 # def plot_polygon(cs):
 
+def plot_multi_profiles_fieldline(cs, region_pol, idx_ring):
+    plots = [
+        ("Te",      "e temperature",        "T [eV]",                    False),
+        ("Td+",     "d+ temperature",       "T [eV]",                    False),
+        ("Td",      "d temperature",        "T [eV]",                    False),
+        ("Ne",      "e density",            "density [m^-3]",            True),
+        ("Nd+",     "d+ density",           "density [m^-3]",            True),
+        ("Nd",      "d density",            "density [m^-3]",            True),
+        ("Sd+_rec", "Recombination",        "Rate [m^-3 s^-1]",          True),
+        ("Sd+_iz",  "Ionisation",           "Rate [m^-3 s^-1]",          True),
+        ("Fdd+_cx", "Charge exchange",      "Momentum [kg m^-2 s^-2]",   True),
+    ]
+   
+    ncols = len(plots)
+    
+    fig, ax = plt.subplots(3, ncols, figsize=(3.5 * ncols ,10), squeeze=False)
+
+    ds = cs["MAST-U"].ds.isel(t=-1)
+    df = get_1d_poloidal_data(ds, params=[p[0] for p in plots], region=region_pol, sepadd=idx_ring)
+    
+    for idx, (param, title, ylabel, logy) in enumerate(plots):
+        r, c = divmod(idx, 3)
+        axi = ax[r,c]
+    
+        axi.plot(np.abs(df["Spar"][::-1]), np.abs(df[param]),)
+        axi.set_title(title)
+        axi.set_xlabel("Spar [m]")
+        axi.set_ylabel(ylabel)
+        axi.grid(True, alpha=0.5)
+    
+        if logy:
+            axi.set_yscale("log")
+    
+    for axi in ax.flat:
+        axi.legend()
+
+    fig.savefig("multiple_profiles.png")
 
 # ------------------ main ---------------------
 
@@ -355,7 +392,8 @@ def main():
         idx_ring = 15 # deps on nx, e.g. 0 - 19 
 
     '''
-    make_plot(case, args.region_rad, args.region_pol, args.sepadd)
+    # plot_single_profiles(case, args.region_rad, args.region_pol, args.sepadd)
+    plot_multi_profiles_fieldline(case, args.region_pol, args.sepadd)
 
     # make_plot_diff_coeff(case)
     # plot_Lz_function(case)
