@@ -94,6 +94,24 @@ def plot_multi_profiles_fieldline(cs, region_pol, idx_ring_array):
     for ring in idx_ring_array:
         print(f"Plotting {ring} ....")
         df = get_1d_poloidal_data(ds, params=[p[0] for p in plots] + ["Bpxy"], region=region_pol, sepadd=ring)
+
+
+        ### Find X-point 
+
+        N = len(df["Bpxy"].values)
+        search_start = int(N * 0.2)
+        search_end   = int(N * 0.8)
+        
+        B_mid = df["Bpxy"][search_start:search_end]
+        
+        local_min = np.argmin(B_mid)
+        xpt_index = search_start + local_min
+        xpt_value = df["Bpxy"][xpt_index]
+        xpt_spar  = df["Spar"][xpt_index]
+        xpt_spar_list.append(float(xpt_spar))
+        print(f"X-point index = {xpt_index}")
+        print(f"X-point Bpxy = {xpt_value}")
+        print(f"X-point Spar = {xpt_spar}")
     
         for idx, (param, title, ylabel, logy) in enumerate(plots):
             r, c = divmod(idx, 3)
@@ -103,21 +121,7 @@ def plot_multi_profiles_fieldline(cs, region_pol, idx_ring_array):
             # min_B = np.min(B_values)
             # min_B_loc = np.argmin(B_values)
             # print(f"X-point is at {min_B_loc} with value {min_B}")
-            N = len(df["Bpxy"].values)
-            search_start = int(N * 0.2)
-            search_end   = int(N * 0.8)
             
-            B_mid = df["Bpxy"][search_start:search_end]
-            
-            local_min = np.argmin(B_mid)
-            xpt_index = search_start + local_min
-            xpt_value = df["Bpxy"][xpt_index]
-            xpt_spar  = df["Spar"][xpt_index]
-            xpt_spar_list.append(float(xpt_spar))
-            
-            print(f"X-point index = {xpt_index}")
-            print(f"X-point Bpxy = {xpt_value}")
-            print(f"X-point Spar = {xpt_spar}")
         
             # print(np.min(B_value))
             axi.plot(np.abs(df["Spar"][::-1]), np.abs(df[param]), label=f"ring = {ring}")
@@ -130,13 +134,13 @@ def plot_multi_profiles_fieldline(cs, region_pol, idx_ring_array):
             if logy:
                 axi.set_yscale("log")
 
-        xpt_min = min(xpt_spar_list)
-        xpt_max = max(xpt_spar_list)
-        print(f"X-point Spar band: {xpt_min} → {xpt_max}")
-        
-        for axi in ax.flat:
-            axi.legend()
-            axi.axvspan(xpt_min, xpt_max, color='red', alpha=0.2)
+    xpt_min = min(xpt_spar_list)
+    xpt_max = max(xpt_spar_list)
+    print(f"X-point Spar band: {xpt_min} → {xpt_max}")
+    
+    for axi in ax.flat:
+        axi.legend()
+        axi.axvspan(xpt_min, xpt_max, color='red', alpha=0.2)
 
     plt.tight_layout()
     fig.savefig("multi_rings_profiles.png")
