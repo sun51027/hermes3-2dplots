@@ -37,11 +37,14 @@ p.add_argument("-i", "--input", required=True, type=str, help="Name of netcdf fi
 p.add_argument("-o", "--output", required=True, type=str, help="Path to plots folder, better to use date as note, e.g. YYMMDD")
 p.add_argument("-r", "--region_rad",  type=str, default="omp", help="omp, {inner/outer}_{lower/upper}_target ... for more see doc")
 p.add_argument("-p", "--region_pol",  type=str, default="outer_lower", help="Must specify sepadd/sepdist ... for more see doc")
-p.add_argument("--sepadd",  type=int, default=1, help="Index of the SOL ring based on nx. Default SOL ring = 1")
-p.add_argument("-s", "--scale",  type=str, default="linear", help="linear or log")
+# p.add_argument("--sepadd",  type=int, default=1, help="Index of the SOL ring based on nx. Default SOL ring = 1")
+# p.add_argument("-s", "--scale",  type=str, default="linear", help="linear or log")
 
 
 args = p.parse_args()
+
+figures_pdf_path = args.output + "_figures_pdf"
+figures_png_path = args.output + "_figures_png"
 
 def read_file(input_id):
 
@@ -143,11 +146,10 @@ def plot_multi_profiles_fieldline(cs, region_pol, idx_ring_array):
         axi.axvspan(xpt_min, xpt_max, color='red', alpha=0.2)
 
     plt.tight_layout()
-    fig.savefig("multi_rings_profiles.png")
+    fig.savefig(f"{figures_png_path}/multi_rings_profiles.png")
 
 def main():
 
-    print(args.scale)
     case = read_file(args.input)
 
     '''For test'''
@@ -170,8 +172,8 @@ if __name__ == "__main__":
     start_time = time.time()
     # if not os.path.exists(f"./{figures_pdf_path}"):
     #     os.makedirs(figures_pdf_path)
-    # if not os.path.exists(f"./{figures_png_path}"):
-    #     os.makedirs(figures_png_path)
+    if not os.path.exists(f"./{figures_png_path}"):
+        os.makedirs(figures_png_path)
     main()
     end_time = time.time()
     print(f"Total runtime: {end_time - start_time:.2f} seconds")
