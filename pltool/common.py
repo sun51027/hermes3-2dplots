@@ -29,7 +29,8 @@ from hermes3.selectors import *
 import time
 
 
-def build_base_parser(description: str) -> argparse.ArgumentParser:
+def build_base_parser():
+# def build_base_parser(description: str) -> argparse.ArgumentParser:
     """Base parser shared by multi and single plot scripts."""
     p = argparse.ArgumentParser(
             description = "Assign a input folder and output directory"
@@ -43,7 +44,7 @@ def build_base_parser(description: str) -> argparse.ArgumentParser:
 
     return p
 
-def read_file(input_id):
+def read_files(input_id):
 
     db = CaseDB(
         case_dir = r"/users/jpm590/scratch/",
@@ -58,6 +59,7 @@ def read_file(input_id):
     for case in toload:
         cs[case["name"]] = db.load_case_2D(case["id"], use_squash = case["squash"], verbose = True)
         cs[case["name"]].extract_2d_tokamak_geometry()
+
 
     return cs
 
