@@ -1,13 +1,9 @@
 from .common import build_base_parser, read_files, setup_matplotlib
-import xarray as xr
-import matplotlib
-import pandas as pd
 import numpy as np
 import matplotlib
 import argparse
 import matplotlib.pyplot as plt
-import os, sys, pathlib, shlex, subprocess
-
+import os, sys
 import xbout
 import scipy
 import xhermes
@@ -26,15 +22,8 @@ from hermes3.grid_fields import *
 from hermes3.accessors import *
 from hermes3.selectors import *
 
-# def plot_single_profiles():
-# def plot_single_profiles(cs, region_rad=args.region_rad, region_pol=args.region_pol, idx_ring=args.sepadd):
 def plot_single_profiles(cs, region_rad, region_pol, idx_ring, args, figures_png_path):
   
-    # The X-axis is from target in LHS to upstream RHS
-    # cs = read_files(args.input)
-    # region_rad=args.region_rad
-    # region_pol=args.region_pol
-    # idx_ring=args.sepadd
 
     coord_list = ["Spar", "Srad"]
     
@@ -203,7 +192,6 @@ def plot_Lz_function(cs):
 
 #    fig.savefig(f"{figures_pdf_path}/Lz_function.pdf")
 
-# def plot_polygon(cs):
 
 
 def run_single_plots():
@@ -214,30 +202,13 @@ def run_single_plots():
 
     ## create output directory
 
-#    figures_pdf_path = args.output + "_figures_pdf"
     figures_png_path = args.output + "_figures_png"
 
-#    if not os.path.exists(f"./{figures_pdf_path}"):
-#        os.makedirs(figures_pdf_path)
     if not os.path.exists(f"./{figures_png_path}"):
         os.makedirs(figures_png_path)
 
     ## Run
     plot_single_profiles(case, args.region_rad, args.region_pol, args.sepadd, args, figures_png_path)
-    # plot_multi_profiles_fieldline(case, args.region_pol, args.sepadd)
-
     # make_plot_diff_coeff(case)
     # plot_Lz_function(case)
 
-# if __name__ == "__main__":
-    
-#     start_time = time.time()
-##     if not os.path.exists(f"./{figures_pdf_path}"):
-##         os.makedirs(figures_pdf_path)
-#     if not os.path.exists(f"./{figures_png_path}"):
-#         os.makedirs(figures_png_path)
-#     plot_single_profiles()
-#     # main()
-#     end_time = time.time()
-#     print(f"Total runtime: {end_time - start_time:.2f} seconds")
-    

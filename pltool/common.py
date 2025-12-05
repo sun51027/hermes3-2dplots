@@ -64,8 +64,29 @@ def read_files(input_id):
     return cs
 
 
-def setup_matplotlib():
-    """Optional: central place for rcParams / styling."""
+def setup_matplotlib() -> None:
+    """
+    Central place for Matplotlib rcParams / styling.
+    Call this once at program start (e.g. in run_single_plots / run_multi_plots).
+    # Use a reasonable style without being too fancy
+    try:
+        plt.style.use("seaborn-v0_8-colorblind")
+    except Exception:
+        # Fall back silently if style not available
+        pass
+    """
+    # Base DPI and font
     plt.rcParams["figure.dpi"] = 120
-    # ... your other global style tweaks
+    plt.rcParams["savefig.dpi"] = 300
+    plt.rcParams["font.size"] = 11
+
+    # Axes and lines
+    plt.rcParams["axes.grid"] = False  # you turn grid on per-axis
+    plt.rcParams["axes.labelsize"] = 11
+    plt.rcParams["axes.titlesize"] = 11
+    plt.rcParams["lines.linewidth"] = 1.5
+
+    # Legend
+    plt.rcParams["legend.frameon"] = True  # do you want the frame or not
+    plt.rcParams["legend.fontsize"] =  9
 
