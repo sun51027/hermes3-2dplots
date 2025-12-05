@@ -26,12 +26,6 @@ from hermes3.grid_fields import *
 from hermes3.accessors import *
 from hermes3.selectors import *
 
-import time
-
-
-
-
-
 # def plot_single_profiles():
 # def plot_single_profiles(cs, region_rad=args.region_rad, region_pol=args.region_pol, idx_ring=args.sepadd):
 def plot_single_profiles(cs, region_rad, region_pol, idx_ring, args, figures_png_path):
@@ -212,7 +206,7 @@ def plot_Lz_function(cs):
 # def plot_polygon(cs):
 
 
-def main():
+def run_single_plots():
 
     parser = build_base_parser()
     args = parser.parse_args()
