@@ -96,6 +96,55 @@ def plot_multi_profiles_fieldline(cs, region_pol, idx_ring_array, figures_png_pa
     plt.tight_layout()
     fig.savefig(f"{figures_png_path}/multi_rings_profiles.png")
 
+def plot_multi_profiles_radial(cs, region_rad, figures_png_path):
+    plots = [
+        ("Te",      "e temperature",        "T [eV]",                    False),
+        ("Td+",     "d+ temperature",       "T [eV]",                    False),
+        ("Td",      "d temperature",        "T [eV]",                    False),
+        ("Ne",      "e density",            "density [$m^{-3}$]",            True),
+        ("Nd+",     "d+ density",           "density [$m^{-3}$]",            True),
+        ("Nd",      "d density",            "density [$m^{-3}$]",            True),
+        ("Sd+_rec", "Recombination",        "Rate [$m^{-3} s^{-1}$]",          True),
+        ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",          True),
+        ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True),
+        ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
+        ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
+        ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
+    ]
+   
+    ncols = len(plots)
+    print(f"ncols = {ncols}")
+    
+    fig, ax = plt.subplots(int(ncols/3), 3, figsize= (10, 10), squeeze=False)
+
+    ds = cs["MAST-U"].ds.isel(t=-1)
+    xpt_spar_list = []
+    
+    for idx, (param, title, ylabel, logy) in enumerate(plots):
+        df = get_1d_radial_data(ds, params=[p[0] for p in plots], region=region_rad)
+        r, c = divmod(idx, 3)
+        axi = ax[r,c]
+        
+        axi.plot(df["Srad"], np.abs(df[param]), label=f"")
+        axi.set_title(title)
+        axi.set_ylabel(ylabel)
+        axi.set_xlabel("")
+        axi.grid(True, alpha=0.7)
+    
+        if logy:
+            axi.set_yscale("log")
+
+
+    
+    for i, axi in enumerate(ax.flat):
+        axi.legend()
+        
+        if i == ncols-1 or i == ncols-2 or i == ncols-3:
+            axi.set_xlabel("$X-X_{sep}$ [m]")
+
+    plt.tight_layout()
+    fig.savefig(f"{figures_png_path}/multi_radial_profiles.png")
+
 def run_multi_plots():
 
     setup_matplotlib()
@@ -110,3 +159,4 @@ def run_multi_plots():
 
     sepadd_array = [0, 1, 2, 3, 4]
     plot_multi_profiles_fieldline(case, args.region_pol, sepadd_array, figures_png_path)
+    plot_multi_profiles_radial(case, args.region_rad, figures_png_path)
