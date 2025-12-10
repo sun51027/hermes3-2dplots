@@ -31,13 +31,20 @@ def compute_cell_volumes(mesh: Mesh) -> np.ndarray:
     return mesh.mesh["dy"] * mesh.mesh["dx"] * mesh.mesh["J"] * (2.0 * np.pi)
 
 
-def mastu_inner_midplane_region(mesh: Mesh):
+def inner_midplane_region(mesh: Mesh):
     """Return two-cell puff region on the inner midplane."""
     j1, j2 = int(mesh.j1_1g), int(mesh.j2_1g)
-    mid_a = int((j2 - j1) / 2) + j1 + 1
-    mid_b = int((j2 - j1) / 2) + j1
-    return (-mesh.MXG - 1, np.r_[mid_a, mid_b])
+    imp_a = int((j2 - j1) / 2) + j1 + 1
+    imp_b = int((j2 - j1) / 2) + j1
+    return (-mesh.MXG - 1, np.r_[imp_a, imp_b])
 
+def outer_midplane_region(mesh: Mesh):
+    """Return two-cell puff region on the inner midplane."""
+    '''See     sdtools/hermes3/load.py '''
+
+    omp_a = int((mesh["j2_2g"] - mesh["j1_2g"]) / 2) + mesh["j1_2g"]
+    omp_b = int((mesh["j2_2g"] - mesh["j1_2g"]) / 2) + mesh["j1_2g"] + 1
+    return (-mesh.MXG - 1, np.r_[omp_a, omp_b])
 
 def write_pump_mask(mesh: Mesh) -> None:
     """Mark pump regions (targets and SOL/PFR edges)."""
@@ -73,11 +80,15 @@ def summarize_sources(grid_path: Path, label: str):
         del mesh
 
 
-def apply_sources(new_grid_path: Path, total_P: float, total_N: float):
+def apply_sources(new_grid_path: Path, total_P: float, total_N: float, puff_loc: str):
     """Apply distributed sources on new grid based on total values."""
     mesh = Mesh(str(new_grid_path))
     try:
-        puff_region = mastu_inner_midplane_region(mesh)
+        if puff_loc == "omp":
+            puff_region = outer_midplane_region(mesh)
+        elif puff_loc == "imp":
+            puff_region = inner_midplane_region(mesh)
+
         dv = compute_cell_volumes(mesh)
         region_vol = dv[puff_region]
 
@@ -114,6 +125,8 @@ def parse_args():
                    help="Total neutral influx [s^-1]. If not given, use value from old grid.")
     p.add_argument("--Pd", type=float, default=None,
                    help="Total heat power [W]. If not given, use value from old grid.")
+    p.add_argument("--puff", choices=["omp", "imp"],  required=True, type=str,
+                   help="puff location inner midplnae (imp) or outer midplane (omp)")
     p.add_argument("--mode", choices=["show", "edit"], default="show",
                    help="'show' to only print summary (default), 'edit' to apply sources.")
 
@@ -160,7 +173,7 @@ def main():
     total_N = args.Nd if args.Nd is not None else total_N_old
 
     # Step 3. Apply sources on the new grid
-    apply_sources(args.new_grid, total_P=total_P, total_N=total_N)
+    apply_sources(args.new_grid, total_P=total_P, total_N=total_N, puff_loc=args.puff)
 
     # Step 4. Verify results
     summarize_sources(args.new_grid, "New grid")
