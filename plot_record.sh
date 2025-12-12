@@ -18,5 +18,6 @@
 # python3 multi_plot.py -i 251119-MASTU-newbranch-rerun -o 251119-mastu-newbranch-log -r omp -p outer_lower --sepadd 1 --scale log
 
 
-python3 multi_plot.py -i 251007-2D-MASTU -o 251201-mastu-original-multi -r omp -p outer_lower
+python3 make_plot.py -i 251205-cdn-46895-old-param -o 251212-newgrid-old-param -r omp -p outer_lower
+# python3 multi_plot.py -i 251007-2D-MASTU -o 251201-mastu-original-multi -r omp -p outer_lower
 # python3 multi_plot.py -i 251123-MASTU-cx-multiplier1000 -o 251201-mastu-cx-multiplier1000-multi -r omp -p outer_lower

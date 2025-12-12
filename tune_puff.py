@@ -204,6 +204,7 @@ def main():
 
     # Step 2. Determine total Nd, Pd
     if args.Pd is not None and args.Nd is not None:
+        
         total_P = args.Pd
         total_N = args.Nd
         print(f"Using user-specified Nd={total_N:.3e} [s^-1], Pd={total_P:.3e} [W]")

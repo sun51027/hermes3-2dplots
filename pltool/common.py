@@ -48,7 +48,8 @@ def read_files(input_id):
 
     db = CaseDB(
         case_dir = r"/users/jpm590/scratch/",
-        grid_dir = r"/users/jpm590/2dspace/hermes-3/build-mc-master"
+        grid_dir = r"/users/jpm590/neutralrun/hermes-3/master"
+        # grid_dir = r"/users/jpm590/2dspace/hermes-3/build-mc-master"
     )
     
     toload = [
