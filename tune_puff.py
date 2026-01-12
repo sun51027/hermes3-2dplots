@@ -104,10 +104,11 @@ def summarize_sources(grid_path: Path, label: str):
         del mesh
 
 
-def apply_sources(new_grid_path: Path, total_P: float, total_N: float, puff_loc: str):
+def apply_sources(new_grid_path: Path, total_N: float, puff_loc: str):
+# def apply_sources(new_grid_path: Path, total_P: float, total_N: float, puff_loc: str):
     """Apply distributed sources on new grid based on total values."""
-    if total_P is None or total_N is None:
-        raise ValueError("total_P and total_N must be finite numbers, not None.")
+    # if total_P is None or total_N is None:
+    #     raise ValueError("total_P and total_N must be finite numbers, not None.")
 
     mesh = Mesh(str(new_grid_path))
     try:
@@ -121,19 +122,34 @@ def apply_sources(new_grid_path: Path, total_P: float, total_N: float, puff_loc:
         dv = compute_cell_volumes(mesh)
         region_vol = dv[puff_region]
 
+        print(f"region_vol: {region_vol}")
+
+        total_flow = total_N   # atoms per second
+        
+        total_flow_per_volume = total_flow * (region_vol/region_vol.sum()) / region_vol# first find how much per cell, then per volume
+        print(f"Total flow: {total_flow} [s-1]")
+        print(f"Total flow per volume: {total_flow_per_volume.sum():.2e} [s-1 m-3]")
+        
+        heat_source = total_flow * 3 * 2/3 * constants("q_e")  #  3eV per particle (assume dissociated molecules)
+        heat_source_per_volume = heat_source * (region_vol/region_vol.sum()) / region_vol 
+        print(f"Total heat source: {heat_source:.2e} [W]")
+        print(f"Total heat source per volume: {heat_source_per_volume.sum():.2e} [W m-3]")
+
         Nd_src = Field("Nd_src", mesh)
         Pd_src = Field("Pd_src", mesh)
 
-        Nd_src.data[puff_region] = total_N * (region_vol / region_vol.sum()) / region_vol
-        Pd_src.data[puff_region] = total_P * (region_vol / region_vol.sum()) / region_vol
+        # Nd_src.data[puff_region] = total_N * (region_vol / region_vol.sum()) / region_vol
+        # Pd_src.data[puff_region] = total_P * (region_vol / region_vol.sum()) / region_vol
+        Nd_src.data[puff_region] = total_flow_per_volume
+        Pd_src.data[puff_region] = heat_source_per_volume
 
         mesh.write_field(Nd_src)
         mesh.write_field(Pd_src)
         write_pump_mask(mesh)
 
         print(f"Applied puff at: {puff_loc}")
-        print(f"Applied total Nd_src: {total_N:.3e} [s^-1]")
-        print(f"Applied total Pd_src: {total_P:.3e} [W]")
+        # print(f"Applied total Nd_src: {total_N:.3e}, with total flow per volume {total_flow_per_volume:.3e}")
+        # print(f"Applied total pressure source : {heat_source_per_volume:.3e}")
     finally:
         try:
             mesh.close()
@@ -203,25 +219,28 @@ def main():
     )
 
     # Step 2. Determine total Nd, Pd
-    if args.Pd is not None and args.Nd is not None:
+    if args.Nd is not None:
+    #if args.Pd is not None and args.Nd is not None:
         
-        total_P = args.Pd
+        # total_P = args.Pd
         total_N = args.Nd
-        print(f"Using user-specified Nd={total_N:.3e} [s^-1], Pd={total_P:.3e} [W]")
+        # print(f"Using user-specified Nd={total_N:.3e} [s^-1], Pd={total_P:.3e} [W]")
+        # print(f"Using user-specified Nd={total_N:.3e} [s^-1], Pd={total_P:.3e} [W]")
     else:
         total_P_old, total_N_old = summarize_sources(args.old_grid, "Old grid (for default Nd/Pd)")
 
-        if total_P_old is None or total_N_old is None:
-            print("\nERROR: Pd_src / Nd_src not found in old grid and --Nd/--Pd not specified.")
-            print("       Please provide --Nd and --Pd explicitly for edit mode.")
-            sys.exit(1)
+        # if total_P_old is None or total_N_old is None:
+        #     print("\nERROR: Pd_src / Nd_src not found in old grid and --Nd/--Pd not specified.")
+        #     print("       Please provide --Nd and --Pd explicitly for edit mode.")
+        #     sys.exit(1)
 
         total_P = args.Pd if args.Pd is not None else total_P_old
         total_N = args.Nd if args.Nd is not None else total_N_old
         print(f"Using defaults from old grid: Nd={total_N:.3e} [s^-1], Pd={total_P:.3e} [W]")
 
     # Step 3. Apply sources on the new grid
-    apply_sources(args.new_grid, total_P=total_P, total_N=total_N, puff_loc=args.puff)
+    apply_sources(args.new_grid,  total_N=total_N, puff_loc=args.puff)
+    # apply_sources(args.new_grid, total_P=total_P, total_N=total_N, puff_loc=args.puff)
 
     # Step 4. Verify results on the (now valid) new grid
     summarize_sources(args.new_grid, "New grid (after edit)")
