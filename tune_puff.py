@@ -48,12 +48,20 @@ def outer_midplane_region(mesh: Mesh):
 def write_pump_mask(mesh: Mesh) -> None:
     """Mark pump regions (targets and SOL/PFR edges)."""
     is_pump = Field("is_pump", mesh)
+
+    # Target 
     for region in [
         "inner_lower_target", "inner_upper_target",
         "outer_lower_target", "outer_upper_target",
-        "sol_edge", "pfr_edge",
     ]:
         is_pump.data[mesh.slices(region)] = 1
+    mesh.write_field(is_pump, dtype="Field2D")
+
+    # Side wall
+    for region in [
+        "sol_edge", "pfr_edge",
+    ]:
+        is_pump.data[mesh.slices(region)] = 0
     mesh.write_field(is_pump, dtype="Field2D")
 
 
@@ -145,6 +153,8 @@ def apply_sources(new_grid_path: Path, total_N: float, puff_loc: str):
 
         mesh.write_field(Nd_src)
         mesh.write_field(Pd_src)
+
+        # Turn on or off pump
         write_pump_mask(mesh)
 
         print(f"Applied puff at: {puff_loc}")
