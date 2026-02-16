@@ -22,7 +22,7 @@ from hermes3.grid_fields import *
 from hermes3.accessors import *
 from hermes3.selectors import *
 
-def plot_multi_profiles_fieldline(cs, region_pol, idx_ring_array, figures_png_path):
+def plot_multifiles_profiles_fieldline(cs, region_pol, idx_ring_array, figures_png_path):
 
     # Plot sol ring = 1 ~ 5 on the same plot for each species separately
     # With x-point for each ring
@@ -46,31 +46,11 @@ def plot_multi_profiles_fieldline(cs, region_pol, idx_ring_array, figures_png_pa
     print(f"ncols = {ncols}")
     
     fig, ax = plt.subplots(int(ncols/3), 3, figsize= (10, 10), squeeze=False)
+    for case_name, case_obj in cs.items():
+        print(case_name, case_obj)
 
-    ds = cs["MAST-U"].ds.isel(t=-1)
-    xpt_spar_list = []
-    for ring in idx_ring_array:
-        print(f"Plotting {ring} ....")
-        df = get_1d_poloidal_data(ds, params=[p[0] for p in plots] + ["Bpxy"], region=region_pol, sepadd=ring)
-
-
-        ### Find X-point 
-
-        N = len(df["Bpxy"].values)
-        search_start = int(N * 0.2)
-        search_end   = int(N * 0.8)
+        ds = case_obj.ds.isel(t=-1)
         
-        B_mid = df["Bpxy"][search_start:search_end]
-        
-        local_min = np.argmin(B_mid)
-        xpt_index = search_start + local_min
-        xpt_value = df["Bpxy"][xpt_index]
-        xpt_spar  = df["Spar"][xpt_index]
-        xpt_spar_list.append(float(xpt_spar))
-        print(f"X-point index = {xpt_index}")
-        print(f"X-point Bpxy = {xpt_value}")
-        print(f"X-point Spar = {xpt_spar}")
-    
         for idx, (param, title, ylabel, logy) in enumerate(plots):
             r, c = divmod(idx, 3)
             axi = ax[r,c]
@@ -83,12 +63,8 @@ def plot_multi_profiles_fieldline(cs, region_pol, idx_ring_array, figures_png_pa
         
             if logy:
                 axi.set_yscale("log")
+    
 
-
-    ## Print out the X-point band
-    xpt_min = min(xpt_spar_list)
-    xpt_max = max(xpt_spar_list)
-    print(f"X-point Spar band: {xpt_min} → {xpt_max}")
     
     for i, axi in enumerate(ax.flat):
         axi.legend()
@@ -98,9 +74,9 @@ def plot_multi_profiles_fieldline(cs, region_pol, idx_ring_array, figures_png_pa
             axi.set_xlabel("$S_{\\parallel}$")
 
     plt.tight_layout()
-    fig.savefig(f"{figures_png_path}/multi_rings_profiles.png")
+    fig.savefig(f"{figures_png_path}/multifiles_rings_profiles.png")
 
-def plot_multi_profiles_radial(cs, region_rad, figures_png_path):
+def plot_multifiles_profiles_radial(cs, region_rad, figures_png_path):
     plots = [
         ("Te",      "e temperature",        "T [eV]",                    False),
         ("Td+",     "d+ temperature",       "T [eV]",                    False),
@@ -147,62 +123,8 @@ def plot_multi_profiles_radial(cs, region_rad, figures_png_path):
             axi.set_xlabel("$X-X_{sep}$ [m]")
 
     plt.tight_layout()
-    fig.savefig(f"{figures_png_path}/multi_radial_profiles.png")
-
-def plot_plasma_overlap(cs, region_pol, figures_png_path):
-
-    #########
-    #
-    #   ring 1  ring 5
-    #   N all   N all
-    #   T all  T all
-    #
-    ###########
-
-    
-    fig, ax = plt.subplots(2, 2, figsize= (6, 6), squeeze=False)
-
-    ds = cs["MAST-U"].ds.isel(t=-1)
-
-
-    # Ring 1
-    df1 = get_1d_poloidal_data(ds, params=["Td", "Te", "Td+", "Nd", "Ne", "Nd+"], region=region_pol, sepadd=1)
-    
-    ax[0,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Te"]), label=f"Te")
-    ax[0,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Td+"]), label=f"Td+")
-    ax[0,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Td"]), label=f"Td")
-    ax[1,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Ne"]), label=f"Ne")
-    ax[1,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Nd+"]), label=f"Nd+")
-    ax[1,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Nd"]), label=f"Nd")
-    ax[1,0].set_xlabel("Parallel distance [m]")
-    ax[0,0].set_title("1st SOL ring")
-    # ax[1,0].set_yscale("log")
-    
-    # Ring 5
-    df2 = get_1d_poloidal_data(ds, params=["Td", "Te", "Td+", "Nd", "Ne", "Nd+"], region=region_pol, sepadd=5)
-    
-    ax[0,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Te"]), label=f"Te")
-    ax[0,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Td+"]), label=f"Td+")
-    ax[0,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Td"]), label=f"Td")
-    ax[1,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Ne"]), label=f"Ne")
-    ax[1,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Nd+"]), label=f"Nd+")
-    ax[1,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Nd"]), label=f"Nd")
-    ax[1,1].set_xlabel("Parallel distance [m]")
-    ax[0,1].set_title("5th SOL ring")
-    # ax[1,1].set_yscale("log")
-
-
-    for i, ax in enumerate(ax.flat):
-        ax.legend()
-        ax.grid(True, alpha=0.7)
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-
-
-    plt.tight_layout()
-    fig.savefig(f"{figures_png_path}/species_profiles.png")
-
-def run_multi_plots():
+    fig.savefig(f"{figures_png_path}/multifiles_radial_profiles.png")
+def run_multifiles_plots():
 
     setup_matplotlib()
     parser = build_base_parser()
@@ -215,6 +137,5 @@ def run_multi_plots():
     #     os.makedirs(figures_png_path)
 
     # sepadd_array = [0, 1, 2, 3, 4]
-    # plot_multi_profiles_fieldline(case, args.region_pol, sepadd_array, figures_png_path)
-    # plot_multi_profiles_radial(case, args.region_rad, figures_png_path)
-    # plot_plasma_overlap(case, args.region_pol, figures_png_path)
+    # plot_multifiles_profiles_fieldline(case, args.region_pol, sepadd_array, figures_png_path)
+    # plot_multifiles_profiles_radial(case, args.region_rad, figures_png_path)

@@ -26,4 +26,4 @@
 
 # python3 make_plot.py -i 260112-cdn-46895-david-param -o 260123-cdn-46895-david-param -r omp -p outer_lower
 # python3 make_plot.py -i 260114-cdn-46895-bndry-neumann -o 260123-cdn-46895-bndry-neumann -r omp -p outer_lower
-python3 make_plot.py -i 260120-cdn-46895-nowallpump_2e21 -o 260126-cdn-46895-nowallpump_2e21 -r omp -p outer_lower
+python3 make_plot.py -i 260207* -o 260207_multiple_comparison -r omp -p outer_lower
