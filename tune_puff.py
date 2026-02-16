@@ -61,7 +61,7 @@ def write_pump_mask(mesh: Mesh) -> None:
     for region in [
         "sol_edge", "pfr_edge",
     ]:
-        is_pump.data[mesh.slices(region)] = 0
+        is_pump.data[mesh.slices(region)] = 1
     mesh.write_field(is_pump, dtype="Field2D")
 
 
