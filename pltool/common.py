@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib
 import argparse
 import matplotlib.pyplot as plt
-import os, sys, pathlib, shlex, subprocess
+import os, sys, pathlib, shlex, subprocess, glob
 
 import xbout
 import scipy
@@ -35,7 +35,14 @@ def build_base_parser():
     p = argparse.ArgumentParser(
             description = "Assign a input folder and output directory"
     )
-    p.add_argument("-i", "--input", required=True, type=str, help="Name of netcdf files folder, not path")
+    # p.add_argument("-i", "--input", required=True, type=str, help="Name of netcdf files folder, not path")
+    p.add_argument(
+        "-i", "--input",
+        required=True,
+        nargs="+",                 # <-- key change
+        type=str,
+        help="Input file IDs or patterns (e.g. 260207*)"
+    )
     p.add_argument("-o", "--output", required=True, type=str, help="Path to plots folder, better to use date as note, e.g. YYMMDD")
     p.add_argument("-r", "--region_rad",  type=str, default="omp", help="omp, {inner/outer}_{lower/upper}_target ... for more see doc")
     p.add_argument("-p", "--region_pol",  type=str, default="outer_lower", help="Must specify sepadd/sepdist ... for more see doc")
@@ -44,18 +51,44 @@ def build_base_parser():
 
     return p
 
-def read_files(input_id):
-
+def read_files(input_ids):
+    case_dir = r"/users/jpm590/scratch/"  
     db = CaseDB(
-        case_dir = r"/users/jpm590/scratch/",
+        case_dir = case_dir,
         grid_dir = r"/users/jpm590/neutralrun/hermes-3/master"
         # grid_dir = r"/users/jpm590/2dspace/hermes-3/build-mc-master"
     )
-    
-    toload = [
-        dict(name="MAST-U", id=input_id , unnormalise_geom = True, use_xhermes = True, squash = True)
 
-    ]
+    print(input_ids)
+    # Expand wildcards
+    expanded_ids = []
+    for pattern in input_ids:
+        matches = glob.glob(os.path.join(case_dir, pattern))
+        if matches:
+            expanded_ids.extend(os.path.basename(m) for m in matches)
+        else:
+            # If no wildcard match, treat as literal ID
+            expanded_ids.append(pattern)
+
+    print(expanded_ids)
+    # Build toload
+    toload = []
+    for path in expanded_ids:
+
+        file_name = os.path.basename(path)
+
+        toload.append(
+            dict(
+                name=file_name,          # <-- filename here
+                id=file_name,            # or keep full path if needed
+                unnormalise_geom=True,
+                use_xhermes=True,
+                squash=True
+            )
+        )
+
+        print(file_name)
+
     cs = {}
     for case in toload:
         cs[case["name"]] = db.load_case_2D(case["id"], use_squash = case["squash"], verbose = True)
@@ -63,6 +96,7 @@ def read_files(input_id):
 
 
     return cs
+
 
 
 def setup_matplotlib() -> None:
