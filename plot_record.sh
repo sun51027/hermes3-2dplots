@@ -26,4 +26,14 @@
 
 # python3 make_plot.py -i 260112-cdn-46895-david-param -o 260123-cdn-46895-david-param -r omp -p outer_lower
 # python3 make_plot.py -i 260114-cdn-46895-bndry-neumann -o 260123-cdn-46895-bndry-neumann -r omp -p outer_lower
-python3 make_plot.py -i 260207* -o 260207_multiple_comparison -r omp -p outer_lower
+# python3 make_plot.py -i 260207-cdn-46895-nowallpump_1e21 -o 260207-cdn-46895-nowallpump_1e21 -r omp -p outer_lower
+
+# python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21 -o 260217-nowallpump_limiterOff_1e21 -r omp -p outer_lower
+
+
+################# Compare different simulation ######################
+# python3 make_plot.py -i 260207* -o 260207_multiple_comparison -r omp -p outer_lower 
+
+
+################# Benchamrk against solps ######################
+python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21   -o 260225-first-benchmark  -r omp -p outer_lower

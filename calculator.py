@@ -17,6 +17,7 @@
 # ## Quick check any physics parameters for a single file
 
 # %%
+# %matplotlib widget
 
 
 import pandas as pd
@@ -63,10 +64,11 @@ db = CaseDB(
 toload = [
     # dict(name="source_guess", id="260112-cdn-46895-david-param", unnormalise_geom = True, use_xhermes = True, squash = True),
     # dict(name="david_param", id="260105-cdn-46895-david-param", unnormalise_geom = True, use_xhermes = True, squash = True),
-    dict(name="nowallpump_2e21", id="260207-cdn-46895-nowallpump_2e21", unnormalise_geom = True, use_xhermes = True, squash = True),
-    dict(name="nowallpump_1e21", id="260207-cdn-46895-nowallpump_1e21", unnormalise_geom = True, use_xhermes = True, squash = True),
-    dict(name="nowallpump_1e21_decayBC", id="260207-cdn-46895-nowallpump_decayBC_1e21", unnormalise_geom = True, use_xhermes = True, squash = True),
-    dict(name="nowallpump_1e21_limiterOFF", id="260207-cdn-46895-nowallpump_limiterOff_1e21", unnormalise_geom = True, use_xhermes = True, squash = True),
+    # dict(name="nowallpump_2e21", id="260207-cdn-46895-nowallpump_2e21", unnormalise_geom = True, use_xhermes = True, squash = True),
+    # dict(name="nowallpump_1e21", id="260207-cdn-46895-nowallpump_1e21", unnormalise_geom = True, use_xhermes = True, squash = False),
+    # dict(name="nowallpump_1e21_decayBC", id="260207-cdn-46895-nowallpump_decayBC_1e21", unnormalise_geom = True, use_xhermes = True, squash = False),
+    dict(name="nowallpump_1e21_limiterOFF", id="260217-cdn-46895-nowallpump_limiterOff_1e21", unnormalise_geom = True, use_xhermes = True, squash = True),
+    # dict(name="wallRecyON_1e21", id="260213-cdn-46895-wallRecyON_1e21", unnormalise_geom = True, use_xhermes = True, squash = True),
 
 
     # dict(name="new_grid", id="251210-cdn-46895", unnormalise_geom = True, use_xhermes = True, squash = True),
@@ -77,13 +79,15 @@ toload = [
 cs = {}
 for case in toload:
     cs[case["name"]] = db.load_case_2D(case["id"], use_squash = case["squash"], verbose = True)
+    # cs[case["name"]] = db.load_case_2D(case["id"], verbose = True)
+
     cs[case["name"]].extract_2d_tokamak_geometry()
 
 # %%
 ### Check meta data
-m = cs["original"].ds.metadata
+m = cs["nowallpump_1e21_limiterOFF"].ds.metadata
 # m
-ds = cs["original"].ds
+ds = cs["nowallpump_1e21_limiterOFF"].ds
 # ds
 
 
@@ -109,7 +113,7 @@ print(f"Total power source = {power2}")
 # %%
 #######
 
-ds = cs["nowallpump_1e21"].ds.isel(t=-1)
+ds = cs["nowallpump_1e21_limiterOFF"].ds.isel(t=-1)
 
 nparticles = (ds["Sd_src"].values) * ds["dv"].values
 nparticles = np.sum(nparticles)
@@ -123,13 +127,6 @@ nparticles = np.sum(nparticles)
 print(f"Total number of particles = {nparticles}")
 #######
 
-ds = cs["nowallpump_1e21_limiterOFF"].ds.isel(t=-1)
-
-nparticles = (ds["Sd_src"].values) * ds["dv"].values
-nparticles = np.sum(nparticles)
-print(f"Total number of particles = {nparticles}")
-
-#####
 ds = cs["nowallpump_2e21"].ds.isel(t=-1)
 nparticles = (ds["Sd_src"].values) * ds["dv"].values
 nparticles = np.sum(nparticles)
@@ -172,18 +169,20 @@ print(domain_volume)
 
 # %%
 
-ds = cs["nowallpump_1e21"].ds.isel(t=-1)
+ds = cs["wallRecyON_1e21"].ds.isel(t=-1)
 fig, ax = plt.subplots(1,3 , figsize=(12,6))
-ds["Sd+_src" ].bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True, logscale = True, )
-ds["Sd_src" ].bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True, logscale = True, )
+ds["Sd_src" ].bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True )
+ds["Sd_pump" ].bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True, )
+ds["is_pump" ].bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True, )
 
+print()
 plt.tight_layout()
 
 
 
 
 # %% [markdown]
-# ### Find the first core ring
+# ## Find the first core ring
 # The fuel is fuelling in the first core ring, so you should find the correct normalised position for fuelling function in input file.
 #
 # ```python
@@ -191,17 +190,23 @@ plt.tight_layout()
 # ```
 #
 # Below `sep` shows the position of the separatrix. `Srad` is the real distance from the separatrix (-: core, +: Sol). Note that `Srad` is in the cell center, while the real separatrix is on the boundary.
-#
 
 # %% [markdown]
 # To get the normalised core ring position `x`, take `x` by cumulatively summing up the dx (width of each cell). Then normalised it by dividing max value.
 #
 # The value you should take is the `x` where `Pe_src` is non-zero (1st core ring)
+#
+# Also check where the target_recycling is on
 
 # %%
+########
+#
+# Check by Radial data
+#
+#######
 
-ds = cs["david_param"].ds.isel(t=-1)
-df = get_1d_radial_data(ds, params = ["dx", "Pd_src","Pe_src","Pd+_src", "Sd_src", "Nd_src"], region = "omp")
+ds = cs["wallRecyON_1e21"].ds.isel(t=-1)
+df = get_1d_radial_data(ds, params = ["dx", "Pd_src","Pe_src","Pd+_src", "Sd_src", "Sd+_src" "Sd_pump", "Sd_target_recycle", "Sd_wall_recycle"], region = "omp")
 
 df["x"] = df["dx"].cumsum()
 # x is in the center of the cell
@@ -210,9 +215,16 @@ df
 # use the first 0.08
 
 # %%
+########
+#
+# Check by poloidal data
+#
+#######
+ds = cs["wallRecyON_1e21"].ds.isel(t=-1)
 
-ds = cs["source_guess"].ds.isel(t=-1)
-df = get_1d_radial_data(ds, params = ["dx", "Pd_src","Pe_src","Pd+_src", "Sd_src", "Nd_src"], region = "omp")
+df = get_1d_poloidal_data(ds, params = ["dx", "Pd_src","Pe_src",
+                                        "Pd+_src", "Sd_src", "Sd+_src" "Sd_pump", 
+                                        "Sd_target_recycle", "Sd_wall_recycle", ], region = "outer_lower", sepadd=19)
 
 df["x"] = df["dx"].cumsum()
 # x is in the center of the cell

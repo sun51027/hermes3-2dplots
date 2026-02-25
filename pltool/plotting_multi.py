@@ -47,7 +47,8 @@ def plot_multi_profiles_fieldline(cs, region_pol, idx_ring_array, figures_png_pa
     
     fig, ax = plt.subplots(int(ncols/3), 3, figsize= (10, 10), squeeze=False)
 
-    ds = cs["MAST-U"].ds.isel(t=-1)
+    case_name = list(cs.keys())[0]
+    ds = cs[case_name].ds.isel(t=-1)
     xpt_spar_list = []
     for ring in idx_ring_array:
         print(f"Plotting {ring} ....")
@@ -121,7 +122,8 @@ def plot_multi_profiles_radial(cs, region_rad, figures_png_path):
     
     fig, ax = plt.subplots(int(ncols/3), 3, figsize= (10, 10), squeeze=False)
 
-    ds = cs["MAST-U"].ds.isel(t=-1)
+    case_name = list(cs.keys())[0]
+    ds = cs[case_name].ds.isel(t=-1)
     xpt_spar_list = []
     
     for idx, (param, title, ylabel, logy) in enumerate(plots):
@@ -149,7 +151,7 @@ def plot_multi_profiles_radial(cs, region_rad, figures_png_path):
     plt.tight_layout()
     fig.savefig(f"{figures_png_path}/multi_radial_profiles.png")
 
-def plot_plasma_overlap(cs, region_pol, figures_png_path):
+def plot_plasma_overlap(cs, region_pol, region_rad, figures_png_path):
 
     #########
     #
@@ -162,7 +164,8 @@ def plot_plasma_overlap(cs, region_pol, figures_png_path):
     
     fig, ax = plt.subplots(2, 2, figsize= (6, 6), squeeze=False)
 
-    ds = cs["MAST-U"].ds.isel(t=-1)
+    case_name = list(cs.keys())[0]
+    ds = cs[case_name].ds.isel(t=-1)
 
 
     # Ring 1
@@ -171,12 +174,15 @@ def plot_plasma_overlap(cs, region_pol, figures_png_path):
     ax[0,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Te"]), label=f"Te")
     ax[0,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Td+"]), label=f"Td+")
     ax[0,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Td"]), label=f"Td")
+    ax[0,0].set_xlabel("Parallel distance [m]")
+    ax[0,0].set_ylabel("Temperature")
+    ax[0,0].set_title("1st SOL ring")
     ax[1,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Ne"]), label=f"Ne")
     ax[1,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Nd+"]), label=f"Nd+")
     ax[1,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Nd"]), label=f"Nd")
     ax[1,0].set_xlabel("Parallel distance [m]")
-    ax[0,0].set_title("1st SOL ring")
-    # ax[1,0].set_yscale("log")
+    ax[1,0].set_ylabel("Denisty")
+    ax[1,0].set_yscale("log")
     
     # Ring 5
     df2 = get_1d_poloidal_data(ds, params=["Td", "Te", "Td+", "Nd", "Ne", "Nd+"], region=region_pol, sepadd=5)
@@ -184,23 +190,53 @@ def plot_plasma_overlap(cs, region_pol, figures_png_path):
     ax[0,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Te"]), label=f"Te")
     ax[0,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Td+"]), label=f"Td+")
     ax[0,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Td"]), label=f"Td")
+    ax[0,1].set_xlabel("Parallel distance [m]")
+    ax[0,1].set_ylabel("Temperature")
+    ax[0,1].set_title("5th SOL ring")
+
     ax[1,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Ne"]), label=f"Ne")
     ax[1,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Nd+"]), label=f"Nd+")
     ax[1,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Nd"]), label=f"Nd")
     ax[1,1].set_xlabel("Parallel distance [m]")
-    ax[0,1].set_title("5th SOL ring")
-    # ax[1,1].set_yscale("log")
+    ax[1,1].set_ylabel("Denisty")
+    ax[1,1].set_yscale("log")
 
 
     for i, ax in enumerate(ax.flat):
         ax.legend()
         ax.grid(True, alpha=0.7)
-        ax.set_xscale('log')
-        ax.set_yscale('log')
+        # ax.set_xscale('log')
+        # ax.set_yscale('log')
 
 
     plt.tight_layout()
-    fig.savefig(f"{figures_png_path}/species_profiles.png")
+    fig.savefig(f"{figures_png_path}/species_poloidal_profiles.png")
+
+    ####### Radial profile
+
+    fig, ax2 = plt.subplots(1, 2, figsize= (8, 4))
+    dr1 = get_1d_radial_data(ds, params=["Td", "Te", "Td+", "Nd", "Ne", "Nd+"], region=region_rad )
+    
+    ax2[0].plot(dr1["Srad"], np.abs(dr1["Te"]), label=f"Te")
+    ax2[0].plot(dr1["Srad"], np.abs(dr1["Td+"]), label=f"Td+")
+    ax2[0].plot(dr1["Srad"], np.abs(dr1["Td"]), label=f"Td")
+    ax2[0].set_title("Temperature")
+    ax2[0].set_xlabel("$X-X_{sep}$ [m]")
+    ax2[1].plot(dr1["Srad"], np.abs(dr1["Ne"]), label=f"Ne")
+    ax2[1].plot(dr1["Srad"], np.abs(dr1["Nd+"]), label=f"Nd+")
+    ax2[1].plot(dr1["Srad"], np.abs(dr1["Nd"]), label=f"Nd")
+    ax2[1].set_title("Density")
+    ax2[1].set_xlabel("$X-X_{sep}$ [m]")
+    ax2[1].set_yscale("log")
+
+    for i, ax2 in enumerate(ax2.flat):
+        ax2.legend()
+        ax2.grid(True, alpha=0.7)
+        # ax2.set_xscale('log')
+        # ax2.set_yscale('log')
+
+    plt.tight_layout()
+    fig.savefig(f"{figures_png_path}/species_radial_profiles.png")
 
 def run_multi_plots():
 
@@ -210,11 +246,11 @@ def run_multi_plots():
     case = read_files(args.input)
 
     ## create output directory
-    # figures_png_path = args.output + "_figures_png"
-    # if not os.path.exists(f"./{figures_png_path}"):
-    #     os.makedirs(figures_png_path)
+    figures_png_path = args.output + "_figures_png"
+    if not os.path.exists(f"./{figures_png_path}"):
+        os.makedirs(figures_png_path)
 
-    # sepadd_array = [0, 1, 2, 3, 4]
-    # plot_multi_profiles_fieldline(case, args.region_pol, sepadd_array, figures_png_path)
-    # plot_multi_profiles_radial(case, args.region_rad, figures_png_path)
-    # plot_plasma_overlap(case, args.region_pol, figures_png_path)
+    sepadd_array = [0, 1, 2, 3, 4]
+    plot_multi_profiles_fieldline(case, args.region_pol, sepadd_array, figures_png_path)
+    plot_multi_profiles_radial(case, args.region_rad, figures_png_path)
+    plot_plasma_overlap(case, args.region_pol, args.region_rad, figures_png_path)

@@ -8,6 +8,7 @@ import argparse
 import matplotlib.pyplot as plt
 import os, sys, pathlib, shlex, subprocess, glob
 
+
 import xbout
 import scipy
 import xhermes
@@ -26,6 +27,7 @@ from hermes3.grid_fields import *
 from hermes3.accessors import *
 from hermes3.selectors import *
 
+from code_comparison.solps_pp import *
 import time
 
 
@@ -48,38 +50,56 @@ def build_base_parser():
     p.add_argument("-p", "--region_pol",  type=str, default="outer_lower", help="Must specify sepadd/sepdist ... for more see doc")
     p.add_argument("--sepadd",  type=int, default=1, help="Index of the SOL ring based on nx. Default SOL ring = 1")
     p.add_argument("-s", "--scale",  type=str, default="linear", help="linear or log")
+    # p.add_argument("--isolps", type=str, help="Path to SOLPS's balance.nc")
 
     return p
 
 def read_files(input_ids):
-    case_dir = r"/users/jpm590/scratch/"  
+
+    case_dir = "/users/jpm590/scratch/"
     db = CaseDB(
         case_dir = case_dir,
         grid_dir = r"/users/jpm590/neutralrun/hermes-3/master"
         # grid_dir = r"/users/jpm590/2dspace/hermes-3/build-mc-master"
     )
 
-    print(input_ids)
-    # Expand wildcards
+
     expanded_ids = []
+
     for pattern in input_ids:
-        matches = glob.glob(os.path.join(case_dir, pattern))
+
+
+
+        search_pattern = os.path.join(case_dir, pattern + "*")
+        matches = glob.glob(search_pattern)
+
+        print("Searching:", search_pattern)
+        print("Matches:", matches)
+
         if matches:
+            # keep only case names, not full path
             expanded_ids.extend(os.path.basename(m) for m in matches)
         else:
-            # If no wildcard match, treat as literal ID
+            print(f"No match for {pattern}, using literal")
             expanded_ids.append(pattern)
 
-    print(expanded_ids)
+    print("Expanded IDs:", expanded_ids)
+
+
+    # Reduce common prefix, get the short names for plots
+    prefix = os.path.commonprefix(expanded_ids)
+    short_names = [name[len(prefix):] for name in expanded_ids]
+    print(short_names)
+
     # Build toload
     toload = []
-    for path in expanded_ids:
+    for i, path in enumerate(expanded_ids):
 
         file_name = os.path.basename(path)
 
         toload.append(
             dict(
-                name=file_name,          # <-- filename here
+                name=short_names[i],          # <-- filename here
                 id=file_name,            # or keep full path if needed
                 unnormalise_geom=True,
                 use_xhermes=True,
@@ -94,9 +114,15 @@ def read_files(input_ids):
         cs[case["name"]] = db.load_case_2D(case["id"], use_squash = case["squash"], verbose = True)
         cs[case["name"]].extract_2d_tokamak_geometry()
 
-
     return cs
 
+def read_solps_balance():
+
+    # SOLPScase init includes "balance.nc", so only path is required
+    input_path = "/users/jpm590/2dspace/post-processing/xhermes"
+    bal = SOLPScase(input_path)
+
+    return bal
 
 
 def setup_matplotlib() -> None:
