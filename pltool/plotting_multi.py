@@ -76,7 +76,8 @@ def plot_multi_profiles_fieldline(cs, region_pol, idx_ring_array, figures_png_pa
             r, c = divmod(idx, 3)
             axi = ax[r,c]
             
-            axi.plot(np.abs(df["Spar"][::-1]), np.abs(df[param]), label=f"ring = {ring}")
+            axi.plot(df["Spar"][::-1], np.abs(df[param]), label=f"ring = {ring}")
+            # axi.plot(np.abs(df["Spar"][::-1]), np.abs(df[param]), label=f"ring = {ring}")
             axi.set_title(title)
             axi.set_ylabel(ylabel)
             axi.set_xlabel("")
@@ -131,14 +132,15 @@ def plot_multi_profiles_radial(cs, region_rad, figures_png_path):
         r, c = divmod(idx, 3)
         axi = ax[r,c]
         
-        axi.plot(df["Srad"], np.abs(df[param]), label=f"")
+        axi.plot(df["Srad"], df[param], label=f"")
+        # axi.plot(df["Srad"], np.abs(df[param]), label=f"")
         axi.set_title(title)
         axi.set_ylabel(ylabel)
         axi.set_xlabel("")
         axi.grid(True, alpha=0.7)
     
         if logy:
-            axi.set_yscale("log")
+            axi.set_yscale("symlog")
 
 
     

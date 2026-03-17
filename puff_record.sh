@@ -9,4 +9,5 @@
 # python3 tune_puff.py --old-grid ~/neutralrun/hermes-3/master/CDN_46895_v2.nc --new-grid ~/neutralrun/hermes-3/master/CDN_46895_260105.nc --Nd 1.3e+22 --puff omp --mode edit
 # python3 tune_puff.py --old-grid ~/neutralrun/hermes-3/master/CDN_46895_v2.nc --new-grid ~/neutralrun/hermes-3/master/CDN_46895_260120_nowallpump_2e21.nc --Nd 2.0e+21 --puff omp --mode edit
 # python3 tune_puff.py --old-grid ~/neutralrun/hermes-3/master/CDN_46895_v2.nc --new-grid ~/neutralrun/hermes-3/master/CDN_46895_260129_nowallpump_1e21.nc --Nd 1.0e+21 --puff omp --mode edit
-python3 tune_puff.py --old-grid ~/neutralrun/hermes-3/master/CDN_46895_v2.nc --new-grid ~/neutralrun/hermes-3/master/CDN_46895_260213_allwallpump_1e21.nc --Nd 1.0e+21 --puff omp --mode edit
+# python3 tune_puff.py --old-grid ~/neutralrun/hermes-3/master/CDN_46895_v2.nc --new-grid ~/neutralrun/hermes-3/master/CDN_46895_260213_allwallpump_1e21.nc --Nd 1.0e+21 --puff omp --mode edit
+python3 tune_puff.py --old-grid ~/neutralrun/hermes-3/master/CDN_46895_v2.nc --new-grid ~/CDN_46895_260314_nowallpump_3e20.nc --Nd 3.0e+20 --puff omp --mode edit

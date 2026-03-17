@@ -59,7 +59,9 @@ def read_files(input_ids):
     case_dir = "/users/jpm590/scratch/"
     db = CaseDB(
         case_dir = case_dir,
-        grid_dir = r"/users/jpm590/neutralrun/hermes-3/master"
+        grid_dir = r"/users/jpm590/neutralimit_gcc12_9497476/hermes-3/build-mc-master"
+        # grid_dir = r"/users/jpm590/benchspace/hermes-3/build-mc-master"
+        # grid_dir = r"/users/jpm590/neutralrun/hermes-3/master"
         # grid_dir = r"/users/jpm590/2dspace/hermes-3/build-mc-master"
     )
 

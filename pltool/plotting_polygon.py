@@ -30,9 +30,9 @@ def plot_temperature(cs, figures_png_path):
         ds = case_obj.ds.isel(t=-1)
         fig, ax = plt.subplots(1,3 , figsize=(10,6), constrained_layout=True)
 
-        ds["Te"].bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True, vmin=1, vmax=100)
-        ds["Td"].bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True, vmin=1, vmax=100)
-        ds["Td+"].bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True, vmin=1, vmax=100)
+        ds["Te"].bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True,) #vmin=1, vmax=100)
+        ds["Td"].bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True,) #vmin=1, vmax=100)
+        ds["Td+"].bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True,)# vmin=1, vmax=100)
 
         fig.suptitle(f"{case_name}")
         fig.savefig(f"{figures_png_path}/{case_name}_T_polygon.png")
@@ -64,6 +64,34 @@ def plot_pressure(cs, figures_png_path):
         ds["Pd+"].bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True, logscale = True,)
         fig.suptitle(f"{case_name}")
         fig.savefig(f"{figures_png_path}/{case_name}_P_polygon.png")
+
+def plot_momentum(cs, figures_png_path):
+
+    for case_name, case_obj in cs.items():
+        print(f"Plotting P polygon for {case_name}")
+
+        ds = case_obj.ds.isel(t=-1)
+        fig, ax = plt.subplots(1,3 , figsize=(10,6), constrained_layout=True)
+
+        ds["NVe"].bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True, logscale = True, )
+        ds["NVd"].bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True, logscale = True, )
+        ds["NVd+"].bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True, logscale = True,)
+        fig.suptitle(f"{case_name}")
+        fig.savefig(f"{figures_png_path}/{case_name}_NV_polygon.png")
+        
+def plot_momentum(cs, figures_png_path):
+
+    for case_name, case_obj in cs.items():
+        print(f"Plotting P polygon for {case_name}")
+
+        ds = case_obj.ds.isel(t=-1)
+        fig, ax = plt.subplots(1,3 , figsize=(10,6), constrained_layout=True)
+
+        ds["NVe"].bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True, logscale = True, )
+        ds["NVd"].bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True, logscale = True, )
+        ds["NVd+"].bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True, logscale = True,)
+        fig.suptitle(f"{case_name}")
+        fig.savefig(f"{figures_png_path}/{case_name}_NV_polygon.png")
 def run_polygon():
 
     setup_matplotlib()
@@ -78,6 +106,6 @@ def run_polygon():
 
 
     ## Run
-    # plot_density(case, figures_png_path)
+    plot_density(case, figures_png_path)
     plot_temperature(case, figures_png_path)
-    # plot_pressure(case, figures_png_path)
+    plot_pressure(case, figures_png_path)

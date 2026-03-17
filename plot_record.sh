@@ -29,6 +29,10 @@
 # python3 make_plot.py -i 260207-cdn-46895-nowallpump_1e21 -o 260207-cdn-46895-nowallpump_1e21 -r omp -p outer_lower
 
 # python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21 -o 260217-nowallpump_limiterOff_1e21 -r omp -p outer_lower
+# python3 make_plot.py -i 260310_neutralimit_gcc12_9497476 -o 260313_neutralimit_gcc12_9497476 -r omp -p outer_lower
+# python3 make_plot.py -i 260314_neutralimit_9497476_3e20 -o 260314_9497476_cvode_3e20 -r omp -p outer_lower
+# python3 make_plot.py -i 260316_neutralimit_9497476_3e20_from0217 -o 260316_9497476_cvode_3e20_from0217 -r omp -p outer_lower
+python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21_extend -o 260316-cdn-46895-nowallpump_limiterOff_1e21_extend -r omp -p outer_lower
 
 
 ################# Compare different simulation ######################
@@ -36,4 +40,5 @@
 
 
 ################# Benchamrk against solps ######################
-python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21   -o 260225-first-benchmark  -r omp -p outer_lower
+# python3 make_plot.py -i 260305-nowallpump-limiterOff-1e21-cvode  -o 260310-cvode  -r omp -p outer_lower
+# python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21   -o 260225-first-benchmark  -r omp -p outer_lower
