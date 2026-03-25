@@ -48,25 +48,31 @@ def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_
     xpt_spar_slist = []
     for ring in idx_ring_array:
         print(f"Plotting {ring} ....")
-        df = get_1d_poloidal_data(ds, params=[p[0] for p in plots], region=region_pol, sepadd=ring)
-        df_solps = bal.get_1d_poloidal_data(params=[p[0] for p in plots], region=region_pol, sepadd=ring)
+        # df = get_1d_poloidal_data(ds, params=[p[0] for p in plots], region=region_pol, sepadd=ring)
+        # df_solps = bal.get_1d_poloidal_data(params=[p[0] for p in plots], region=region_pol, sepadd=ring)
+        df = get_1d_poloidal_data(ds, params=[p[0] for p in plots], region=region_pol, sepadd=ring, target_first=True)
+        df_solps = bal.get_1d_poloidal_data(params=[p[0] for p in plots], region=region_pol, sepadd=ring, target_first=True)
 
         local_Rmin_h = np.argmin(df["R"].values) # return location
-        print(f"Hermes location of Rmin: {local_Rmin_h}, value: {np.min(df["R"].values)}")
+        print(f"Hermes location of Rmin: {local_Rmin_h}, value: {np.min(df['R'].values)}")
         local_Rmin_solps = np.argmin(df_solps["R"].values) # return location
-        print(f"SOLPS  location of Rmin: {local_Rmin_solps}, value: {np.min(df_solps["R"].values)}")
+        print(f"SOLPS  location of Rmin: {local_Rmin_solps}, value: {np.min(df_solps['R'].values)}")
 
         xpt_spar_hlist.append(float(df["Spar"][local_Rmin_h]))
-        xpt_spar_slist.append(float(df["Spar"][local_Rmin_solps]))
+        xpt_spar_slist.append(float(df_solps["Spar"][local_Rmin_solps]))
+        print(f"The coordinate is: {df["Spar"][local_Rmin_h]}")
+
         for idx, (param, title, ylabel, logy) in enumerate(plots):
             r, c = divmod(idx, 3)
             axi = ax[r,c]
 
             # Hermes-3 
-            axi.plot(np.abs(df["Spar"][::-1]), np.abs(df[param]), label=f"Hermes-3")
+            # axi.plot(np.abs(df["Spar"][::-1]), np.abs(df[param]), label=f"Hermes-3")
+            axi.plot(np.abs(df["Spar"]), np.abs(df[param]), label=f"Hermes-3")
 
             # SOLPS
-            axi.plot(df_solps["Spar"][::-1], np.abs(df_solps[param]), label=f"SOLPS", ls = "--")
+            axi.plot(df_solps["Spar"], np.abs(df_solps[param]), label=f"SOLPS", ls = "--")
+            # axi.plot(df_solps["Spar"][::-1], np.abs(df_solps[param]), label=f"SOLPS", ls = "--")
 
             axi.set_title(title)
             axi.set_ylabel(ylabel)
@@ -78,6 +84,7 @@ def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_
 
     xpt_h = min(xpt_spar_hlist)
     xpt_s = min(xpt_spar_hlist)
+    print(xpt_h)
     
     for i, axi in enumerate(ax.flat):
         axi.legend()
@@ -88,7 +95,7 @@ def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_
             axi.set_xlabel("$S_{\\parallel}$")
 
     plt.tight_layout()
-    fig.savefig(f"{figures_png_path}/multi_rings_profiles.png")
+    fig.savefig(f"{figures_png_path}/benchmark_rings.png")
 
 
 
@@ -147,7 +154,90 @@ def plot_bm_profiles_radial(cs, bal, region_rad, figures_png_path):
             axi.set_xlabel("$X-X_{sep}$ [m]")
 
     plt.tight_layout()
-    fig.savefig(f"{figures_png_path}/multi_radial_profiles.png")
+    fig.savefig(f"{figures_png_path}/benchmark_radial.png")
+
+def plot_bm_plasma_overlap(cs, bal, region_pol, region_rad, figures_png_path):
+
+    #########
+    #
+    #   ring 1  radial
+    #   T all   T all
+    #   N all   N all
+    #   P all   P all
+    #
+    ###########
+
+    fig, ax = plt.subplots(5, 2, figsize=(10, 16), squeeze=False)
+
+    case_name = list(cs.keys())[0]
+    ds = cs[case_name].ds.isel(t=-1)
+
+    params = ["Td", "Te", "Td+", "Nd", "Ne", "Nd+", "Pd", "Pe", "Pd+","Sd+_rec", "Sd+_iz"]
+    
+    # Get Poloidal Data
+    df_herm_pol = get_1d_poloidal_data(ds, params=params, region=region_pol, sepadd=1, target_first=True)
+    df_solps_pol = bal.get_1d_poloidal_data(params=params, region=region_pol, sepadd=1,target_first=True)
+
+    # Get Radial Data
+    df_herm_rad = get_1d_radial_data(ds, params=params, region=region_rad)
+    df_solps_rad = bal.get_1d_radial_data(params=params, region=region_rad)
+    
+    plot_groups = [
+        {"vars": ["Te", "Td+", "Td"], "ylabel": "Temperature (eV)", "yscale": "linear", "title_prefix": ""},
+        {"vars": ["Ne", "Nd+", "Nd"], "ylabel": "Density (m^-3)", "yscale": "log", "title_prefix": ""},
+        {"vars": ["Pe", "Pd+", "Pd"], "ylabel": "Pressure (Pa)", "yscale": "log", "title_prefix": ""},
+        {"vars": ["Sd+_rec"], "ylabel": "Recombination (m^-3 s^-1)", "yscale": "log", "title_prefix": ""},
+        {"vars": ["Sd+_iz"], "ylabel": "Ionisation (m^-3 s^-1)", "yscale": "log", "title_prefix": ""},
+
+    ]
+
+    for row, group in enumerate(plot_groups):
+        for var in group["vars"]:
+            # --- Poloidal plot (Col 0) ---
+            # p_pol, = ax[row, 0].plot(np.abs(df_herm_pol["Spar"][::-1]), np.abs(df_herm_pol[var]), label=f"{var} (Hermes)")
+            # color = p_pol.get_color()
+            # ax[row, 0].plot(np.abs(df_solps_pol["Spar"][::-1]), np.abs(df_solps_pol[var]), label=f"{var} (SOLPS)", color=color, ls=":")
+            p_pol, = ax[row, 0].plot(np.abs(df_herm_pol["Spar"]), np.abs(df_herm_pol[var]), label=f"{var} (Hermes)")
+            color = p_pol.get_color()
+            ax[row, 0].plot(np.abs(df_solps_pol["Spar"]), np.abs(df_solps_pol[var]), label=f"{var} (SOLPS)", color=color, ls=":")
+            
+            # --- Radial plot (Col 1) ---
+            p_rad, = ax[row, 1].plot(df_herm_rad["Srad"], np.abs(df_herm_rad[var]), label=f"{var} (Hermes)")
+            color_rad = p_rad.get_color()
+            ax[row, 1].plot(df_solps_rad["dist"], np.abs(df_solps_rad[var]), label=f"{var} (SOLPS)", color=color_rad, ls=":")
+
+        # Configure Poloidal axis
+        ax[row, 0].set_ylabel(group["ylabel"])
+        ax[row, 0].set_yscale(group["yscale"])
+        if row == 2:
+            ax[row, 0].set_xlabel("Parallel distance [m]")
+        if row == 0:
+            ax[row, 0].set_title(group["title_prefix"])
+            
+        # Configure Radial axis
+        ax[row, 1].set_ylabel(group["ylabel"])
+        ax[row, 1].set_yscale(group["yscale"])
+        if row == 2:
+            ax[row, 1].set_xlabel("$X-X_{sep}$ [m]")
+        if row == 0:
+            ax[row, 1].set_title(group["title_prefix"])
+            
+    # Dummy lines for linestyle legends
+    from matplotlib.lines import Line2D
+    legend_elements = [
+        Line2D([0], [0], color='k', ls='-', label='Hermes-3'),
+        Line2D([0], [0], color='k', ls='--', label='SOLPS')
+    ]
+
+    for axi in ax.flat:
+        # Create legend with variables only and the line styles
+        handles, labels = axi.get_legend_handles_labels()
+        # Keep only the first few handles for variables (exclude duplicates from solps if we want, but here they have different labels)
+        axi.legend(fontsize='small')
+        axi.grid(True, alpha=0.7)
+
+    plt.tight_layout()
+    fig.savefig(f"{figures_png_path}/benchmark_all_overlap.png")
 
 def run_benchmark():
 
@@ -165,3 +255,4 @@ def run_benchmark():
     sepadd_array = [1]
     # plot_bm_profiles_radial(case, balance, args.region_rad, figures_png_path)
     plot_bm_profiles_fieldline(case, balance, args.region_pol, sepadd_array, figures_png_path)
+    # plot_bm_plasma_overlap(case, balance, args.region_pol, args.region_rad, figures_png_path)

@@ -51,14 +51,14 @@ def plot_multifiles_profiles_fieldline(cs, region_pol, ring, figures_png_path):
         print(case_name)
 
         ds = case_obj.ds.isel(t=-1)
-        df = get_1d_poloidal_data(ds, params=[p[0] for p in plots] + ["Bpxy"], region=region_pol, sepadd=ring)
+        df = get_1d_poloidal_data(ds, params=[p[0] for p in plots] + ["Bpxy"], region=region_pol, sepadd=ring, target_first=True)
        
 
         for idx, (param, title, ylabel, logy) in enumerate(plots):
             r, c = divmod(idx, 3)
             axi = ax[r,c]
             
-            axi.plot(np.abs(df["Spar"][::-1]), np.abs(df[param]), label=f"{case_name}")
+            axi.plot(np.abs(df["Spar"]), np.abs(df[param]), label=f"{case_name}")
             axi.set_title(title)
             axi.set_ylabel(ylabel)
             axi.set_xlabel("")

@@ -52,7 +52,7 @@ def plot_multi_profiles_fieldline(cs, region_pol, idx_ring_array, figures_png_pa
     xpt_spar_list = []
     for ring in idx_ring_array:
         print(f"Plotting {ring} ....")
-        df = get_1d_poloidal_data(ds, params=[p[0] for p in plots] + ["Bpxy"], region=region_pol, sepadd=ring)
+        df = get_1d_poloidal_data(ds, params=[p[0] for p in plots] + ["Bpxy"], region=region_pol, sepadd=ring, target_first = True)
 
 
         ### Find X-point 
@@ -76,8 +76,7 @@ def plot_multi_profiles_fieldline(cs, region_pol, idx_ring_array, figures_png_pa
             r, c = divmod(idx, 3)
             axi = ax[r,c]
             
-            axi.plot(df["Spar"][::-1], np.abs(df[param]), label=f"ring = {ring}")
-            # axi.plot(np.abs(df["Spar"][::-1]), np.abs(df[param]), label=f"ring = {ring}")
+            axi.plot(df["Spar"], np.abs(df[param]), label=f"ring = {ring}")
             axi.set_title(title)
             axi.set_ylabel(ylabel)
             axi.set_xlabel("")
@@ -171,34 +170,34 @@ def plot_plasma_overlap(cs, region_pol, region_rad, figures_png_path):
 
 
     # Ring 1
-    df1 = get_1d_poloidal_data(ds, params=["Td", "Te", "Td+", "Nd", "Ne", "Nd+"], region=region_pol, sepadd=1)
+    df1 = get_1d_poloidal_data(ds, params=["Td", "Te", "Td+", "Nd", "Ne", "Nd+"], region=region_pol, sepadd=1, target_first=True)
     
-    ax[0,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Te"]), label=f"Te")
-    ax[0,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Td+"]), label=f"Td+")
-    ax[0,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Td"]), label=f"Td")
+    ax[0,0].plot(np.abs(df1["Spar"]), np.abs(df1["Te"]), label=f"Te")
+    ax[0,0].plot(np.abs(df1["Spar"]), np.abs(df1["Td+"]), label=f"Td+")
+    ax[0,0].plot(np.abs(df1["Spar"]), np.abs(df1["Td"]), label=f"Td")
     ax[0,0].set_xlabel("Parallel distance [m]")
     ax[0,0].set_ylabel("Temperature")
     ax[0,0].set_title("1st SOL ring")
-    ax[1,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Ne"]), label=f"Ne")
-    ax[1,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Nd+"]), label=f"Nd+")
-    ax[1,0].plot(np.abs(df1["Spar"][::-1]), np.abs(df1["Nd"]), label=f"Nd")
+    ax[1,0].plot(np.abs(df1["Spar"]), np.abs(df1["Ne"]), label=f"Ne")
+    ax[1,0].plot(np.abs(df1["Spar"]), np.abs(df1["Nd+"]), label=f"Nd+")
+    ax[1,0].plot(np.abs(df1["Spar"]), np.abs(df1["Nd"]), label=f"Nd")
     ax[1,0].set_xlabel("Parallel distance [m]")
     ax[1,0].set_ylabel("Denisty")
     ax[1,0].set_yscale("log")
     
     # Ring 5
-    df2 = get_1d_poloidal_data(ds, params=["Td", "Te", "Td+", "Nd", "Ne", "Nd+"], region=region_pol, sepadd=5)
+    df2 = get_1d_poloidal_data(ds, params=["Td", "Te", "Td+", "Nd", "Ne", "Nd+"], region=region_pol, sepadd=5, target_first=True)
     
-    ax[0,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Te"]), label=f"Te")
-    ax[0,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Td+"]), label=f"Td+")
-    ax[0,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Td"]), label=f"Td")
+    ax[0,1].plot(np.abs(df2["Spar"]), np.abs(df2["Te"]), label=f"Te")
+    ax[0,1].plot(np.abs(df2["Spar"]), np.abs(df2["Td+"]), label=f"Td+")
+    ax[0,1].plot(np.abs(df2["Spar"]), np.abs(df2["Td"]), label=f"Td")
     ax[0,1].set_xlabel("Parallel distance [m]")
     ax[0,1].set_ylabel("Temperature")
     ax[0,1].set_title("5th SOL ring")
 
-    ax[1,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Ne"]), label=f"Ne")
-    ax[1,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Nd+"]), label=f"Nd+")
-    ax[1,1].plot(np.abs(df2["Spar"][::-1]), np.abs(df2["Nd"]), label=f"Nd")
+    ax[1,1].plot(np.abs(df2["Spar"]), np.abs(df2["Ne"]), label=f"Ne")
+    ax[1,1].plot(np.abs(df2["Spar"]), np.abs(df2["Nd+"]), label=f"Nd+")
+    ax[1,1].plot(np.abs(df2["Spar"]), np.abs(df2["Nd"]), label=f"Nd")
     ax[1,1].set_xlabel("Parallel distance [m]")
     ax[1,1].set_ylabel("Denisty")
     ax[1,1].set_yscale("log")
