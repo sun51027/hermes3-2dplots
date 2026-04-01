@@ -42,7 +42,13 @@ def outer_midplane_region(mesh: Mesh):
     """
     omp_a = int((mesh.j2_2g - mesh.j1_2g) / 2) + mesh.j1_2g
     omp_b = int((mesh.j2_2g - mesh.j1_2g) / 2) + mesh.j1_2g + 1
-    return (-mesh.MXG - 1, np.r_[omp_a, omp_b])
+    print(f"omp_a: {omp_a}, omp_b: {omp_b}")
+    print(f"np.r_ : {np.r_[omp_a, omp_b]}")
+    expanded_region = np.arange(omp_a , omp_b + 4)
+    print(f"expanded_region: {expanded_region}")
+    return (-mesh.MXG - 1, expanded_region)
+    # extension = [-1,0,1,2,3]
+    # return (-mesh.MXG - 1, np.r_[omp_a, omp_b])
 
 
 def write_pump_mask(mesh: Mesh) -> None:
@@ -122,6 +128,7 @@ def apply_sources(new_grid_path: Path, total_N: float, puff_loc: str):
     try:
         if puff_loc == "omp":
             puff_region = outer_midplane_region(mesh)
+            print(f"Puff region: {puff_region}")
         elif puff_loc == "imp":
             puff_region = inner_midplane_region(mesh)
         else:
