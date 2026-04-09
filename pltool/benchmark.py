@@ -143,7 +143,7 @@ def plot_bm_profiles_radial(cs, bal, region_rad, figures_png_path):
         axi.grid(True, alpha=0.7)
     
         if logy:
-            axi.set_yscale("log")
+            axi.set_yscale("linear")
 
 
     
@@ -154,7 +154,7 @@ def plot_bm_profiles_radial(cs, bal, region_rad, figures_png_path):
             axi.set_xlabel("$X-X_{sep}$ [m]")
 
     plt.tight_layout()
-    fig.savefig(f"{figures_png_path}/benchmark_radial.png")
+    fig.savefig(f"{figures_png_path}/benchmark_radial_linear.png")
 
 def plot_bm_plasma_overlap(cs, bal, region_pol, region_rad, figures_png_path):
 
@@ -184,7 +184,7 @@ def plot_bm_plasma_overlap(cs, bal, region_pol, region_rad, figures_png_path):
     
     plot_groups = [
         {"vars": ["Te", "Td+", "Td"], "ylabel": "Temperature (eV)", "yscale": "linear", "title_prefix": ""},
-        {"vars": ["Ne", "Nd+", "Nd"], "ylabel": "Density (m^-3)", "yscale": "log", "title_prefix": ""},
+        {"vars": ["Ne", "Nd+", "Nd"], "ylabel": "Density (m^-3)", "yscale": "linear", "title_prefix": ""},
         {"vars": ["Pe", "Pd+", "Pd"], "ylabel": "Pressure (Pa)", "yscale": "log", "title_prefix": ""},
         {"vars": ["Sd+_rec"], "ylabel": "Recombination (m^-3 s^-1)", "yscale": "log", "title_prefix": ""},
         {"vars": ["Sd+_iz"], "ylabel": "Ionisation (m^-3 s^-1)", "yscale": "log", "title_prefix": ""},
@@ -253,6 +253,6 @@ def run_benchmark():
         os.makedirs(figures_png_path)
 
     sepadd_array = [1]
-    # plot_bm_profiles_radial(case, balance, args.region_rad, figures_png_path)
+    plot_bm_profiles_radial(case, balance, args.region_rad, figures_png_path)
     plot_bm_profiles_fieldline(case, balance, args.region_pol, sepadd_array, figures_png_path)
-    # plot_bm_plasma_overlap(case, balance, args.region_pol, args.region_rad, figures_png_path)
+    plot_bm_plasma_overlap(case, balance, args.region_pol, args.region_rad, figures_png_path)

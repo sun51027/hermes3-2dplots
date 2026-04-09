@@ -44,11 +44,11 @@ def outer_midplane_region(mesh: Mesh):
     omp_b = int((mesh.j2_2g - mesh.j1_2g) / 2) + mesh.j1_2g + 1
     print(f"omp_a: {omp_a}, omp_b: {omp_b}")
     print(f"np.r_ : {np.r_[omp_a, omp_b]}")
-    expanded_region = np.arange(omp_a , omp_b + 4)
-    print(f"expanded_region: {expanded_region}")
-    return (-mesh.MXG - 1, expanded_region)
+    # expanded_region = np.arange(omp_a -9 , omp_b + 10)
+    # print(f"expanded_region: {expanded_region}")
+    # return (-mesh.MXG - 1, expanded_region)
     # extension = [-1,0,1,2,3]
-    # return (-mesh.MXG - 1, np.r_[omp_a, omp_b])
+    return (-mesh.MXG - 1, np.r_[omp_a, omp_b])
 
 
 def write_pump_mask(mesh: Mesh) -> None:
