@@ -13,7 +13,7 @@ if __name__ == "__main__":
     # run_multi_plots()
     run_multifiles_plots()
     # run_polygon()
-    run_benchmark()
+    # run_benchmark()
     end_time = time.time()
     print(f"Total runtime: {end_time - start_time:.2f} seconds")
     

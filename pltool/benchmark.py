@@ -143,7 +143,7 @@ def plot_bm_profiles_radial(cs, bal, region_rad, figures_png_path):
         axi.grid(True, alpha=0.7)
     
         if logy:
-            axi.set_yscale("linear")
+            axi.set_yscale("log")
 
 
     
@@ -154,7 +154,8 @@ def plot_bm_profiles_radial(cs, bal, region_rad, figures_png_path):
             axi.set_xlabel("$X-X_{sep}$ [m]")
 
     plt.tight_layout()
-    fig.savefig(f"{figures_png_path}/benchmark_radial_linear.png")
+    fig.savefig(f"{figures_png_path}/benchmark_radial.png")
+    # fig.savefig(f"{figures_png_path}/benchmark_radial_linear.png")
 
 def plot_bm_plasma_overlap(cs, bal, region_pol, region_rad, figures_png_path):
 

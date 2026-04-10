@@ -37,12 +37,16 @@
 # python3 make_plot.py -i 260319_neutralimit_9497476_5e19  -o 260319_neutralimit_9497476_5e19 -r omp -p outer_lower
 # python3 make_plot.py -i 260327_neutral_flux0.1 -o 260327_neutral_flux0.1 -r omp -p outer_lower
 # python3 make_plot.py -i 260310_neutralimit_gcc12_9497476  -o 260310_neutralimit_gcc12_9497476 -r omp -p outer_lower
-python3 make_plot.py -i 260407_pump_95  -o 260408_pump95_strange -r omp -p outer_lower 
+# python3 make_plot.py -i 260407_pump_95  -o 260410_pump_95 -r omp -p outer_lower 
+# python3 make_plot.py -i 260409_ion_coupling_off  -o 260410_ion_coupling_off -r omp -p outer_lower 
+# python3 make_plot.py -i 260410_puff_1e19  -o 260410_puff_1e19 -r omp -p outer_lower 
 
 
 ################# Compare different simulation ######################
 # python3 make_plot.py -i 260207* -o 260207_multiple_comparison -r omp -p outer_lower 
 # python3 make_plot.py -i 260310_neutralimit_gcc12_9497476 260407_pump_95  -o 260408_pump95_compare -r omp -p outer_lower 
+# python3 make_plot.py -i 260410_puff_1e19 260310_neutralimit_gcc12_9497476 -o 260410_puff_compare -r omp -p outer_lower 
+python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21 260310_neutralimit_gcc12_9497476 -o 260410_oldnew -r omp -p outer_lower 
 
 
 ################# Benchamrk against solps ######################
