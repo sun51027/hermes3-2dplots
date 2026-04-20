@@ -135,7 +135,7 @@ def run_multifiles_plots():
     case= read_files(args.input)
 
     ## create output directory
-    figures_png_path = args.output + "_figures_png"
+    figures_png_path = args.output
     if not os.path.exists(f"./{figures_png_path}"):
         os.makedirs(figures_png_path)
 

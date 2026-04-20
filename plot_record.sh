@@ -44,9 +44,9 @@
 
 ################# Compare different simulation ######################
 # python3 make_plot.py -i 260207* -o 260207_multiple_comparison -r omp -p outer_lower 
-# python3 make_plot.py -i 260310_neutralimit_gcc12_9497476 260407_pump_95  -o 260408_pump95_compare -r omp -p outer_lower 
+# python3 make_plot.py -i 260310_neutralimit_gcc12_9497476 260407_pump_95  -o 260413_pump95_compare -r omp -p outer_lower 
 # python3 make_plot.py -i 260410_puff_1e19 260310_neutralimit_gcc12_9497476 -o 260410_puff_compare -r omp -p outer_lower 
-python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21 260310_neutralimit_gcc12_9497476 -o 260410_oldnew -r omp -p outer_lower 
+# python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21 260310_neutralimit_gcc12_9497476 -o 260410_oldnew -r omp -p outer_lower 
 
 
 ################# Benchamrk against solps ######################
@@ -54,4 +54,15 @@ python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21 260310_neutr
 # python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21   -o 260407_new_bal  -r omp -p outer_lower
 # python3 make_plot.py -i 260310_neutralimit_gcc12_9497476 -o 260407_new_bal_neutralimit -r omp -p outer_lower
 # python3 make_plot.py -i 260327_neutral_lmax -o 260328_neutral_lmax_benchmark -r omp -p outer_lower
+
+######## New SOLPS fil
 # python3 make_plot.py -i 260407_pump_95 -o 260407_pump_95_new -r omp -p outer_lower
+# python3 make_plot.py -i 260410_reproduce -o 260414_reproduce_new -r omp -p outer_lower
+# python3 make_plot.py -i 260412_reproduce_1e19 -o 260417_reproduce_1e19_new -r omp -p outer_lower
+# python3 make_plot.py -i 260417_reproduce_1e19 -o 260417_reproduce_1e19 -r omp -p outer_lower
+# python3 make_plot.py -i 260417_reproduce_1e20 -o 260418_reproduce_1e20 -r omp -p outer_lower
+# python3 make_plot.py -i 260417_reproduce_1e19 -o 260418_reproduce_1e19 -r omp -p outer_lower
+# python3 make_plot.py -i 260419_reproduce_1e20_neumann_NV_nowallpump -o 260419_reproduce_1e20_neumann_NV_nowallpump -r omp -p outer_lower
+python3 make_plot.py -i 260417_reproduce_1e20_neumann_NV -o 260420_reproduce_1e20_neumann_NV -r omp -p outer_lower
+
+# python3 make_plot.py -i 260407_pump_95 -o 260418_pump_95 -r omp -p outer_lower

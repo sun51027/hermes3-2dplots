@@ -72,8 +72,16 @@ def read_files(input_ids):
 
 
 
-        search_pattern = os.path.join(case_dir, pattern + "*")
-        matches = glob.glob(search_pattern)
+        exact_path = os.path.join(case_dir, pattern)
+        if any(c in pattern for c in ["*", "?", "["]):
+            search_pattern = exact_path
+            matches = glob.glob(search_pattern)
+        elif os.path.exists(exact_path):
+            search_pattern = exact_path
+            matches = [exact_path]
+        else:
+            search_pattern = exact_path + "*"
+            matches = glob.glob(search_pattern)
 
         print("Searching:", search_pattern)
         print("Matches:", matches)
@@ -141,12 +149,12 @@ def setup_matplotlib() -> None:
     # Base DPI and font
     plt.rcParams["figure.dpi"] = 120
     plt.rcParams["savefig.dpi"] = 300
-    plt.rcParams["font.size"] = 11
+    plt.rcParams["font.size"] = 13
 
     # Axes and lines
     plt.rcParams["axes.grid"] = False  # you turn grid on per-axis
-    plt.rcParams["axes.labelsize"] = 11
-    plt.rcParams["axes.titlesize"] = 11
+    plt.rcParams["axes.labelsize"] = 13
+    plt.rcParams["axes.titlesize"] = 13
     plt.rcParams["lines.linewidth"] = 1.5
 
     # Legend

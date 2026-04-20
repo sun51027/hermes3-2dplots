@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, "/users/jpm590/2dspace/post-processing/boutdata/src")
 import boutdata
 from boutdata import restart
 from boutdata import collect
@@ -15,8 +17,15 @@ def change_gridfile():
     output_path = "/users/jpm590/260320_neutralimit_oldgrid_1e21/"
     restart.change_grid( old_grid, new_grid, restartfile, output_path)
 
+def modify_timestep():
+    ##     averagelast=1, final=-1, path="data", output="./", informat="nc", outformat=None):
+    restartfile = "/users/jpm590/scratch/260412_reproduce_1e19/"
+    output_path = "/users/jpm590/scratch/260412_reproduce_1e19/"
+    restart.create(averagelast=171, final = 171, path=restartfile, output = output_path )
 
-change_gridfile()
+
+modify_timestep()
+# change_gridfile()
 # Old restart file
 # print("Old restart file:")
 # nd = collect("Nd+", path="/users/jpm590/scratch/260207-cdn-46895-nowallpump_1e21/", info=True)

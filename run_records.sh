@@ -50,5 +50,13 @@
 # python3 make_slurm_script.py -n 4 -c 5 -t 03:00:00 -d 26:04:09 -i 260409_ion_coupling_off -j  260409_ion_coupling_off --restart 
 # python3 make_slurm_script.py -n 4 -c 5 -t 05:00:00 -d 26:04:10 -i 260410_puff_1e19 -j 260410_puff_1e19 --restart  --mkdir
 # python3 make_slurm_script.py -n 4 -c 5 -t 05:00:00 -d 26:04:10 -i 260410_puff_1e19 -j 260410_puff_1e19 --restart  --mkdir
-python3 make_slurm_script.py -n 4 -c 5 -t 02:00:00 -d 26:04:10 -i 260410_reproduce -j 260410_reproduce --restart  --mkdir
+# python3 make_slurm_script.py -n 4 -c 5 -t 02:00:00 -d 26:04:10 -i 260410_reproduce -j 260410_reproduce --restart  --mkdir
+# python3 make_slurm_script.py -n 4 -c 5 -t 06:00:00 -d 26:04:12 -i 260412_reproduce_1e19 -j 260412_reproduce_1e19 --restart  
+# python3 make_slurm_script.py -n 4 -c 5 -t 06:00:00 -d 26:04:17 -i 260417_reproduce_1e19 -j 260417_reproduce_1e19 --restart  
+# python3 make_slurm_script.py -n 4 -c 5 -t 06:00:00 -d 26:04:17 -i 260417_reproduce_1e20 -j 260417_reproduce_1e20 --restart  
+# python3 make_slurm_script.py -n 4 -c 5 -t 06:00:00 -d 26:04:17 -i 260417_reproduce_1e19_neumann -j 260417_reproduce_1e19_neumann --restart  
+# python3 make_slurm_script.py -n 4 -c 5 -t 06:00:00 -d 26:04:17 -i 260417_reproduce_1e19_neumann_NV -j 260417_reproduce_1e19_neumann_NV --restart  
+python3 make_slurm_script.py -n 2 -c 10 -t 11:00:00 -d 26:04:19 -i 260419_reproduce_1e20_neumann_NV_nowallpump -j 260419_reproduce_1e20_neumann_NV_nowallpump --restart  
+# python3 make_slurm_script.py -n 4 -c 5 -t 06:00:00 -d 26:04:17 -i 260417_reproduce_1e20_neumann_NV -j 260417_reproduce_1e20_neumann_NV --restart  
+# python3 make_slurm_script.py -n 4 -c 5 -t 06:00:00 -d 26:04:17 -i 260417_reproduce_1e19_nowallpump -j 260417_reproduce_1e19_nowallpump --restart  
 
