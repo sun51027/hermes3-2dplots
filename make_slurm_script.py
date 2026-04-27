@@ -5,8 +5,6 @@ from pathlib import Path
 import stat
 import subprocess
 
-scratch_path="/users/jpm590/scratch"
-hermes_path="/users/jpm590/neutralimit_gcc12_9497476/hermes-3/build-mc-master"
 
 TEMPLATE = """#!/bin/bash
 #
@@ -25,10 +23,11 @@ set -e
 module purge
 source /users/jpm590/neutralimit_gcc12_9497476/bout.env
 
-executable={hermes_path}/hermes-3
-# hermes_path=/users/jpm590/neutralimit_gcc12_9497476/hermes-3/build-mc-master/hermes-3
-input_path={scratch_path}/{input_base}
-#input_base=/users/jpm590/scratch/{input_base}
+scratch_path=/users/jpm590/scratch
+hermes_path=/users/jpm590/neutralimit_gcc12_9497476/hermes-3/build-mc-master
+
+executable=$hermes_path/hermes-3
+input_path=$scratch_path/{input_base}
 
 DRY_RUN="${{DRY_RUN:-${{dryrun:-false}}}}"
 
@@ -37,16 +36,22 @@ if [ "$DRY_RUN" = true ]; then
         echo "[DRY RUN] ERROR: $input_path/BOUT.inp not found." >&2
         exit 1
     fi
-    if [ ! -f "
+
+    grid_file=$(grep -Po '(?<=")[^"]*\.nc(?=")' "$input_path/BOUT.inp")
+    echo "[DRY RUN] Check the grid file name in BOUT.inp: $grid_file"
+    
+    if [ ! -f "$hermes_path/$grid_file" ]; then
+        echo "[DRY RUN] ERROR: $hermes_path/$grid_file not found." >&2
+        exit 1
+    fi
+
+    echo "[DRY RUN] $grid_file found."
     echo "[DRY RUN] BOUT.inp found."
-    echo "[DRY RUN] Would run: {runcommand}"
+    echo "[DRY RUN] Would run: \n {runcommand}"
+    
     exit 0
 fi
 
-# if [ ! -f "$input_path/BOUT.inp" ]; then
-#     echo "ERROR: $input_path/BOUT.inp not found." >&2
-#     exit 1
-# fi
 
 {runcommand}
 """
@@ -92,7 +97,7 @@ def main():
         input_base=args.input_base,
         restart_suffix=restart_suffix,
         append_suffix=append_suffix,
-        runcommand = f'mpirun -np {total_cores} "$hermes_path" -d "$input_base" {restart_suffix} {append_suffix}'
+        runcommand = f'mpirun -np {total_cores} "$executable" -d "$input_path" {restart_suffix} {append_suffix}'
         #ntasks=args.ntasks,
         #cpus_per_task=args.cpus_per_task,
     )
