@@ -6,6 +6,7 @@ import stat
 import subprocess
 
 scratch_path="/users/jpm590/scratch"
+hermes_path="/users/jpm590/neutralimit_gcc12_9497476/hermes-3/build-mc-master"
 
 TEMPLATE = """#!/bin/bash
 #
@@ -24,25 +25,28 @@ set -e
 module purge
 source /users/jpm590/neutralimit_gcc12_9497476/bout.env
 
-hermes_path=/users/jpm590/neutralimit_gcc12_9497476/hermes-3/build-mc-master/hermes-3
-input_base=/users/jpm590/scratch/{input_base}
+executable={hermes_path}/hermes-3
+# hermes_path=/users/jpm590/neutralimit_gcc12_9497476/hermes-3/build-mc-master/hermes-3
+input_path={scratch_path}/{input_base}
+#input_base=/users/jpm590/scratch/{input_base}
 
 DRY_RUN="${{DRY_RUN:-${{dryrun:-false}}}}"
 
 if [ "$DRY_RUN" = true ]; then
-    if [ ! -f "$input_base/BOUT.inp" ]; then
-        echo "[DRY RUN] ERROR: $input_base/BOUT.inp not found." >&2
+    if [ ! -f "$input_path/BOUT.inp" ]; then
+        echo "[DRY RUN] ERROR: $input_path/BOUT.inp not found." >&2
         exit 1
     fi
+    if [ ! -f "
     echo "[DRY RUN] BOUT.inp found."
     echo "[DRY RUN] Would run: {runcommand}"
     exit 0
 fi
 
-if [ ! -f "$input_base/BOUT.inp" ]; then
-    echo "ERROR: $input_base/BOUT.inp not found." >&2
-    exit 1
-fi
+# if [ ! -f "$input_path/BOUT.inp" ]; then
+#     echo "ERROR: $input_path/BOUT.inp not found." >&2
+#     exit 1
+# fi
 
 {runcommand}
 """

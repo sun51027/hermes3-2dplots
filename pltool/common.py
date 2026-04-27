@@ -101,6 +101,9 @@ def read_files(input_ids):
     short_names = [name[len(prefix):] for name in expanded_ids]
     print(short_names)
 
+    # If you want to type on your own
+    # short_names = ["decaylen", "neumann","neumann_nowallpump"]
+
     # Build toload
     toload = []
     for i, path in enumerate(expanded_ids):
@@ -117,7 +120,7 @@ def read_files(input_ids):
             )
         )
 
-        print(file_name)
+        # print(file_name)
 
     cs = {}
     for case in toload:
@@ -156,8 +159,10 @@ def setup_matplotlib() -> None:
     plt.rcParams["axes.labelsize"] = 13
     plt.rcParams["axes.titlesize"] = 13
     plt.rcParams["lines.linewidth"] = 1.5
+    # If compare multiple files
+    # plt.rcParams["axes.prop_cycle"] = plt.cycler(color=plt.cm.Dark2.colors)
 
     # Legend
     plt.rcParams["legend.frameon"] = True  # do you want the frame or not
-    plt.rcParams["legend.fontsize"] =  9
+    plt.rcParams["legend.fontsize"] =  13
 
