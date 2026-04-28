@@ -50,7 +50,11 @@ def build_base_parser():
     p.add_argument("-p", "--region_pol",  type=str, default="outer_lower", help="Must specify sepadd/sepdist ... for more see doc")
     p.add_argument("--sepadd",  type=int, default=1, help="Index of the SOL ring based on nx. Default SOL ring = 1")
     p.add_argument("-s", "--scale",  type=str, default="linear", help="linear or log")
-    # p.add_argument("--isolps", type=str, help="Path to SOLPS's balance.nc")
+    p.add_argument("-m", "--mode",  
+            required=True,
+            nargs="+",
+            type=str, 
+            help="benchmark? polygon? multifiles? multi_benchmark?")
 
     return p
 
