@@ -66,9 +66,9 @@
 # python3 make_plot.py -i 260419_reproduce_1e20_neumann_NV_nowallpump -o 260419_reproduce_1e20_neumann_NV_nowallpump -r omp -p outer_lower
 # python3 make_plot.py -i 260417_reproduce_1e20_neumann_NV -o 260421_reproduce_1e20_neumann_NV -r omp -p outer_lower
 # python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump -o 260427_reproduce_1e21_neumann_nowallpump -r omp -p outer_lower
-python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump 260417_reproduce_1e20_neumann_NV -in 1e21 1e20 -o 260428_reproduce1e20_1e21_compare -r omp -p outer_lower -m  multifiles
+# python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump 260421_reproduce_1e20_neumann_nowallpump -in 1e21 1e20 -o 260429_1e20_1e21_compare -r omp -p outer_lower -m  multifiles
 # python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump 260417_reproduce_1e20_neumann_NV -in 1e20 -o 260428_reproduce1e20_1e21_compare -r omp -p outer_lower -m  multifiles
-# python3 make_plot.py -i 260417_reproduce_1e20_neumann_NV  -o 260428_reproduce1e20_1e21_compare -r omp -p outer_lower -m  multifiles
+python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump  -o 260429_1e21_benchmark -r omp -p outer_lower -m benchmark 
 
 
 # python3 make_plot.py -i 260407_pump_95 -o 260418_pump_95 -r omp -p outer_lower

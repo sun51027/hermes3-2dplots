@@ -1,7 +1,7 @@
 # from pltool.plotting_single import run_single_plots
 from pltool.plotting_multi import run_multi_plots 
-from pltool.plotting_multi_files import run_multifiles_plots 
-from pltool.plotting_polygon import run_polygon 
+from pltool.plotting_multi_files import * 
+from pltool.plotting_polygon import *
 from pltool.benchmark import *
 from pltool.common import *
 import time, os
@@ -23,15 +23,19 @@ if __name__ == "__main__":
         parser.error(f"Number of file name is not correct, with {len(args.input)} files != {len(args.input_name)} name. \n")
 
     else:
+        # If everything is correct, start to read Hermes-3
         max_len = max(len(name) for name in args.input)
         if max_len > 1 and args.input_name:
             print("Multiplfe files and its corresponding name:")
             for idx, f in enumerate(args.input):
                 print(f"{idx}: {args.input[idx]:<{max_len}} -> {args.input_name[idx]}")
             print("\n")
+            case = read_files(args.input, args.input_name)
+        else:
+            case = read_files(args.input)
 
-    # Read Hermes-3 case 
-    case = read_files(args.input)
+    # # Read Hermes-3 case 
+    # case = read_files(args.input, args.input_name)
 
     # Read SOLPS case 
     balance = read_solps_balance()
@@ -46,7 +50,7 @@ if __name__ == "__main__":
 
     ## Run program
     if "benchmark" in args.mode:
-        print("========================================")
+        print("========================================\n")
         print("Benchmark against single file mode")
         print("========================================")
         sepadd_array = [1]
@@ -54,15 +58,17 @@ if __name__ == "__main__":
         plot_bm_profiles_fieldline(case, balance, args.region_pol, sepadd_array, figures_png_path)
 
     if "multifiles" in args.mode:
-        print("========================================")
+        print("========================================\n")
         print("Compare multiple files mode")
         print("========================================")
+        sepadd_array = 1
+        plot_multifiles_profiles_fieldline(case, args.region_pol, sepadd_array, figures_png_path)
     if "polygon" in args.mode:
-        print("========================================")
+        print("========================================\n")
         print("Plot two-dim polygon mode")
         print("========================================")
     if "multi_benchmark" in args.mode:
-        print("========================================")
+        print("========================================\n")
         print("Benchmark against multiple files mode")
         print("========================================")
     # run_multi_plots()

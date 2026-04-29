@@ -85,7 +85,7 @@ def build_base_parser():
 
     return p
 
-def read_files(input_ids):
+def read_files(input_ids, input_name=None):
 
     case_dir = "/users/jpm590/scratch/"
     db = CaseDB(
@@ -101,8 +101,6 @@ def read_files(input_ids):
 
     for pattern in input_ids:
 
-
-
         exact_path = os.path.join(case_dir, pattern)
         if any(c in pattern for c in ["*", "?", "["]):
             search_pattern = exact_path
@@ -114,8 +112,8 @@ def read_files(input_ids):
             search_pattern = exact_path + "*"
             matches = glob.glob(search_pattern)
 
-        print("Searching:", search_pattern)
-        print("Matches:", matches)
+        # print("Searching:", search_pattern)
+        # print("Matches:", matches)
 
         if matches:
             # keep only case names, not full path
@@ -128,9 +126,9 @@ def read_files(input_ids):
 
 
     # Reduce common prefix, get the short names for plots
-    prefix = os.path.commonprefix(expanded_ids)
-    short_names = [name[len(prefix):] for name in expanded_ids]
-    print(short_names)
+    # prefix = os.path.commonprefix(expanded_ids)
+    # short_names = [name[len(prefix):] for name in expanded_ids]
+    # print(short_names)
 
     # If you want to type on your own
     # short_names = ["decaylen", "neumann","neumann_nowallpump"]
@@ -141,15 +139,30 @@ def read_files(input_ids):
 
         file_name = os.path.basename(path)
 
-        toload.append(
-            dict(
-                name=short_names[i],          # <-- filename here
-                id=file_name,            # or keep full path if needed
-                unnormalise_geom=True,
-                use_xhermes=True,
-                squash=True
+        if input_name:
+            print(f"input name[{i}] = {input_name[i]}")
+            toload.append(
+                dict(
+                    name=input_name[i],          # <-- filename here
+                    # name=expanded_ids[i],          # <-- filename here
+                    # name=short_names[i],          # <-- filename here
+                    id=file_name,            # or keep full path if needed
+                    unnormalise_geom=True,
+                    use_xhermes=True,
+                    squash=True
+                )
             )
-        )
+        else: 
+            toload.append(
+                dict(
+                    name=expanded_ids[i],          # <-- filename here
+                    # name=short_names[i],          # <-- filename here
+                    id=file_name,            # or keep full path if needed
+                    unnormalise_geom=True,
+                    use_xhermes=True,
+                    squash=True
+                )
+            )
 
         # print(file_name)
 
