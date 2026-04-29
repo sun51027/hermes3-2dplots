@@ -25,8 +25,6 @@ from hermes3.selectors import *
 
 def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_path):
 
-    # Plot sol ring = 1 ~ 5 on the same plot for each species separately
-    # With x-point for each ring
 
     plots = [
         ("Te",      "e temperature",        "T [eV]",                    False),
@@ -119,43 +117,66 @@ def plot_bm_profiles_radial(cs, bal, region_rad, figures_png_path):
     ]
    
     ncols = len(plots)
-    print(f"ncols = {ncols}")
+    print(f"Number of plots = {ncols}")
     
     fig, ax = plt.subplots(int(ncols/3), 3, figsize= (10, 10), squeeze=False)
 
-    case_name = list(cs.keys())[0]
-    ds = cs[case_name].ds.isel(t=-1)
-    
+
+    # Loop through all the profiles
     for idx, (param, title, ylabel, logy) in enumerate(plots):
-        df = get_1d_radial_data(ds, params=[p[0] for p in plots], region=region_rad)
-        df_solps = bal.get_1d_radial_data(params=[p[0] for p in plots], region=region_rad)
 
         r, c = divmod(idx, 3)
         axi = ax[r,c]
-        # Hermes-3 
-        axi.plot(df["Srad"], np.abs(df[param]), label=f"Hermes-3")
+
+        # Read SOLPS first (only once if multi Hermes-3 files)
         # SOLPS dist = Srad
+        df_solps = bal.get_1d_radial_data(params=[p[0] for p in plots], region=region_rad)
         axi.plot(df_solps["dist"], np.abs(df_solps[param]), label=f"SOLPS", ls = "--")
 
-        axi.set_title(title)
-        axi.set_ylabel(ylabel)
-        axi.set_xlabel("")
-        axi.grid(True, alpha=0.7)
+        # Loop through all profiles for each file
+        for case_name, case_obj in cs.items():
+            print(f"Plotting {case_name} with {title}...")
+            # case_name = list(cs.keys())[0] # if input multiple files, select the first one
+            ds = cs[case_name].ds.isel(t=-1)
+            df = get_1d_radial_data(ds, params=[p[0] for p in plots], region=region_rad)
+
+            # Hermes-3 
+            axi.plot(df["Srad"], np.abs(df[param]), label=f"Hermes-3 {case_name}")
     
-        if logy:
-            axi.set_yscale("log")
+            axi.set_title(title)
+            axi.set_ylabel(ylabel)
+            axi.set_xlabel("")
+            axi.grid(True, alpha=0.7)
+        
+            if logy:
+                axi.set_yscale("log")
 
 
+
+    
+    # for i, axi in enumerate(ax.flat):
+    #     axi.legend()
+        
+    #     if i == ncols-1 or i == ncols-2 or i == ncols-3:
+            # axi.set_xlabel("$X-X_{sep}$ [m]")
+
+    handles, labels = ax[0, 0].get_legend_handles_labels()
+    print(handles, labels)
+    
+    fig.legend(handles, labels, loc='lower center',ncol=3) 
+               # ncol=min(len(cs), 4), frameon=True)
     
     for i, axi in enumerate(ax.flat):
-        axi.legend()
-        
-        if i == ncols-1 or i == ncols-2 or i == ncols-3:
+        if i >= len(plots):
+            axi.axis('off')
+            continue
+            
+        if i >= (len(plots) - 3):
             axi.set_xlabel("$X-X_{sep}$ [m]")
-
-    plt.tight_layout()
+    
+    plt.tight_layout(rect=[0, 0.05, 1, 1]) 
+    plt.show()
     fig.savefig(f"{figures_png_path}/benchmark_radial.png")
-    # fig.savefig(f"{figures_png_path}/benchmark_radial_linear.png")
 
 def plot_bm_plasma_overlap(cs, bal, region_pol, region_rad, figures_png_path):
 

@@ -55,7 +55,7 @@ if __name__ == "__main__":
         print("========================================")
         sepadd_array = [1]
         plot_bm_profiles_radial(case, balance, args.region_rad, figures_png_path)
-        plot_bm_profiles_fieldline(case, balance, args.region_pol, sepadd_array, figures_png_path)
+        # plot_bm_profiles_fieldline(case, balance, args.region_pol, sepadd_array, figures_png_path)
 
     if "multifiles" in args.mode:
         print("========================================\n")
