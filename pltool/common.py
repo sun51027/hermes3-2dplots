@@ -45,11 +45,38 @@ def build_base_parser():
         type=str,
         help="Input file IDs or patterns (e.g. 260207*)"
     )
-    p.add_argument("-o", "--output", required=True, type=str, help="Path to plots folder, better to use date as note, e.g. YYMMDD")
-    p.add_argument("-r", "--region_rad",  type=str, default="omp", help="omp, {inner/outer}_{lower/upper}_target ... for more see doc")
-    p.add_argument("-p", "--region_pol",  type=str, default="outer_lower", help="Must specify sepadd/sepdist ... for more see doc")
-    p.add_argument("--sepadd",  type=int, default=1, help="Index of the SOL ring based on nx. Default SOL ring = 1")
-    p.add_argument("-s", "--scale",  type=str, default="linear", help="linear or log")
+    # If multiple files to be compared, input the legend name manually
+    p.add_argument(
+        "-in", "--input_name",
+        required=False,
+        nargs="+",                 # <-- key change
+        type=str,
+        help="Input file names for printing on plot"
+    )
+    p.add_argument("-o", "--output", 
+            required=True, 
+            type=str, 
+            help="Path to plots folder, better to use date as note, e.g. YYMMDD"
+            )
+    p.add_argument("-r", "--region_rad",  
+            type=str, 
+            default="omp", 
+            help="omp, {inner/outer}_{lower/upper}_target ... for more see doc"
+            )
+    p.add_argument("-p", "--region_pol",  
+            type=str, 
+            default="outer_lower", 
+            help="Must specify sepadd/sepdist ... for more see doc"
+            )
+    p.add_argument("--sepadd",  
+            type=int, 
+            default=1, 
+            help="Index of the SOL ring based on nx. Default SOL ring = 1"
+            )
+    p.add_argument("-s", "--scale",  
+            type=str, 
+            default="linear", 
+            help="linear or log")
     p.add_argument("-m", "--mode",  
             required=True,
             nargs="+",

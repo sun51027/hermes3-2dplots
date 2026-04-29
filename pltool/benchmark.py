@@ -47,12 +47,12 @@ def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_
     xpt_spar_hlist = []
     xpt_spar_slist = []
     for ring in idx_ring_array:
-        print(f"Plotting {ring} ....")
         # df = get_1d_poloidal_data(ds, params=[p[0] for p in plots], region=region_pol, sepadd=ring)
         # df_solps = bal.get_1d_poloidal_data(params=[p[0] for p in plots], region=region_pol, sepadd=ring)
         df = get_1d_poloidal_data(ds, params=[p[0] for p in plots], region=region_pol, sepadd=ring, target_first=True)
         df_solps = bal.get_1d_poloidal_data(params=[p[0] for p in plots], region=region_pol, sepadd=ring, target_first=True)
 
+        ## Find the x-point
         local_Rmin_h = np.argmin(df["R"].values) # return location
         print(f"Hermes location of Rmin: {local_Rmin_h}, value: {np.min(df['R'].values)}")
         local_Rmin_solps = np.argmin(df_solps["R"].values) # return location
