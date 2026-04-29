@@ -182,6 +182,22 @@ def read_solps_balance():
     return bal
 
 
+def format_legend_and_axes(fig, ax, n_plots, xlabel):
+    handles, labels = ax[0, 0].get_legend_handles_labels()
+    print(handles, labels)
+    
+    fig.legend(handles, labels, loc='lower center', ncol=3)
+    
+    for i, axi in enumerate(ax.flat):
+        if i >= n_plots:
+            axi.axis('off')
+            continue
+            
+        if i >= (n_plots - 3):
+            axi.set_xlabel(xlabel)
+            
+    plt.tight_layout(rect=[0, 0.02, 1, 1])
+
 def setup_matplotlib() -> None:
     """
     Central place for Matplotlib rcParams / styling.

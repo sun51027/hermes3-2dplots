@@ -46,8 +46,6 @@ if __name__ == "__main__":
         os.makedirs(figures_png_path)
 
 
-
-
     ## Run program
     if "benchmark" in args.mode:
         print("========================================\n")
@@ -55,7 +53,7 @@ if __name__ == "__main__":
         print("========================================")
         sepadd_array = [1]
         plot_bm_profiles_radial(case, balance, args.region_rad, figures_png_path)
-        # plot_bm_profiles_fieldline(case, balance, args.region_pol, sepadd_array, figures_png_path)
+        plot_bm_profiles_fieldline(case, balance, args.region_pol, sepadd_array, figures_png_path)
 
     if "multifiles" in args.mode:
         print("========================================\n")
@@ -63,18 +61,12 @@ if __name__ == "__main__":
         print("========================================")
         sepadd_array = 1
         plot_multifiles_profiles_fieldline(case, args.region_pol, sepadd_array, figures_png_path)
+        plot_multifiles_profiles_radial(case, args.region_rad, figures_png_path)
     if "polygon" in args.mode:
         print("========================================\n")
         print("Plot two-dim polygon mode")
         print("========================================")
-    if "multi_benchmark" in args.mode:
-        print("========================================\n")
-        print("Benchmark against multiple files mode")
-        print("========================================")
-    # run_multi_plots()
-    # run_multifiles_plots()
-    # run_polygon()
-    # run_benchmark()
+
     end_time = time.time()
     print(f"Total runtime: {end_time - start_time:.2f} seconds")
     

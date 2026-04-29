@@ -1,4 +1,4 @@
-from .common import build_base_parser, read_files, setup_matplotlib
+from .common import build_base_parser, read_files, setup_matplotlib, format_legend_and_axes
 import numpy as np
 import matplotlib
 import argparse
@@ -50,16 +50,14 @@ def plot_multifiles_profiles_fieldline(cs, region_pol, ring, figures_png_path):
     
 
     fig, ax = plt.subplots(int(ncols/3), 3, figsize= (10, 10), squeeze=False)
-    for case_name, case_obj in cs.items():
-        print(case_name)
+    for idx, (param, title, ylabel, logy) in enumerate(plots):
+        r, c = divmod(idx, 3)
+        axi = ax[r,c]
 
-        ds = case_obj.ds.isel(t=-1)
-        df = get_1d_poloidal_data(ds, params=[p[0] for p in plots] + ["Bpxy"], region=region_pol, sepadd=ring, target_first=True)
-       
-
-        for idx, (param, title, ylabel, logy) in enumerate(plots):
-            r, c = divmod(idx, 3)
-            axi = ax[r,c]
+        for case_name, case_obj in cs.items():
+            print(f"Plotting {case_name} with {title}...")
+            ds = case_obj.ds.isel(t=-1)
+            df = get_1d_poloidal_data(ds, params=[p[0] for p in plots] + ["Bpxy"], region=region_pol, sepadd=ring, target_first=True)
             
             axi.plot(np.abs(df["Spar"]), np.abs(df[param]), label=f"{case_name}")
             axi.set_title(title)
@@ -69,31 +67,8 @@ def plot_multifiles_profiles_fieldline(cs, region_pol, ring, figures_png_path):
             if logy:
                 axi.set_yscale("log")
     
-    # 1. 取得最後一個 subplot 的 handles 和 labels (假設所有圖的 label 都一樣)
-    handles, labels = ax[0, 0].get_legend_handles_labels()
-    print(handles, labels)
-    
-    # 2. 在全圖底部建立一個統一的圖例
-    # ncol 可以設定成你有幾個 case 就排成幾列，或是固定一個數字
-    # fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(1,1), 
-    fig.legend(handles, labels, loc='lower center',) 
-               # ncol=min(len(cs), 4), frameon=True)
-    
-    # 3. 遍歷所有軸，設定最後一列的 xlabel，並確保不要個別顯示 legend
-    for i, axi in enumerate(ax.flat):
-        # 如果超出 plots 數量的空白子圖，可以直接隱藏
-        if i >= len(plots):
-            axi.axis('off')
-            continue
-            
-        # 只給最後三張圖（最後一列）加上 xlabel
-        if i >= (len(plots) - 3):
-            axi.set_xlabel("$S_{\\parallel}$")
-    
-    # 4. 調整佈局，留出底部空間給圖例 (bottom=0.1 左右)
-    # plt.tight_layout() 
-    plt.tight_layout(rect=[0, 0.02, 1, 1]) 
-    plt.show()
+    # Legend setting
+    format_legend_and_axes(fig, ax, len(plots), "$S_{\\parallel}$")
     fig.savefig(f"{figures_png_path}/multifiles_rings_profiles.png")
 
 def plot_multifiles_profiles_radial(cs, region_rad, figures_png_path):
@@ -120,15 +95,14 @@ def plot_multifiles_profiles_radial(cs, region_rad, figures_png_path):
     fig, ax = plt.subplots(int(ncols/3), 3, figsize= (10, 10), squeeze=False)
 
     
-    for case_name, case_obj in cs.items():
-        print(case_name)
-        ds = case_obj.ds.isel(t=-1)
+    for idx, (param, title, ylabel, logy) in enumerate(plots):
+        r, c = divmod(idx, 3)
+        axi = ax[r,c]
 
-        for idx, (param, title, ylabel, logy) in enumerate(plots):
-
+        for case_name, case_obj in cs.items():
+            print(f"Plotting {case_name} with {title}...")
+            ds = case_obj.ds.isel(t=-1)
             df = get_1d_radial_data(ds, params=[p[0] for p in plots], region=region_rad)
-            r, c = divmod(idx, 3)
-            axi = ax[r,c]
             
             axi.plot(df["Srad"], np.abs(df[param]), label=f"{case_name}")
             axi.set_title(title)
@@ -142,20 +116,7 @@ def plot_multifiles_profiles_radial(cs, region_rad, figures_png_path):
 
     
 
-    handles, labels = ax[0, 0].get_legend_handles_labels()
-    print(handles, labels)
-    
-    fig.legend(handles, labels, loc='lower center',) 
-    
-    for i, axi in enumerate(ax.flat):
-        if i >= len(plots):
-            axi.axis('off')
-            continue
-            
-        if i >= (len(plots) - 3):
-            axi.set_xlabel("$X-X_{sep} [m]$")
-    
-    plt.tight_layout(rect=[0, 0.02, 1, 1]) 
+    format_legend_and_axes(fig, ax, len(plots), "$X-X_{sep} [m]$")
     plt.show()
     fig.savefig(f"{figures_png_path}/multifiles_radial_profiles.png")
 

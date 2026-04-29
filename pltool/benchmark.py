@@ -1,4 +1,4 @@
-from .common import build_base_parser, read_files, setup_matplotlib, read_solps_balance
+from .common import build_base_parser, read_files, setup_matplotlib, read_solps_balance, format_legend_and_axes
 
 import numpy as np
 import matplotlib
@@ -38,61 +38,62 @@ def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_
         ("Pd",      "d pressure",            "pressure [Pa]",            True),
         ]
     ncols = len(plots)
+    print(f"Number of plots = {ncols}")
     fig, ax = plt.subplots(int(ncols/3), 3, figsize= (10, 10), squeeze=False)
 
     case_name = list(cs.keys())[0]
     ds = cs[case_name].ds.isel(t=-1)
     xpt_spar_hlist = []
     xpt_spar_slist = []
+
     for ring in idx_ring_array:
-        # df = get_1d_poloidal_data(ds, params=[p[0] for p in plots], region=region_pol, sepadd=ring)
-        # df_solps = bal.get_1d_poloidal_data(params=[p[0] for p in plots], region=region_pol, sepadd=ring)
-        df = get_1d_poloidal_data(ds, params=[p[0] for p in plots], region=region_pol, sepadd=ring, target_first=True)
-        df_solps = bal.get_1d_poloidal_data(params=[p[0] for p in plots], region=region_pol, sepadd=ring, target_first=True)
-
-        ## Find the x-point
-        local_Rmin_h = np.argmin(df["R"].values) # return location
-        print(f"Hermes location of Rmin: {local_Rmin_h}, value: {np.min(df['R'].values)}")
-        local_Rmin_solps = np.argmin(df_solps["R"].values) # return location
-        print(f"SOLPS  location of Rmin: {local_Rmin_solps}, value: {np.min(df_solps['R'].values)}")
-
-        xpt_spar_hlist.append(float(df["Spar"][local_Rmin_h]))
-        xpt_spar_slist.append(float(df_solps["Spar"][local_Rmin_solps]))
-        print(f"The coordinate is: {df["Spar"][local_Rmin_h]}")
 
         for idx, (param, title, ylabel, logy) in enumerate(plots):
             r, c = divmod(idx, 3)
             axi = ax[r,c]
 
-            # Hermes-3 
-            # axi.plot(np.abs(df["Spar"][::-1]), np.abs(df[param]), label=f"Hermes-3")
-            axi.plot(np.abs(df["Spar"]), np.abs(df[param]), label=f"Hermes-3")
-
             # SOLPS
+            df_solps = bal.get_1d_poloidal_data(params=[p[0] for p in plots], region=region_pol, sepadd=ring, target_first=True)
             axi.plot(df_solps["Spar"], np.abs(df_solps[param]), label=f"SOLPS", ls = "--")
-            # axi.plot(df_solps["Spar"][::-1], np.abs(df_solps[param]), label=f"SOLPS", ls = "--")
 
-            axi.set_title(title)
-            axi.set_ylabel(ylabel)
-            axi.set_xlabel("")
-            axi.grid(True, alpha=0.7)
+            # Find SOLPS's x-point
+            local_Rmin_solps = np.argmin(df_solps["R"].values) # return location
+            # print(f"SOLPS  location of Rmin: {local_Rmin_solps}, value: {np.min(df_solps['R'].values)}")
+            xpt_spar_slist.append(float(df_solps["Spar"][local_Rmin_solps]))
+
+            for case_name, case_obj in cs.items():
+                print(f"Plotting {case_name} with {title}...")
+                # case_name = list(cs.keys())[0] # if input multiple files, select the first one
+                ds = cs[case_name].ds.isel(t=-1)
+                df = get_1d_poloidal_data(ds, params=[p[0] for p in plots], region=region_pol, sepadd=ring, target_first=True)
+    
+                # Find Hermes-3's x-point
+                local_Rmin_h = np.argmin(df["R"].values) # return location
+                # print(f"Hermes location of Rmin: {local_Rmin_h}, value: {np.min(df['R'].values)}")
+                xpt_spar_hlist.append(float(df["Spar"][local_Rmin_h]))
+                # print(f"The coordinate is: {df["Spar"][local_Rmin_h]}")
         
-            if logy:
-                axi.set_yscale("log")
+                # Hermes-3 
+                axi.plot(np.abs(df["Spar"]), np.abs(df[param]), label=f"Hermes-3 {case_name}")
+                axi.set_title(title)
+                axi.set_ylabel(ylabel)
+                axi.set_xlabel("")
+                axi.grid(True, alpha=0.7)
+                
+                if logy:
+                    axi.set_yscale("log")
 
     xpt_h = min(xpt_spar_hlist)
     xpt_s = min(xpt_spar_hlist)
-    print(xpt_h)
-    
+    # print(xpt_h)
+   
+    # Plot x-point vertical line
     for i, axi in enumerate(ax.flat):
-        axi.legend()
         axi.axvline(xpt_h, color='r', alpha = 0.2)
         axi.axvline(xpt_s, color='r', alpha = 0.2, ls = '--')
-        
-        if i == ncols-1 or i == ncols-2 or i == ncols-3:
-            axi.set_xlabel("$S_{\\parallel}$")
-
-    plt.tight_layout()
+    
+    # Legend setting
+    format_legend_and_axes(fig, ax, len(plots), "$S_{\\parallel}$")
     fig.savefig(f"{figures_png_path}/benchmark_rings.png")
 
 
@@ -151,30 +152,7 @@ def plot_bm_profiles_radial(cs, bal, region_rad, figures_png_path):
             if logy:
                 axi.set_yscale("log")
 
-
-
-    
-    # for i, axi in enumerate(ax.flat):
-    #     axi.legend()
-        
-    #     if i == ncols-1 or i == ncols-2 or i == ncols-3:
-            # axi.set_xlabel("$X-X_{sep}$ [m]")
-
-    handles, labels = ax[0, 0].get_legend_handles_labels()
-    print(handles, labels)
-    
-    fig.legend(handles, labels, loc='lower center',ncol=3) 
-               # ncol=min(len(cs), 4), frameon=True)
-    
-    for i, axi in enumerate(ax.flat):
-        if i >= len(plots):
-            axi.axis('off')
-            continue
-            
-        if i >= (len(plots) - 3):
-            axi.set_xlabel("$X-X_{sep}$ [m]")
-    
-    plt.tight_layout(rect=[0, 0.05, 1, 1]) 
+    format_legend_and_axes(fig, ax, len(plots), "$X-X_{sep}$ [m]")
     plt.show()
     fig.savefig(f"{figures_png_path}/benchmark_radial.png")
 
