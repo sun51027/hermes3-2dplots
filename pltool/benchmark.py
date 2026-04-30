@@ -122,62 +122,66 @@ def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_
 
 
 def plot_bm_profiles_radial(cs, bal, region_rad, figures_png_path):
-    plots = [
-        ("Te",      "e temperature",        "T [eV]",                    False),
-        ("Td+",     "d+ temperature",       "T [eV]",                    False),
-        ("Td",      "d temperature",        "T [eV]",                    False),
-        ("Ne",      "e density",            "density [$m^{-3}$]",            True),
-        ("Nd+",     "d+ density",           "density [$m^{-3}$]",            True),
-        ("Nd",      "d density",            "density [$m^{-3}$]",            True),
-        ("Pe",      "e pressure",            "pressure [Pa]",            True),
-        ("Pd+",     "d+ pressure",           "pressure [Pa]",            True),
-        ("Pd",      "d pressure",            "pressure [Pa]",            True),
-        # ("Sd+_rec", "Recombination",        "Rate [$m^{-3} s^{-1}$]",          True),
-        # ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",          True),
-        # ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True),
-        # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
-        # ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
-        # ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
-    ]
+    plots = {
+        "state_var": [
+            ("Te",  "e temperature", "T [eV]",            False),
+            ("Td+", "d+ temperature","T [eV]",            False),
+            ("Td",  "d temperature", "T [eV]",            False),
+            ("Ne",  "e density",     "density [$m^{-3}$]", True),
+            ("Nd+", "d+ density",    "density [$m^{-3}$]", True),
+            ("Nd",  "d density",     "density [$m^{-3}$]", True),
+            ("Pe",  "e pressure",    "pressure [Pa]",      True),
+            ("Pd+", "d+ pressure",   "pressure [Pa]",      True),
+            ("Pd",  "d pressure",    "pressure [Pa]",      True),
+        ],
+        "reactions": [
+            ("Sd+_rec", "Recombination", "Rate [$m^{-3} s^{-1}$]", True),
+            ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",          True),
+            ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True),
+            # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            # ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            # ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
+        ]
+    }
    
-    ncols = len(plots)
-    print(f"Number of plots = {ncols}")
-    
-    fig, ax = plt.subplots(int(ncols/3), 3, figsize= (10, 10), squeeze=False)
-
-
-    # Loop through all the profiles
-    for idx, (param, title, ylabel, logy) in enumerate(plots):
-
-        r, c = divmod(idx, 3)
-        axi = ax[r,c]
-
-        # Read SOLPS first (only once if multi Hermes-3 files)
-        # SOLPS dist = Srad
-        df_solps = bal.get_1d_radial_data(params=[p[0] for p in plots], region=region_rad)
-        axi.plot(df_solps["dist"], np.abs(df_solps[param]), label=f"SOLPS", ls = "--")
-
-        # Loop through all profiles for each file
-        for case_name, case_obj in cs.items():
-            print(f"Plotting {case_name} with {title}...")
-            # case_name = list(cs.keys())[0] # if input multiple files, select the first one
-            ds = cs[case_name].ds.isel(t=-1)
-            df = get_1d_radial_data(ds, params=[p[0] for p in plots], region=region_rad)
-
-            # Hermes-3 
-            axi.plot(df["Srad"], np.abs(df[param]), label=f"Hermes-3 {case_name}")
-    
-            axi.set_title(title)
-            axi.set_ylabel(ylabel)
-            axi.set_xlabel("")
-            axi.grid(True, alpha=0.7)
+    for category, items in plots.items():
+        nitems = len(items)
+        print(f"Number of plots = {nitems} in category {category}")
         
-            if logy:
-                axi.set_yscale("log")
+        cols = 3
+        rows = math.ceil(nitems / cols)
+        fig, ax = plt.subplots(rows, cols, figsize=(12, 4 * rows), squeeze=False)
 
-    format_legend_and_axes(fig, ax, len(plots), "$X-X_{sep}$ [m]")
-    plt.show()
-    fig.savefig(f"{figures_png_path}/benchmark_radial.png")
+        # Loop through all the profiles
+        for idx, (param, title, ylabel, logy) in enumerate(items):
+
+            r, c = divmod(idx, 3)
+            axi = ax[r,c]
+
+            # Read SOLPS first (only once if multi Hermes-3 files)
+            # SOLPS dist = Srad
+            df_solps = bal.get_1d_radial_data(params=[p[0] for p in items], region=region_rad)
+            axi.plot(df_solps["dist"], np.abs(df_solps[param]), label=f"SOLPS", ls = "--")
+
+            # Loop through all profiles for each file
+            for case_name, case_obj in cs.items():
+                print(f"Plotting {case_name} with {title}...")
+                ds = cs[case_name].ds.isel(t=-1)
+                df = get_1d_radial_data(ds, params=[p[0] for p in items], region=region_rad)
+
+                # Hermes-3 
+                axi.plot(df["Srad"], np.abs(df[param]), label=f"Hermes-3 {case_name}")
+        
+                axi.set_title(title)
+                axi.set_ylabel(ylabel)
+                axi.set_xlabel("")
+                axi.grid(True, alpha=0.7)
+            
+                if logy:
+                    axi.set_yscale("log")
+
+        format_legend_and_axes(fig, ax, nitems, "$X-X_{sep}$ [m]")
+        fig.savefig(f"{figures_png_path}/benchmark_radial_{category}.png")
 
 def plot_bm_plasma_overlap(cs, bal, region_pol, region_rad, figures_png_path):
 

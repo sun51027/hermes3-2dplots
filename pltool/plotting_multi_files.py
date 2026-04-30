@@ -1,4 +1,5 @@
 from .common import build_base_parser, read_files, setup_matplotlib, format_legend_and_axes
+import math
 import numpy as np
 import matplotlib
 import argparse
@@ -27,98 +28,106 @@ def plot_multifiles_profiles_fieldline(cs, region_pol, ring, figures_png_path):
     # Plot sol ring = 1 ~ 5 on the same plot for each species separately
     # With x-point for each ring
 
-    plots = [
-        ("Te",      "e temperature",        "T [eV]",                    False),
-        ("Td+",     "d+ temperature",       "T [eV]",                    False),
-        ("Td",      "d temperature",        "T [eV]",                    False),
-        ("Ne",      "e density",            "density [$m^{-3}$]",            True),
-        ("Nd+",     "d+ density",           "density [$m^{-3}$]",            True),
-        ("Nd",      "d density",            "density [$m^{-3}$]",            True),
-        ("Pe",      "e pressure",            "pressure [$Pa$]",            True),
-        ("Pd+",     "d+ pressure",           "pressure [$Pa$]",            True),
-        ("Pd",      "d pressure",            "pressure [$Pa$]",            True),
-        # ("Sd+_rec", "Recombination",        "Rate [$m^{-3} s^{-1}$]",          True),
-        # ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",          True),
-        # ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True),
-        # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
-        # ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
-        # ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
-    ]
+    plots = {
+        "state_var": [
+            ("Te",  "e temperature", "T [eV]",            False),
+            ("Td+", "d+ temperature","T [eV]",            False),
+            ("Td",  "d temperature", "T [eV]",            False),
+            ("Ne",  "e density",     "density [$m^{-3}$]", True),
+            ("Nd+", "d+ density",    "density [$m^{-3}$]", True),
+            ("Nd",  "d density",     "density [$m^{-3}$]", True),
+            ("Pe",  "e pressure",    "pressure [Pa]",      True),
+            ("Pd+", "d+ pressure",   "pressure [Pa]",      True),
+            ("Pd",  "d pressure",    "pressure [Pa]",      True),
+        ],
+        "reactions": [
+            ("Sd+_rec", "Recombination", "Rate [$m^{-3} s^{-1}$]", True),
+            ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",          True),
+            ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True),
+            # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            # ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            # ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
+        ]
+    }
    
-    ncols = len(plots)
-    print(f"ncols = {ncols}")
-    
+    for category, items in plots.items():
+        nitems = len(items)
+        print(f"Number of plots = {nitems} in category {category}")
+        cols = 3
+        rows = math.ceil(nitems / cols)
+        fig, ax = plt.subplots(rows, cols, figsize=(12, 4 * rows), squeeze=False)
+        
+        for idx, (param, title, ylabel, logy) in enumerate(items):
+            r, c = divmod(idx, 3)
+            axi = ax[r,c]
 
-    fig, ax = plt.subplots(int(ncols/3), 3, figsize= (10, 10), squeeze=False)
-    for idx, (param, title, ylabel, logy) in enumerate(plots):
-        r, c = divmod(idx, 3)
-        axi = ax[r,c]
-
-        for case_name, case_obj in cs.items():
-            print(f"Plotting {case_name} with {title}...")
-            ds = case_obj.ds.isel(t=-1)
-            df = get_1d_poloidal_data(ds, params=[p[0] for p in plots] + ["Bpxy"], region=region_pol, sepadd=ring, target_first=True)
-            
-            axi.plot(np.abs(df["Spar"]), np.abs(df[param]), label=f"{case_name}")
-            axi.set_title(title)
-            axi.set_ylabel(ylabel)
-            axi.set_xlabel("")
-            axi.grid(True, alpha=0.7)
-            if logy:
-                axi.set_yscale("log")
-    
-    # Legend setting
-    format_legend_and_axes(fig, ax, len(plots), "$S_{\\parallel}$")
-    fig.savefig(f"{figures_png_path}/multifiles_rings_profiles.png")
+            for case_name, case_obj in cs.items():
+                print(f"Plotting {case_name} with {title}...")
+                ds = case_obj.ds.isel(t=-1)
+                df = get_1d_poloidal_data(ds, params=[p[0] for p in items] + ["Bpxy"], region=region_pol, sepadd=ring, target_first=True)
+                
+                axi.plot(np.abs(df["Spar"]), np.abs(df[param]), label=f"{case_name}")
+                axi.set_title(title)
+                axi.set_ylabel(ylabel)
+                axi.set_xlabel("")
+                axi.grid(True, alpha=0.7)
+                if logy:
+                    axi.set_yscale("log")
+        
+        # Legend setting
+        format_legend_and_axes(fig, ax, nitems, "$S_{\\parallel}$")
+        fig.savefig(f"{figures_png_path}/multifiles_rings_profiles_{category}.png")
 
 def plot_multifiles_profiles_radial(cs, region_rad, figures_png_path):
-    plots = [
-        ("Te",      "e temperature",        "T [eV]",                    False),
-        ("Td+",     "d+ temperature",       "T [eV]",                    False),
-        ("Td",      "d temperature",        "T [eV]",                    False),
-        ("Ne",      "e density",            "density [$m^{-3}$]",            True),
-        ("Nd+",     "d+ density",           "density [$m^{-3}$]",            True),
-        ("Nd",      "d density",            "density [$m^{-3}$]",            True),
-        ("Pe",      "e pressure",            "pressure [$Pa$]",            True),
-        ("Pd+",     "d+ pressure",           "pressure [$Pa$]",            True),
-        ("Pd",      "d pressure",            "pressure [$Pa$]",            True),
-        # ("Sd+_rec", "Recombination",        "Rate [$m^{-3} s^{-1}$]",          True),
-        # ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",          True),
-        # ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True),
-        # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
-        # ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
-        # ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
-    ]
+    plots = {
+        "state_var": [
+            ("Te",  "e temperature", "T [eV]",            False),
+            ("Td+", "d+ temperature","T [eV]",            False),
+            ("Td",  "d temperature", "T [eV]",            False),
+            ("Ne",  "e density",     "density [$m^{-3}$]", True),
+            ("Nd+", "d+ density",    "density [$m^{-3}$]", True),
+            ("Nd",  "d density",     "density [$m^{-3}$]", True),
+            ("Pe",  "e pressure",    "pressure [Pa]",      True),
+            ("Pd+", "d+ pressure",   "pressure [Pa]",      True),
+            ("Pd",  "d pressure",    "pressure [Pa]",      True),
+        ],
+        "reactions": [
+            ("Sd+_rec", "Recombination", "Rate [$m^{-3} s^{-1}$]", True),
+            ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",          True),
+            ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True),
+            # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            # ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            # ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
+        ]
+    }
    
-    ncols = len(plots)
-    
-    fig, ax = plt.subplots(int(ncols/3), 3, figsize= (10, 10), squeeze=False)
-
-    
-    for idx, (param, title, ylabel, logy) in enumerate(plots):
-        r, c = divmod(idx, 3)
-        axi = ax[r,c]
-
-        for case_name, case_obj in cs.items():
-            print(f"Plotting {case_name} with {title}...")
-            ds = case_obj.ds.isel(t=-1)
-            df = get_1d_radial_data(ds, params=[p[0] for p in plots], region=region_rad)
-            
-            axi.plot(df["Srad"], np.abs(df[param]), label=f"{case_name}")
-            axi.set_title(title)
-            axi.set_ylabel(ylabel)
-            axi.set_xlabel("")
-            axi.grid(True, alpha=0.7)
+    for category, items in plots.items():
+        nitems = len(items)
+        print(f"Number of plots = {nitems} in category {category}")
+        cols = 3
+        rows = math.ceil(nitems / cols)
+        fig, ax = plt.subplots(rows, cols, figsize=(12, 4 * rows), squeeze=False)
         
-            if logy:
-                axi.set_yscale("log")
+        for idx, (param, title, ylabel, logy) in enumerate(items):
+            r, c = divmod(idx, 3)
+            axi = ax[r,c]
 
+            for case_name, case_obj in cs.items():
+                print(f"Plotting {case_name} with {title}...")
+                ds = case_obj.ds.isel(t=-1)
+                df = get_1d_radial_data(ds, params=[p[0] for p in items], region=region_rad)
+                
+                axi.plot(df["Srad"], np.abs(df[param]), label=f"{case_name}")
+                axi.set_title(title)
+                axi.set_ylabel(ylabel)
+                axi.set_xlabel("")
+                axi.grid(True, alpha=0.7)
+            
+                if logy:
+                    axi.set_yscale("log")
 
-    
-
-    format_legend_and_axes(fig, ax, len(plots), "$X-X_{sep} [m]$")
-    plt.show()
-    fig.savefig(f"{figures_png_path}/multifiles_radial_profiles.png")
+        format_legend_and_axes(fig, ax, nitems, "$X-X_{sep} [m]$")
+        fig.savefig(f"{figures_png_path}/multifiles_radial_profiles_{category}.png")
 
 def run_multifiles_plots():
 
