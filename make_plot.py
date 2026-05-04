@@ -1,3 +1,4 @@
+from pltool.plotting_single import * 
 from pltool.plotting_multi_rings import * 
 from pltool.plotting_multi_files import * 
 from pltool.plotting_polygon import *
@@ -75,6 +76,9 @@ if __name__ == "__main__":
         plot_multi_profiles_fieldline(case, args.region_pol, sepadd_array, figures_png_path)
         plot_multi_profiles_radial(case, args.region_rad, figures_png_path)
         plot_plasma_overlap(case, args.region_pol, args.region_rad, figures_png_path)
+
+    if "special" in args.mode:
+        compare_last_timestep(case, balance,figures_png_path)
 
     end_time = time.time()
     print(f"Total runtime: {end_time - start_time:.2f} seconds")

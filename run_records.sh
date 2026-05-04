@@ -62,8 +62,12 @@
 # python3 make_slurm_script.py -n 4 -c 5 -t 06:00:00 -d 26:04:17 -i 260417_reproduce_1e20_neumann_NV -j 260417_reproduce_1e20_neumann_NV --restart  
 # python3 make_slurm_script.py -n 4 -c 5 -t 06:00:00 -d 26:04:17 -i 260417_reproduce_1e19_nowallpump -j 260417_reproduce_1e19_nowallpump --restart  
 # python3 make_slurm_script.py -n 2 -c 10 -t 00:30:00 -d 26:04:29 -i 260429_reproduce_1e21_neumann_nowallpump_petsc -j 260429_reproduce_1e21_neumann_nowallpump_petsc --restart  
-python3 make_slurm_script.py -n 2 -c 10 -t 02:00:00 -d 26:04:30 -i 260430_reproduce_1e21_neumann_nowallpump_inoff -j 260430_reproduce_1e21_neumann_nowallpump_inoff --restart  
+# python3 make_slurm_script.py -n 2 -c 10 -t 02:00:00 -d 26:04:30 -i 260430_reproduce_1e21_neumann_nowallpump_inoff -j 260430_reproduce_1e21_neumann_nowallpump_inoff --restart  
 
+# python3 make_slurm_script.py -n 2 -c 10 -t 10:00:00 -d 26:05:04 -i 260504_reproduce_5e20_decaylen_nowallpump -j 260504_reproduce_5e20_decaylen_nowallpump --restart  
+# python3 make_slurm_script.py -n 2 -c 10 -t 12:00:00 -d 26:05:03 -i 260503_reproduce_5e20_neumann_nowallpump -j 260503_reproduce_5e20_neumann_nowallpump  --restart  
+python3 make_slurm_script.py -n 2 -c 10 -t 12:00:00 -d 26:05:04 -i 260504_reproduce_7e20_neumann_nowallpump -j 260504_reproduce_7e20_neumann_nowallpump  --restart  
+# python3 make_slurm_script.py -n 2 -c 10 -t 12:00:00 -d 26:05:02 -i 260502_reproduce_5e21_neumann_nowallpump -j 260502_reproduce_5e21_neumann_nowallpump  --restart  
 #### TEST
 # python3 make_slurm_script.py -n 1 -c 10 -t 00:10:00 -d 26:04:27 -i diffusion -j diffusion_test  
 # python3 make_slurm_script.py -n 1 -c 20 -t 00:10:00 -d 26:04:27 -i 260427_slurm_test -j slurm_test 

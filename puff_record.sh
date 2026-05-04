@@ -15,7 +15,10 @@
 # python3 tune_puff.py --old-grid ~/gridfile/CDN_46895_v2.nc --new-grid ~/gridfile/CDN_46895_260402_expand_puff.nc --Nd 1.0e+21 --puff omp --mode edit
 # python3 tune_puff.py --old-grid ~/gridfile/CDN_46895_v2.nc --new-grid ~/gridfile/CDN_46895_260412_allpumprec_1e19.nc --Nd 1.0e+19 --puff omp --mode edit
 # python3 tune_puff.py --old-grid ~/gridfile/CDN_46895_v2.nc --new-grid ~/gridfile/CDN_46895_260412_nowallpump_1e20.nc --Nd 1.0e+20 --puff omp --mode edit
-python3 tune_puff.py --old-grid ~/gridfile/CDN_46895_v2.nc --new-grid ~/gridfile/CDN_46895_260427_nowallpump_1e21.nc --Nd 1.0e+21 --puff omp --mode edit
+python3 tune_puff.py --old-grid ~/gridfile/CDN_46895_v2.nc --new-grid ~/gridfile/CDN_46895_260504_nowallpump_7e20.nc --Nd 7.0e+20 --puff omp --mode edit
+# python3 tune_puff.py --old-grid ~/gridfile/CDN_46895_v2.nc --new-grid ~/gridfile/CDN_46895_260503_nowallpump_5e20.nc --Nd 5.0e+20 --puff omp --mode edit
+# python3 tune_puff.py --old-grid ~/gridfile/CDN_46895_v2.nc --new-grid ~/gridfile/CDN_46895_260502_nowallpump_5e21.nc --Nd 5.0e+21 --puff omp --mode edit
+# python3 tune_puff.py --old-grid ~/gridfile/CDN_46895_v2.nc --new-grid ~/gridfile/CDN_46895_260427_nowallpump_1e21.nc --Nd 1.0e+21 --puff omp --mode edit
 # python3 tune_puff.py --old-grid ~/gridfile/CDN_46895_v2.nc --new-grid ~/gridfile/CDN_46895_260412_allpumprec_1e20.nc --Nd 1.0e+20 --puff omp --mode edit
 # python3 tune_puff.py --old-grid ~/gridfile/CDN_46895_v2.nc --new-grid ~/gridfile/CDN_46895_260408_1e19.nc --Nd 1.0e+19 --puff omp --mode edit
 # python3 tune_puff.py --old-grid ~/gridfile/CDN_46895_v2.nc --new-grid ~/gridfile/CDN_46895_260401_asym_puff.nc --Nd 1.0e+21 --puff omp --mode edit

@@ -1,4 +1,4 @@
-from .common import build_base_parser, read_files, setup_matplotlib
+from .common import build_base_parser, read_files, setup_matplotlib, read_solps_balance
 import numpy as np
 import matplotlib
 import argparse
@@ -192,7 +192,88 @@ def plot_Lz_function(cs):
 
 #    fig.savefig(f"{figures_pdf_path}/Lz_function.pdf")
 
-
+def compare_last_timestep(cs, bal, figures_png_path):
+    
+    # Get SOLPS target max Te
+    df_solps = bal.get_1d_radial_data(params=["Te"], region="outer_lower_target")
+    solps_te_max = np.abs(df_solps["Te"]).max()
+    
+    x_vals = []
+    y_vals = []
+    gradients = []
+    te_firsts = []
+    keys = list(cs.keys())
+    
+    # Check if keys can be cast to float
+    x_numeric = False
+    for k in keys:
+        try:
+            float(k)
+        except ValueError:
+            x_numeric = False
+            break
+            
+    fig, ax = plt.subplots(figsize=(6,6))
+    
+    for i, (case_name, case_obj) in enumerate(cs.items()):
+        ds = case_obj.ds
+        
+        # Last time step
+        ds_last = ds.isel(t=-1)
+        df_last = get_1d_radial_data(ds_last, params=["Te"], region="outer_lower_target")
+        te_last = np.abs(df_last["Te"]).max()
+        
+        # First time step
+        ds_first = ds.isel(t=0)
+        df_first = get_1d_radial_data(ds_first, params=["Te"], region="outer_lower_target")
+        te_first = np.abs(df_first["Te"]).max()
+        
+        t_last = float(ds_last["t"].values)
+        t_first = float(ds_first["t"].values)
+        dt = t_last - t_first
+        
+        if dt > 0:
+            gradient = (te_last - te_first) / dt
+        else:
+            gradient = 0.0
+            
+        x_val = float(case_name) if x_numeric else i
+        x_vals.append(x_val)
+        y_vals.append(te_last)
+        gradients.append(gradient)
+        te_firsts.append(te_first)
+        
+    ax.scatter(x_vals, y_vals, marker='o', label="Hermes-3 $T_{e}^{target,max}$ (last step)", color='blue')
+    
+    # Plot horizontal line for SOLPS
+    ax.axhline(solps_te_max, color='r', linestyle='--', label="SOLPS $T_{e}^{target,max}$")
+    
+    # Add arrows
+    for x, y_last, y_first, grad in zip(x_vals, y_vals, te_firsts, gradients):
+        if y_last != y_first:
+            # Draw arrow from first timestep to last timestep to represent the change
+            ax.annotate("", xy=(x, y_last), xytext=(x, y_first),
+                        arrowprops=dict(arrowstyle="->", color="black", lw=1.5))
+            # Annotate the rate of change (gradient) next to the final point
+            # ax.text(x, y_last, f" {grad:.2e} eV/s", ha='left', va='center', fontsize=9)
+            
+    if not x_numeric:
+        ax.set_xticks(range(len(keys)))
+        ax.set_xticklabels(keys)
+        ax.set_xlabel("Cases")
+    else:
+        ax.set_xlabel("Puff rate")
+        if min(x_vals) > 0 and max(x_vals) / min(x_vals) >= 10:
+            ax.set_xscale("log")
+            
+    ax.set_ylabel("$T_{e}^{target,max}$ [eV]")
+    ax.set_title("Trend of $T_{e}^{target,max}$ vs puff rate")
+    ax.legend()
+    ax.grid(True, alpha=0.5)
+    
+    fig.tight_layout()
+    fig.savefig(f"{figures_png_path}/compare_last_timestep_Te_target_max.png")
+    plt.close(fig)
 
 def run_single_plots():
 

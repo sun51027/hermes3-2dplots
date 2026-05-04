@@ -27,6 +27,11 @@ def plot_multifiles_profiles_fieldline(cs, region_pol, ring, figures_png_path):
 
     # Plot sol ring = 1 ~ 5 on the same plot for each species separately
     # With x-point for each ring
+    '''
+    Plots directionary structure:
+    variable, title, ylabel, logy
+
+    '''
 
     plots = {
         "state_var": [
@@ -47,7 +52,11 @@ def plot_multifiles_profiles_fieldline(cs, region_pol, ring, figures_png_path):
             # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
             # ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
             # ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
-        ]
+        ],
+        "flow":[
+            ("efe_cond_ylow", "e conduction flow", "[W]", True),
+            ("efd_cond_par_ylow", "d parallel conduction flow", "[W]", True)
+            ]
     }
    
     for category, items in plots.items():
@@ -98,7 +107,11 @@ def plot_multifiles_profiles_radial(cs, region_rad, figures_png_path):
             # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
             # ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
             # ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
-        ]
+        ],
+        "flow":[
+            ("efe_cond_ylow", "e conduction flow", "[W]", True),
+            ("efd_cond_perp_xlow", "d radial conduction flow", "[W]", True)
+            ]
     }
    
     for category, items in plots.items():

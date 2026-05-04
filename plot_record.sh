@@ -66,9 +66,17 @@
 # python3 make_plot.py -i 260419_reproduce_1e20_neumann_NV_nowallpump -o 260419_reproduce_1e20_neumann_NV_nowallpump -r omp -p outer_lower
 # python3 make_plot.py -i 260417_reproduce_1e20_neumann_NV -o 260421_reproduce_1e20_neumann_NV -r omp -p outer_lower
 # python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump -o 260427_reproduce_1e21_neumann_nowallpump -r omp -p outer_lower
-python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump -o 260430_reproduce_1e20_neumann_nowallpump -in 1e21  -r omp -p outer_lower -m  benchmark  singlefile
 # python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump 260421_reproduce_1e20_neumann_nowallpump -in 1e21 1e20 -o 260429_1e20_1e21_compare_benchmark -r omp -p outer_lower -m  benchmark
 # python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump -in 1e21 -o 260429_1e21_benchmark -r omp -p outer_lower -m benchmark 
 
+############### UPDATED PLTOOL ################
 
-# python3 make_plot.py -i 260407_pump_95 -o 260418_pump_95 -r omp -p outer_lower
+# python3 make_plot.py -i 260421_reproduce_1e20_neumann_nowallpump 260417_reproduce_1e20_neumann_NV 260417_reproduce_1e20 -in neumann_nowallpump neumann decaylength -o 260430_bc_compare  -r omp -p outer_lower -m  multifiles
+# python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump -o 260430_reproduce_1e20_neumann_nowallpump -in 1e21  -r omp -p outer_lower -m  benchmark  singlefile
+# python3 make_plot.py -i 260430_reproduce_1e21_neumann_nowallpump_inoff  -o 260430_incoupling_OFF -in OFF    -r omp -p outer_lower -m  benchmark 
+# python3 make_plot.py -i 260430_reproduce_1e21_neumann_nowallpump_inoff 260427_reproduce_1e21_neumann_nowallpump -o 260430_incoupling -in OFF ON   -r omp -p outer_lower -m  benchmark 
+# python3 make_plot.py -i 260503_reproduce_5e20_neumann_nowallpump 260310_neutralimit_gcc12_9497476 -in reproduce_5e20 march_1e21 -o 260504_rep_mar_compare -r omp -p outer_lower -m benchmark
+# python3 make_plot.py -i 260421_reproduce_1e20_neumann_nowallpump 260503_reproduce_5e20_neumann_nowallpump 260427_reproduce_1e21_neumann_nowallpump -in 1e20 5e20 1e21 -o 260504_5e20_1e21_compare -r omp -p outer_lower -m benchmark
+python3 make_plot.py -i 260421_reproduce_1e20_neumann_nowallpump 260503_reproduce_5e20_neumann_nowallpump 260427_reproduce_1e21_neumann_nowallpump 260502_reproduce_5e21_neumann_nowallpump -in 1e20 5e20 1e21 5e21 -o 260504_puff_compare -r omp -p outer_lower -m special
+# python3 make_plot.py -i 260503_reproduce_5e20_neumann_nowallpump 260427_reproduce_1e21_neumann_nowallpump -in 5e20 1e21 -o 260504_5e20_1e21_compare -r omp -p outer_lower -m benchmark
+

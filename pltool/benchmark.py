@@ -45,20 +45,9 @@ def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_
             # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
         ]
     }
-    # plots = [
-    #     ("Te",      "e temperature",        "T [eV]",                    False),
-    #     ("Td+",     "d+ temperature",       "T [eV]",                    False),
-    #     ("Td",      "d temperature",        "T [eV]",                    False),
-    #     ("Ne",      "e density",            "density [$m^{-3}$]",            True),
-    #     ("Nd+",     "d+ density",           "density [$m^{-3}$]",            True),
-    #     ("Nd",      "d density",            "density [$m^{-3}$]",            True),
-    #     ("Pe",      "e pressure",            "pressure [Pa]",            True),
-    #     ("Pd+",     "d+ pressure",           "pressure [Pa]",            True),
-    #     ("Pd",      "d pressure",            "pressure [Pa]",            True),
-    #     ]
 
-    case_name = list(cs.keys())[0]
-    ds = cs[case_name].ds.isel(t=-1)
+    # case_name = list(cs.keys())[0]
+    # ds = cs[case_name].ds.isel(t=-1)
     xpt_spar_hlist = []
     xpt_spar_slist = []
 
