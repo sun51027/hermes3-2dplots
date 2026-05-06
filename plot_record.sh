@@ -77,6 +77,9 @@
 # python3 make_plot.py -i 260430_reproduce_1e21_neumann_nowallpump_inoff 260427_reproduce_1e21_neumann_nowallpump -o 260430_incoupling -in OFF ON   -r omp -p outer_lower -m  benchmark 
 # python3 make_plot.py -i 260503_reproduce_5e20_neumann_nowallpump 260310_neutralimit_gcc12_9497476 -in reproduce_5e20 march_1e21 -o 260504_rep_mar_compare -r omp -p outer_lower -m benchmark
 # python3 make_plot.py -i 260421_reproduce_1e20_neumann_nowallpump 260503_reproduce_5e20_neumann_nowallpump 260427_reproduce_1e21_neumann_nowallpump -in 1e20 5e20 1e21 -o 260504_5e20_1e21_compare -r omp -p outer_lower -m benchmark
-python3 make_plot.py -i 260421_reproduce_1e20_neumann_nowallpump 260503_reproduce_5e20_neumann_nowallpump 260427_reproduce_1e21_neumann_nowallpump 260502_reproduce_5e21_neumann_nowallpump -in 1e20 5e20 1e21 5e21 -o 260504_puff_compare -r omp -p outer_lower -m special
+# python3 make_plot.py -i 260503_reproduce_5e20_neumann_nowallpump 260504_reproduce_7e20_neumann_nowallpump -in 5e20 7e20 -o 260504_puff_compare -r omp -p outer_lower -m benchmark
+# python3 make_plot.py -i 260421_reproduce_1e20_neumann_nowallpump 260503_reproduce_5e20_neumann_nowallpump 260504_reproduce_7e20_neumann_nowallpump 260427_reproduce_1e21_neumann_nowallpump 260502_reproduce_5e21_neumann_nowallpump -in 1e20 5e20 7e20 1e21 5e21 -o 260504_puff_compare -r omp -p outer_lower -m special
+# python3 make_plot.py -i 260310_neutralimit_gcc12_9497476 -o 260506_balance_Mar -r omp -p outer_lower -m special
+python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump -in 1e21 -o 260506_puff_compare -r omp -p outer_lower -m special
 # python3 make_plot.py -i 260503_reproduce_5e20_neumann_nowallpump 260427_reproduce_1e21_neumann_nowallpump -in 5e20 1e21 -o 260504_5e20_1e21_compare -r omp -p outer_lower -m benchmark
 

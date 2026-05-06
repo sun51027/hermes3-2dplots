@@ -194,17 +194,33 @@ def plot_Lz_function(cs):
 
 def compare_last_timestep(cs, bal, figures_png_path):
     
-    # Get SOLPS target max Te
-    df_solps = bal.get_1d_radial_data(params=["Te"], region="outer_lower_target")
-    solps_te_max = np.abs(df_solps["Te"]).max()
+    # Dictionary of variables to compare
+    # Format: {"name": {"param": "...", "region": "...", "operation": "...", "ylabel": "...", "title": "..."}}
+    variables_to_compare = {
+        "Te_target_max": {
+            "param": "Te",
+            "region": "outer_lower_target",
+            "operation": "max",
+            "ylabel": "$T_{e}^{target,max}$ [eV]",
+            "title": "Trend of $T_{e}^{target,max}$ vs puff rate",
+            "grad_unit": "eV/s",
+            "label_name": "$T_{e}^{target,max}$"
+        },
+        "Ne_omp_sep": {
+            "param": "Ne",
+            "region": "omp",
+            "operation": "sep",
+            "ylabel": "$N_{e}^{omp,sep}$ [$m^{-3}$]",
+            "title": "Trend of $N_{e}^{omp,sep}$ vs puff rate",
+            "grad_unit": "$m^{-3}s^{-1}$",
+            "label_name": "$N_{e}^{omp,sep}$"
+        }
+    }
     
-    x_vals = []
-    y_vals = []
-    gradients = []
-    te_firsts = []
     keys = list(cs.keys())
     
-    # Check if keys can be cast to float
+    # Check if keys can be cast to float 
+    # (Change initial value to False if you want to force equally-spaced categorical X-axis)
     x_numeric = False
     for k in keys:
         try:
@@ -213,67 +229,172 @@ def compare_last_timestep(cs, bal, figures_png_path):
             x_numeric = False
             break
             
-    fig, ax = plt.subplots(figsize=(6,6))
-    
-    for i, (case_name, case_obj) in enumerate(cs.items()):
+    for var_key, var_info in variables_to_compare.items():
+        param = var_info["param"]
+        region = var_info["region"]
+        operation = var_info["operation"]
+        ylabel = var_info["ylabel"]
+        title = var_info["title"]
+        label_name = var_info["label_name"]
+        grad_unit = var_info.get("grad_unit", "")
+        
+        # Get SOLPS value
+        df_solps = bal.get_1d_radial_data(params=[param], region=region)
+        if operation == "max":
+            solps_val = np.abs(df_solps[param]).max()
+        elif operation == "sep":
+            if "dist" in df_solps.columns:
+                idx_sep = np.argmin(np.abs(df_solps["dist"]))
+            else:
+                idx_sep = np.argmin(np.abs(df_solps["Srad"]))
+            solps_val = np.abs(df_solps[param]).iloc[idx_sep]
+        else:
+            solps_val = 0.0
+            
+        x_vals = []
+        y_vals = []
+        gradients = []
+        te_firsts = []
+        
+        fig, ax = plt.subplots(figsize=(6, 6))
+        
+        for i, (case_name, case_obj) in enumerate(cs.items()):
+            ds = case_obj.ds
+            
+            def get_hermes_val(ds_time):
+                df = get_1d_radial_data(ds_time, params=[param], region=region)
+                if operation == "max":
+                    return np.abs(df[param]).max()
+                elif operation == "sep":
+                    idx_sep = np.argmin(np.abs(df["Srad"]))
+                    return np.abs(df[param]).iloc[idx_sep]
+                return 0.0
+            
+            # Last time step
+            ds_last = ds.isel(t=-1)
+            val_last = get_hermes_val(ds_last)
+            
+            # First time step
+            ds_first = ds.isel(t=0)
+            val_first = get_hermes_val(ds_first)
+            
+            t_last = float(ds_last["t"].values)
+            t_first = float(ds_first["t"].values)
+            dt = t_last - t_first
+            
+            if dt > 0:
+                gradient = (val_last - val_first) / dt
+            else:
+                gradient = 0.0
+                
+            x_val = float(case_name) if x_numeric else i
+            x_vals.append(x_val)
+            y_vals.append(val_last)
+            gradients.append(gradient)
+            te_firsts.append(val_first)
+            
+        ax.scatter(x_vals, y_vals, marker='o', label=f"Hermes-3 {label_name} (last step)", color='blue')
+        
+        # Plot horizontal line for SOLPS
+        ax.axhline(solps_val, color='r', linestyle='--', label=f"SOLPS {label_name}")
+        
+        # Add arrows
+        for x, y_last, y_first, grad in zip(x_vals, y_vals, te_firsts, gradients):
+            if y_last != y_first:
+                # Draw arrow from first timestep to last timestep to represent the change
+                ax.annotate("", xy=(x, y_last), xytext=(x, y_first),
+                            arrowprops=dict(arrowstyle="->", color="black", lw=1.5))
+                # Annotate the rate of change (gradient) next to the final point
+                # ax.text(x, y_last, f" {grad:.2e} {grad_unit}", ha='left', va='center', fontsize=9)
+                
+        if not x_numeric:
+            ax.set_xticks(range(len(keys)))
+            ax.set_xticklabels(keys)
+            ax.set_xlabel("Cases")
+        else:
+            ax.set_xlabel("Puff rate")
+            if min(x_vals) > 0 and max(x_vals) / min(x_vals) >= 10:
+                ax.set_xscale("log")
+                
+        ax.set_ylabel(ylabel)
+        ax.set_title(title)
+        ax.legend()
+        ax.grid(True, alpha=0.5)
+        
+        fig.tight_layout()
+        fig.savefig(f"{figures_png_path}/compare_last_timestep_{var_key}.png")
+        plt.close(fig)
+
+def plot_particle_balance_time(cs, figures_png_path):
+    for case_name, case_obj in cs.items():
         ds = case_obj.ds
         
-        # Last time step
-        ds_last = ds.isel(t=-1)
-        df_last = get_1d_radial_data(ds_last, params=["Te"], region="outer_lower_target")
-        te_last = np.abs(df_last["Te"]).max()
+        fig, ax = plt.subplots(figsize=(8, 6))
         
-        # First time step
-        ds_first = ds.isel(t=0)
-        df_first = get_1d_radial_data(ds_first, params=["Te"], region="outer_lower_target")
-        te_first = np.abs(df_first["Te"]).max()
-        
-        t_last = float(ds_last["t"].values)
-        t_first = float(ds_first["t"].values)
-        dt = t_last - t_first
-        
-        if dt > 0:
-            gradient = (te_last - te_first) / dt
+        # 1. ddt(total density integral of n+plasma)
+        if "Ne" in ds and "Nd" in ds and "dv" in ds:
+            # Keep as xarray DataArrays so .differentiate("t") works!
+            # Note: We use Ne (electrons) as a proxy for ions (Nd+) due to quasi-neutrality.
+            # Adding Ne + Nd tracks the total number of ATOMS.
+            total_plasma = (ds["Ne"].hermesm.clean_guards() * ds["dv"]).sum(["x", "theta"])
+            total_neutral = (ds["Nd"].hermesm.clean_guards() * ds["dv"]).sum(["x", "theta"])
+            total_density_integral = total_plasma + total_neutral
+            
+            ddt_total = total_density_integral.differentiate("t")
+            
+            print(f"[{case_name}] Final total plasma = {total_plasma.values[-1]:.4e}")
+            print(f"[{case_name}] Final total neutral = {total_neutral.values[-1]:.4e}")
+            print(f"[{case_name}] Final ddt_total = {ddt_total.values[-1]:.4e}")
+            
+            ax.plot(ds["t"], ddt_total, label="d/dt (Total Particles)", lw=2, color="black")
         else:
-            gradient = 0.0
+            print(f"[{case_name}] Missing variables for total particle calculation")
             
-        x_val = float(case_name) if x_numeric else i
-        x_vals.append(x_val)
-        y_vals.append(te_last)
-        gradients.append(gradient)
-        te_firsts.append(te_first)
+        # 2. Puff rate vs time
+        if "Sd_src" in ds and "dv" in ds:
+            puff_rate = (ds["Sd_src"].hermesm.clean_guards() * ds["dv"]).sum(["x", "theta"])
+            ax.plot(ds["t"], puff_rate, label="Puff Rate (Sd_src)", linestyle="--", lw=2)
+        else:
+            puff_rate = ds["t"] * 0
         
-    ax.scatter(x_vals, y_vals, marker='o', label="Hermes-3 $T_{e}^{target,max}$ (last step)", color='blue')
-    
-    # Plot horizontal line for SOLPS
-    ax.axhline(solps_te_max, color='r', linestyle='--', label="SOLPS $T_{e}^{target,max}$")
-    
-    # Add arrows
-    for x, y_last, y_first, grad in zip(x_vals, y_vals, te_firsts, gradients):
-        if y_last != y_first:
-            # Draw arrow from first timestep to last timestep to represent the change
-            ax.annotate("", xy=(x, y_last), xytext=(x, y_first),
-                        arrowprops=dict(arrowstyle="->", color="black", lw=1.5))
-            # Annotate the rate of change (gradient) next to the final point
-            # ax.text(x, y_last, f" {grad:.2e} eV/s", ha='left', va='center', fontsize=9)
+        # 3. Pump rate vs time
+        if "Sd_pump" in ds and "dv" in ds:
+            pump_rate = (ds["Sd_pump"].hermesm.clean_guards() * ds["dv"]).sum(["x", "theta"])
+            # Pump is a sink (negative), so we can plot its true value or abs
+            ax.plot(ds["t"], pump_rate, label="Pump Rate (Sd_pump)", linestyle="--", lw=2)
+        else:
+            pump_rate = ds["t"] * 0
             
-    if not x_numeric:
-        ax.set_xticks(range(len(keys)))
-        ax.set_xticklabels(keys)
-        ax.set_xlabel("Cases")
-    else:
-        ax.set_xlabel("Puff rate")
-        if min(x_vals) > 0 and max(x_vals) / min(x_vals) >= 10:
-            ax.set_xscale("log")
+        # 4. Target Recycle vs time
+        if "Sd_target_recycle" in ds and "dv" in ds:
+            target_recycle = (ds["Sd_target_recycle"].hermesm.clean_guards() * ds["dv"]).sum(["x", "theta"])
+            ax.plot(ds["t"], target_recycle, label="Target Recycle", linestyle="--", lw=2)
             
-    ax.set_ylabel("$T_{e}^{target,max}$ [eV]")
-    ax.set_title("Trend of $T_{e}^{target,max}$ vs puff rate")
-    ax.legend()
-    ax.grid(True, alpha=0.5)
-    
-    fig.tight_layout()
-    fig.savefig(f"{figures_png_path}/compare_last_timestep_Te_target_max.png")
-    plt.close(fig)
+            # If Recycling R = 0.99, then the recycled neutrals = 0.99 * Ion_Outflux
+            # The particles permanently LOST to the wall = 0.01 * Ion_Outflux
+            # Therefore, Loss = (0.01 / 0.99) * target_recycle
+            R = 0.99
+            target_loss = ((1 - R) / R) * target_recycle
+        else:
+            target_recycle = ds["t"] * 0
+            target_loss = ds["t"] * 0
+        
+        # The true particle balance of the entire simulation
+        # Net Source = Puff (source) + Pump (sink) - Target_Loss (sink)
+        true_net_balance = puff_rate + pump_rate - target_loss
+        ax.plot(ds["t"], true_net_balance, label="True Net Balance (Puff+Pump-Loss)", linestyle=":", lw=3, color="magenta")
+            
+        ax.set_xlabel("Time [s]")
+        ax.set_ylabel("Particle rate [$s^{-1}$]")
+        ax.set_yscale("symlog", linthresh=1e18) 
+        ax.set_title(f"Particle Balance: {case_name}")
+        ax.legend()
+        # ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+        ax.grid(True, alpha=0.5)
+        
+        fig.tight_layout()
+        fig.savefig(f"{figures_png_path}/particle_balance_{case_name}.png")
+        plt.close(fig)
 
 def run_single_plots():
 
@@ -292,4 +413,6 @@ def run_single_plots():
     plot_single_profiles(case, args.region_rad, args.region_pol, args.sepadd, args, figures_png_path)
     # make_plot_diff_coeff(case)
     # plot_Lz_function(case)
+    # plot_particle_balance(case, figures_png_path)
+
 
