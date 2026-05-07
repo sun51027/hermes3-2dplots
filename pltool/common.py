@@ -14,7 +14,8 @@ import scipy
 import xhermes
 from xhermes import *
 
-sys.path.append(r"/users/jpm590/2dspace/post-processing/sdtools")
+sys.path.append(r"/Users/zero/workspace/phd_work/hms_output/sdtools/")
+# sys.path.append(r"/users/jpm590/2dspace/post-processing/sdtools")
 import hermes3
 
 from hermes3.utils import *
@@ -87,10 +88,12 @@ def build_base_parser():
 
 def read_files(input_ids, input_name=None):
 
-    case_dir = "/users/jpm590/scratch/"
+    # case_dir = "/users/jpm590/scratch/"
+    case_dir = "/Users/zero/workspace/phd_work/hms_output"
     db = CaseDB(
         case_dir = case_dir,
-        grid_dir = r"/users/jpm590/gridfile"
+        # grid_dir = r"/users/jpm590/gridfile"
+        grid_dir = r"/Users/zero/workspace/phd_work/hms_output/gridfile/"
         # grid_dir = r"/users/jpm590/neutralimit_gcc12_9497476/hermes-3/build-mc-master"
         # grid_dir = r"/users/jpm590/benchspace/hermes-3/build-mc-master"
         # grid_dir = r"/users/jpm590/neutralrun/hermes-3/master"
@@ -179,7 +182,8 @@ def read_files(input_ids, input_name=None):
 def read_solps_balance():
 
     # SOLPScase init includes "balance.nc", so only path is required
-    input_path = "/users/jpm590/2dspace/post-processing/xhermes"
+    input_path = "/Users/zero/workspace/phd_work/hms_output"
+    # input_path = "/users/jpm590/2dspace/post-processing/xhermes"
     bal = SOLPScase(input_path)
 
     return bal

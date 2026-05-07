@@ -3,7 +3,6 @@
 # python3 single_plot.py -i 251105-pump-0.95 -o 251105-pump-0.95_omp_outerlower-ring15 -r omp -p outer_lower --sepadd 15
 # python3 single_plot.py -i 251105-pump-0.95 -o 251105-pump-0.95_xtarget_outerlower-ring5 -r outer_lower_target -p outer_lower --sepadd 5
 
-
 # python3 single_plot.py -i 251105-pump-0.95 -o 251105-pump-0.95_omp_outerlower-log -r omp -p outer_lower --sepadd 1 -s log
 # python3 single_plot.py -i 251105-pump-0.95 -o 251105-pump-0.95_omp_outerlower -r omp -p outer_lower --sepadd 1
 
@@ -11,12 +10,11 @@
 
 # python3 single_plot.py  -r omp -p outer_lower --sepadd 1 --scale log    -i 251007-2D-MASTU -o MASTU-origin-log
 # python3 single_plot.py  -r omp -p outer_lower --sepadd 1 --scale linear -i 251007-2D-MASTU -o MASTU-origin-linear
-# python3 single_plot.py -i 251112-tuned-puff-1e22 -o 251112-1e22 -r omp -p outer_lower --sepadd 1 
+# python3 single_plot.py -i 251112-tuned-puff-1e22 -o 251112-1e22 -r omp -p outer_lower --sepadd 1
 # python3 single_plot.py  -r omp -p outer_lower --sepadd 1 --scale log    -i 251119-MASTU-newbranch-rerun -o MASTU-neutralrun-log
 # python3 single_plot.py -i 251119-MASTU-newbranch-rerun -o 251119-mastu-newbranch-log -r omp -p outer_lower --sepadd 1 --scale log
 # python3 single_plot.py -i 251119-MASTU-newbranch-rerun -o 251119-mastu-newbranch-log -r omp -p outer_lower --sepadd 1 --scale log
 # python3 multi_plot.py -i 251119-MASTU-newbranch-rerun -o 251119-mastu-newbranch-log -r omp -p outer_lower --sepadd 1 --scale log
-
 
 # python3 make_plot.py -i 251212-cdn-46895-corrected -o 251212-newgrid-corrected -r omp -p outer_lower
 # python3 make_plot.py -i 260105-cdn-46895-david-param -o 260105-cdn-46895-david-param -r omp -p outer_lower
@@ -37,17 +35,15 @@
 # python3 make_plot.py -i 260319_neutralimit_9497476_5e19  -o 260319_neutralimit_9497476_5e19 -r omp -p outer_lower
 # python3 make_plot.py -i 260327_neutral_flux0.1 -o 260327_neutral_flux0.1 -r omp -p outer_lower
 # python3 make_plot.py -i 260310_neutralimit_gcc12_9497476  -o 260310_neutralimit_gcc12_9497476 -r omp -p outer_lower
-# python3 make_plot.py -i 260407_pump_95  -o 260410_pump_95 -r omp -p outer_lower 
-# python3 make_plot.py -i 260409_ion_coupling_off  -o 260410_ion_coupling_off -r omp -p outer_lower 
-# python3 make_plot.py -i 260410_puff_1e19  -o 260410_puff_1e19 -r omp -p outer_lower 
-
+# python3 make_plot.py -i 260407_pump_95  -o 260410_pump_95 -r omp -p outer_lower
+# python3 make_plot.py -i 260409_ion_coupling_off  -o 260410_ion_coupling_off -r omp -p outer_lower
+# python3 make_plot.py -i 260410_puff_1e19  -o 260410_puff_1e19 -r omp -p outer_lower
 
 ################# Compare different simulation ######################
-# python3 make_plot.py -i 260207* -o 260207_multiple_comparison -r omp -p outer_lower 
-# python3 make_plot.py -i 260310_neutralimit_gcc12_9497476 260407_pump_95  -o 260413_pump95_compare -r omp -p outer_lower 
-# python3 make_plot.py -i 260410_puff_1e19 260310_neutralimit_gcc12_9497476 -o 260410_puff_compare -r omp -p outer_lower 
-# python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21 260310_neutralimit_gcc12_9497476 -o 260410_oldnew -r omp -p outer_lower 
-
+# python3 make_plot.py -i 260207* -o 260207_multiple_comparison -r omp -p outer_lower
+# python3 make_plot.py -i 260310_neutralimit_gcc12_9497476 260407_pump_95  -o 260413_pump95_compare -r omp -p outer_lower
+# python3 make_plot.py -i 260410_puff_1e19 260310_neutralimit_gcc12_9497476 -o 260410_puff_compare -r omp -p outer_lower
+# python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21 260310_neutralimit_gcc12_9497476 -o 260410_oldnew -r omp -p outer_lower
 
 ################# Benchamrk against solps ######################
 # python3 make_plot.py -i 260305-nowallpump-limiterOff-1e21-cvode  -o 260310-cvode  -r omp -p outer_lower
@@ -67,20 +63,20 @@
 # python3 make_plot.py -i 260417_reproduce_1e20_neumann_NV -o 260421_reproduce_1e20_neumann_NV -r omp -p outer_lower
 # python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump -o 260427_reproduce_1e21_neumann_nowallpump -r omp -p outer_lower
 # python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump 260421_reproduce_1e20_neumann_nowallpump -in 1e21 1e20 -o 260429_1e20_1e21_compare_benchmark -r omp -p outer_lower -m  benchmark
-# python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump -in 1e21 -o 260429_1e21_benchmark -r omp -p outer_lower -m benchmark 
+# python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump -in 1e21 -o 260429_1e21_benchmark -r omp -p outer_lower -m benchmark
 
 ############### UPDATED PLTOOL ################
 
 # python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21 -in Feb_1e21 -o oldbranch_plot -r omp -p outer_lower -m special
 # python3 make_plot.py -i 260310_neutralimit_gcc12_9497476 -in Mar_1e21 -o oldbranch_plot -r omp -p outer_lower -m special
-# python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21 -in Feb_1e21 -o 260506_balance -r omp -p outer_lower -m special
+python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21 -in Feb_1e21 -o 260506_balance -r omp -p outer_lower -m special
 # python3 make_plot.py -i 260310_neutralimit_gcc12_9497476 -in Mar_1e21 -o 260506_balance -r omp -p outer_lower -m special
-python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump  -o 260506_balance -r omp -p outer_lower -m special
+# python3 make_plot.py -i 260504_reproduce_7e20_neumann_nowallpump -o 260506_balance -r omp -p outer_lower -m special
 # python3 make_plot.py -i 260114_cdn_46895_bndry_neumann  260217-cdn-46895-nowallpump_limiterOff_1e21 -in Jan_1.3e22 Feb_1e21 -o oldbranch_plot -r omp -p outer_lower -m benchmark
 # python3 make_plot.py -i 260421_reproduce_1e20_neumann_nowallpump 260417_reproduce_1e20_neumann_NV 260417_reproduce_1e20 -in neumann_nowallpump neumann decaylength -o 260430_bc_compare  -r omp -p outer_lower -m  multifiles
 # python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump -o 260430_reproduce_1e20_neumann_nowallpump -in 1e21  -r omp -p outer_lower -m  benchmark  singlefile
-# python3 make_plot.py -i 260430_reproduce_1e21_neumann_nowallpump_inoff  -o 260430_incoupling_OFF -in OFF    -r omp -p outer_lower -m  benchmark 
-# python3 make_plot.py -i 260430_reproduce_1e21_neumann_nowallpump_inoff 260427_reproduce_1e21_neumann_nowallpump -o 260430_incoupling -in OFF ON   -r omp -p outer_lower -m  benchmark 
+# python3 make_plot.py -i 260430_reproduce_1e21_neumann_nowallpump_inoff  -o 260430_incoupling_OFF -in OFF    -r omp -p outer_lower -m  benchmark
+# python3 make_plot.py -i 260430_reproduce_1e21_neumann_nowallpump_inoff 260427_reproduce_1e21_neumann_nowallpump -o 260430_incoupling -in OFF ON   -r omp -p outer_lower -m  benchmark
 # python3 make_plot.py -i 260503_reproduce_5e20_neumann_nowallpump 260310_neutralimit_gcc12_9497476 -in reproduce_5e20 march_1e21 -o 260504_rep_mar_compare -r omp -p outer_lower -m benchmark
 # python3 make_plot.py -i 260421_reproduce_1e20_neumann_nowallpump 260503_reproduce_5e20_neumann_nowallpump 260427_reproduce_1e21_neumann_nowallpump -in 1e20 5e20 1e21 -o 260504_5e20_1e21_compare -r omp -p outer_lower -m benchmark
 # python3 make_plot.py -i 260503_reproduce_5e20_neumann_nowallpump 260504_reproduce_7e20_neumann_nowallpump -in 5e20 7e20 -o 260504_puff_compare -r omp -p outer_lower -m benchmark
@@ -88,4 +84,3 @@ python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump  -o 260506_bala
 # python3 make_plot.py -i 260310_neutralimit_gcc12_9497476 -o 260506_balance -r omp -p outer_lower -m special
 # python3 make_plot.py -i 260504_reproduce_7e20_neumann_nowallpump -o 260506_balance -r omp -p outer_lower -m special
 # python3 make_plot.py -i 260503_reproduce_5e20_neumann_nowallpump 260427_reproduce_1e21_neumann_nowallpump -in 5e20 1e21 -o 260504_5e20_1e21_compare -r omp -p outer_lower -m benchmark
-
