@@ -90,7 +90,8 @@ def read_files(input_ids, input_name=None):
     case_dir = "/users/jpm590/scratch/"
     db = CaseDB(
         case_dir = case_dir,
-        grid_dir = r"/users/jpm590/neutralimit_gcc12_9497476/hermes-3/build-mc-master"
+        grid_dir = r"/users/jpm590/gridfile"
+        # grid_dir = r"/users/jpm590/neutralimit_gcc12_9497476/hermes-3/build-mc-master"
         # grid_dir = r"/users/jpm590/benchspace/hermes-3/build-mc-master"
         # grid_dir = r"/users/jpm590/neutralrun/hermes-3/master"
         # grid_dir = r"/users/jpm590/2dspace/hermes-3/build-mc-master"
@@ -149,6 +150,7 @@ def read_files(input_ids, input_name=None):
                     id=file_name,            # or keep full path if needed
                     unnormalise_geom=True,
                     use_xhermes=True,
+                    # squash=False
                     squash=True
                 )
             )
@@ -168,6 +170,7 @@ def read_files(input_ids, input_name=None):
 
     cs = {}
     for case in toload:
+        cs[case["name"]] = db.load_case_2D(case["id"], use_squash = case["squash"], verbose = True)
         cs[case["name"]] = db.load_case_2D(case["id"], use_squash = case["squash"], verbose = True)
         cs[case["name"]].extract_2d_tokamak_geometry()
 

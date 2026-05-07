@@ -346,7 +346,7 @@ def plot_particle_balance_time(cs, figures_png_path):
             print(f"[{case_name}] Final total neutral = {total_neutral.values[-1]:.4e}")
             print(f"[{case_name}] Final ddt_total = {ddt_total.values[-1]:.4e}")
             
-            ax.plot(ds["t"], ddt_total, label="d/dt (Total Particles)", lw=2, color="black")
+            ax.plot(ds["t"], ddt_total, label="d/dt (Total Particles)", lw=2, color="black", marker="o")
         else:
             print(f"[{case_name}] Missing variables for total particle calculation")
             
@@ -354,39 +354,69 @@ def plot_particle_balance_time(cs, figures_png_path):
         if "Sd_src" in ds and "dv" in ds:
             puff_rate = (ds["Sd_src"].hermesm.clean_guards() * ds["dv"]).sum(["x", "theta"])
             ax.plot(ds["t"], puff_rate, label="Puff Rate (Sd_src)", linestyle="--", lw=2)
+            print(f"Final puff rate = {puff_rate.values[-1]:.4e}")
         else:
             puff_rate = ds["t"] * 0
         
         # 3. Pump rate vs time
         if "Sd_pump" in ds and "dv" in ds:
-            pump_rate = (ds["Sd_pump"].hermesm.clean_guards() * ds["dv"]).sum(["x", "theta"])
+            pump_rate = np.abs((ds["Sd_pump"].hermesm.clean_guards() * ds["dv"]).sum(["x", "theta"]))
             # Pump is a sink (negative), so we can plot its true value or abs
-            ax.plot(ds["t"], pump_rate, label="Pump Rate (Sd_pump)", linestyle="--", lw=2)
+            ax.plot(ds["t"], np.abs(pump_rate), label="Pump Rate (Sd_pump)", linestyle="--", lw=2)
+            print(f"Final pump rate = {pump_rate.values[-1]:.4e}")
         else:
             pump_rate = ds["t"] * 0
             
         # 4. Target Recycle vs time
         if "Sd_target_recycle" in ds and "dv" in ds:
             target_recycle = (ds["Sd_target_recycle"].hermesm.clean_guards() * ds["dv"]).sum(["x", "theta"])
-            ax.plot(ds["t"], target_recycle, label="Target Recycle", linestyle="--", lw=2)
+            # ax.plot(ds["t"], target_recycle, label="Target Recycle", linestyle="--", lw=2)
             
             # If Recycling R = 0.99, then the recycled neutrals = 0.99 * Ion_Outflux
             # The particles permanently LOST to the wall = 0.01 * Ion_Outflux
             # Therefore, Loss = (0.01 / 0.99) * target_recycle
             R = 0.99
             target_loss = ((1 - R) / R) * target_recycle
+            ax.plot(ds["t"], target_loss, label="Target Loss = (1-R)/R * Sd_target_recyle, \n R = recycling factor", linestyle="--", lw=2)
+            print(f"Final target_recycle = {target_recycle.values[-1]:.4e}")
+            print(f"Final target_loss = {target_loss.values[-1]:.4e}")
+            total_source = (1 - (1-R)/R) * target_recycle
+            print(f"Final total source = {total_source.values[-1]:.4e}")
         else:
             target_recycle = ds["t"] * 0
             target_loss = ds["t"] * 0
         
+        # 5. Divergence of particle flow
+        # particle flow (1/s)= integral volume of div dot (particle flux), so don't need np.gradient 
+        # 1/s = m^3 * (1/m) * 1/(m^2 * s), so don't need to integrate dv
+        # this means that the flow term is already integrated over the volume
+        if "pfd+_tot_xlow" in ds and "pfd+_tot_ylow" in ds and "pfd_adv_par_ylow" in ds and "pfd_adv_perp_xlow" in ds and "pfd_adv_perp_ylow" in ds:
+            plasmaflow_x        = (ds["pfd+_tot_xlow"].hermesm.clean_guards()).sum(["x", "theta"])
+            plasmaflow_y        = (ds["pfd+_tot_ylow"].hermesm.clean_guards()).sum(["x", "theta"])
+            neutralflow_par_y   = (ds["pfd_adv_par_ylow"].hermesm.clean_guards()).sum(["x", "theta"])
+            neutralflow_perp_x  = (ds["pfd_adv_perp_xlow"].hermesm.clean_guards()).sum(["x", "theta"])
+            neutralflow_perp_y  = (ds["pfd_adv_perp_ylow"].hermesm.clean_guards()).sum(["x", "theta"])
+
+            total_plasma = plasmaflow_x + plasmaflow_y
+            total_neutral = neutralflow_par_y + neutralflow_perp_x +neutralflow_perp_y
+            total_flow = total_plasma + total_neutral
+            print(f"Final total particle flow: {total_flow.values[-1]:.4e}")
+
+            ax.plot(ds["t"], np.abs(total_flow), label="Total particle flow", linestyle="--", lw=2)
+        else:
+            print("Missing particle flow variables")
+
+
         # The true particle balance of the entire simulation
         # Net Source = Puff (source) + Pump (sink) - Target_Loss (sink)
-        true_net_balance = puff_rate + pump_rate - target_loss
-        ax.plot(ds["t"], true_net_balance, label="True Net Balance (Puff+Pump-Loss)", linestyle=":", lw=3, color="magenta")
+        true_net_balance = puff_rate - pump_rate - target_loss
+        print(f"Final net balance: {true_net_balance.values[-1]:.4e}")
+        ax.plot(ds["t"], true_net_balance, label="True Net Balance (Puff-Pump-Loss)", linestyle=":", lw=3, color="magenta", marker = "*")
             
         ax.set_xlabel("Time [s]")
         ax.set_ylabel("Particle rate [$s^{-1}$]")
-        ax.set_yscale("symlog", linthresh=1e18) 
+        # ax.set_yscale("symlog", linthresh=1e18) 
+        # ax.set_ylim([1e19, 1.1e21])
         ax.set_title(f"Particle Balance: {case_name}")
         ax.legend()
         # ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
