@@ -391,11 +391,11 @@ def plot_particle_balance_time(cs, figures_png_path):
         # 1/s = m^3 * (1/m) * 1/(m^2 * s), so don't need to integrate dv
         # this means that the flow term is already integrated over the volume
         if "pfd+_tot_xlow" in ds and "pfd+_tot_ylow" in ds and "pfd_adv_par_ylow" in ds and "pfd_adv_perp_xlow" in ds and "pfd_adv_perp_ylow" in ds:
-            plasmaflow_x        = (ds["pfd+_tot_xlow"].hermesm.clean_guards()).sum(["x", "theta"])
-            plasmaflow_y        = (ds["pfd+_tot_ylow"].hermesm.clean_guards()).sum(["x", "theta"])
-            neutralflow_par_y   = (ds["pfd_adv_par_ylow"].hermesm.clean_guards()).sum(["x", "theta"])
-            neutralflow_perp_x  = (ds["pfd_adv_perp_xlow"].hermesm.clean_guards()).sum(["x", "theta"])
-            neutralflow_perp_y  = (ds["pfd_adv_perp_ylow"].hermesm.clean_guards()).sum(["x", "theta"])
+            plasmaflow_x        = (ds["pfd+_tot_xlow"].shift(x=-1) - ds["pfd+_tot_xlow"]).hermesm.clean_guards().sum(["x", "theta"])
+            plasmaflow_y        = (ds["pfd+_tot_ylow"].shift(theta=-1) - ds["pfd+_tot_ylow"]).hermesm.clean_guards().sum(["x", "theta"])
+            neutralflow_par_y   = (ds["pfd_adv_par_ylow"].shift(theta=-1) - ds["pfd_adv_par_ylow"]).hermesm.clean_guards().sum(["x", "theta"])
+            neutralflow_perp_x  = (ds["pfd_adv_perp_xlow"].shift(x=-1) - ds["pfd_adv_perp_xlow"]).hermesm.clean_guards().sum(["x", "theta"])
+            neutralflow_perp_y  = (ds["pfd_adv_perp_ylow"].shift(theta=-1) - ds["pfd_adv_perp_ylow"]).hermesm.clean_guards().sum(["x", "theta"])
 
             total_plasma = plasmaflow_x + plasmaflow_y
             total_neutral = neutralflow_par_y + neutralflow_perp_x +neutralflow_perp_y
