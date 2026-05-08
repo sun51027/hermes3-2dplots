@@ -330,6 +330,9 @@ def plot_particle_balance_time(cs, figures_png_path):
         ds = case_obj.ds
         
         fig, ax = plt.subplots(figsize=(8, 6))
+        # Plasma conservation
+        # ddt n_p + n_n = - particleflow_p - particleflow_n  + S_puff - S_pump + S_recycle  
+        RHS_sum = 0
         
         # 1. ddt(total density integral of n+plasma)
         if "Ne" in ds and "Nd" in ds and "dv" in ds:
@@ -342,9 +345,10 @@ def plot_particle_balance_time(cs, figures_png_path):
             
             ddt_total = total_density_integral.differentiate("t")
             
-            print(f"[{case_name}] Final total plasma = {total_plasma.values[-1]:.4e}")
-            print(f"[{case_name}] Final total neutral = {total_neutral.values[-1]:.4e}")
-            print(f"[{case_name}] Final ddt_total = {ddt_total.values[-1]:.4e}")
+            print("Final number of particle and ddt(n): ")
+            print(f"\t total plasma = {total_plasma.values[-1]:.4e}")
+            print(f"\t total neutral = {total_neutral.values[-1]:.4e}")
+            print(f"\t ddt(Np + Nn) = {ddt_total.values[-1]:.4e}")
             
             ax.plot(ds["t"], ddt_total, label="d/dt (Total Particles)", lw=2, color="black", marker="o")
         else:
@@ -354,7 +358,9 @@ def plot_particle_balance_time(cs, figures_png_path):
         if "Sd_src" in ds and "dv" in ds:
             puff_rate = (ds["Sd_src"].hermesm.clean_guards() * ds["dv"]).sum(["x", "theta"])
             ax.plot(ds["t"], puff_rate, label="Puff Rate (Sd_src)", linestyle="--", lw=2)
-            print(f"Final puff rate = {puff_rate.values[-1]:.4e}")
+            print("Total puff rate (Sd_src) after integral of volume (1/s): ")
+            print(f"\t puff rate = {puff_rate.values[-1]:.4e}")
+            RHS_sum = puff_rate
         else:
             puff_rate = ds["t"] * 0
         
@@ -363,7 +369,9 @@ def plot_particle_balance_time(cs, figures_png_path):
             pump_rate = np.abs((ds["Sd_pump"].hermesm.clean_guards() * ds["dv"]).sum(["x", "theta"]))
             # Pump is a sink (negative), so we can plot its true value or abs
             ax.plot(ds["t"], np.abs(pump_rate), label="Pump Rate (Sd_pump)", linestyle="--", lw=2)
-            print(f"Final pump rate = {pump_rate.values[-1]:.4e}")
+            print("Pump (Sd_pump) after integral of volume (1/s):")
+            print(f"\t pump rate = {pump_rate.values[-1]:.4e}")
+            RHS_sum -= pump_rate
         else:
             pump_rate = ds["t"] * 0
             
@@ -378,10 +386,12 @@ def plot_particle_balance_time(cs, figures_png_path):
             R = 0.99
             target_loss = ((1 - R) / R) * target_recycle
             ax.plot(ds["t"], target_loss, label="Target Loss = (1-R)/R * Sd_target_recyle, \n R = recycling factor", linestyle="--", lw=2)
-            print(f"Final target_recycle = {target_recycle.values[-1]:.4e}")
-            print(f"Final target_loss = {target_loss.values[-1]:.4e}")
-            total_source = (1 - (1-R)/R) * target_recycle
-            print(f"Final total source = {total_source.values[-1]:.4e}")
+            print("Sd_target_recycle after integral of volume (1/s): ")
+            print(f"\t target_recycle (99% of ion flux back as neutral) = {target_recycle.values[-1]:.4e}")
+            print(f"\t target_loss (1% of ion loss) = {target_loss.values[-1]:.4e}")
+            # total_source = (1 - (1-R)/R) * target_recycle
+            # print(f"Final total source = {total_source.values[-1]:.4e}")
+            RHS_sum += target_recycle
         else:
             target_recycle = ds["t"] * 0
             target_loss = ds["t"] * 0
@@ -400,14 +410,32 @@ def plot_particle_balance_time(cs, figures_png_path):
             total_plasma = plasmaflow_x + plasmaflow_y
             total_neutral = neutralflow_par_y + neutralflow_perp_x +neutralflow_perp_y
             total_flow = total_plasma + total_neutral
-            print(f"Final total particle flow: {total_flow.values[-1]:.4e}")
+            print(f"Particle flow (1/s): ")
+            print(f"\t total plasma flow = {total_plasma.values[-1]:.4e}")
+            print(f"\t total plasma flow = {total_plasma.values[-1]:.4e}")
+            print(f"\t total particle flow: {total_flow.values[-1]:.4e}")
 
             ax.plot(ds["t"], np.abs(total_flow), label="Total particle flow", linestyle="--", lw=2)
+            RHS_sum = RHS_sum - total_flow
         else:
             print("Missing particle flow variables")
 
 
         # The true particle balance of the entire simulation
+        # Plasma conservation
+        # ddt n_p + n_n = - particleflow_p - particleflow_n  + S_puff - S_pump + S_recycle  
+       
+        print("ddt n_p + n_n = - particleflow_p - particleflow_n  + S_puff - S_pump + S_recycle")
+        print(f"LHS ddt_total = {ddt_total.values[-1]:.4e}")
+        print(f"RHS = {RHS_sum.values[-1]:.4e}")
+        difference = ddt_total - RHS_sum
+        print(f"LHS - RHS = {difference.values[-1]:.4e}")
+
+
+        
+        
+        
+        
         # Net Source = Puff (source) + Pump (sink) - Target_Loss (sink)
         true_net_balance = puff_rate - pump_rate - target_loss
         print(f"Final net balance: {true_net_balance.values[-1]:.4e}")

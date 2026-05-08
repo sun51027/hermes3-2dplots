@@ -69,9 +69,9 @@
 
 # python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21 -in Feb_1e21 -o oldbranch_plot -r omp -p outer_lower -m special
 # python3 make_plot.py -i 260310_neutralimit_gcc12_9497476 -in Mar_1e21 -o oldbranch_plot -r omp -p outer_lower -m special
-python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21 -in Feb_1e21 -o 260506_balance -r omp -p outer_lower -m special
+# python3 make_plot.py -i 260217-cdn-46895-nowallpump_limiterOff_1e21 -in Feb_1e21 -o 260506_balance -r omp -p outer_lower -m special
 # python3 make_plot.py -i 260310_neutralimit_gcc12_9497476 -in Mar_1e21 -o 260506_balance -r omp -p outer_lower -m special
-# python3 make_plot.py -i 260504_reproduce_7e20_neumann_nowallpump -o 260506_balance -r omp -p outer_lower -m special
+python3 make_plot.py -i 260504_reproduce_7e20_neumann_nowallpump -o 260506_balance -r omp -p outer_lower -m special
 # python3 make_plot.py -i 260114_cdn_46895_bndry_neumann  260217-cdn-46895-nowallpump_limiterOff_1e21 -in Jan_1.3e22 Feb_1e21 -o oldbranch_plot -r omp -p outer_lower -m benchmark
 # python3 make_plot.py -i 260421_reproduce_1e20_neumann_nowallpump 260417_reproduce_1e20_neumann_NV 260417_reproduce_1e20 -in neumann_nowallpump neumann decaylength -o 260430_bc_compare  -r omp -p outer_lower -m  multifiles
 # python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump -o 260430_reproduce_1e20_neumann_nowallpump -in 1e21  -r omp -p outer_lower -m  benchmark  singlefile
