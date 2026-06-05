@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     if "special" in args.mode:
         compare_last_timestep(case, balance,figures_png_path)
-        # plot_particle_balance_time(case, figures_png_path)
+        plot_particle_balance_time(case, figures_png_path)
 
     end_time = time.time()
     print(f"Total runtime: {end_time - start_time:.2f} seconds")

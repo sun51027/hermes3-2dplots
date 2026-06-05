@@ -26,14 +26,14 @@ The core ionising physics (after git update to core_ionising branch):
   2. v_th = sqrt(8*T / (pi*AA))  -- full mean speed (Stangeby eq. 2.21)
   3. Particle flux: Gamma = 0.25 * v_th * n  (one-sided Maxwellian flux, eq. 2.24)
   4. Momentum flux: Pi = 0.5 * n * T  (kinetic pressure on a wall)
-  5. Energy flux: Q = 2 * n * T * (0.25*v_th) = 2*T * particle_flux
+  5. Energy flux: Q = 2*T * particle_flow  (Stangeby eq. 2.24: Q = 2kT * Gamma)
   6. Multiply by face area da, divide by cell volume for volumetric source.
 
 Key changes from previous version:
   - v_th no longer carries the 0.25; it is now the full mean thermal speed.
   - Particle flow: 0.25 * v_th * n * da  (was v_th_old * n * da, identical value).
   - Momentum flow: 0.5 * n * T * da  (was v_th_old^2 * n * AA * da -- now pressure-based).
-  - Energy flow: 2 * n * T * (0.25*v_th) * da  (same total as before since v_th_new = 4*v_th_old).
+  - Energy flow: 2*T * particle_flow = 0.5*T*v_th*n*da  (was 2*T*v_th*n*da, which was 4x too large).
 """
 
 verbose = True
@@ -250,18 +250,15 @@ def reconstruct_core_ionise():
     ionise_momentum_flow = neutral_momentum_flow * multiplier
 
     ### Energy flow [W = J/s]
-    # C++ line 521: neutral_energy_flow_to_core = 2.0 * tncore * v_th * nncore * dacore
-    # C++ line 522: ionise_energy_flow = neutral_energy_flow * multiplier
+    # C++ (corrected): neutral_energy_flow_to_core = 2.0 * tncore * neutral_particle_flow_to_core
     #
-    # Physics: The energy flux from a half-Maxwellian (Stangeby eq. 2.21/2.24) is:
-    #   Q = n * <v> * 2*T  where <v> = sqrt(8T/pi*m) is the full mean speed.
-    # This is NOT the same as 2*T * particle_flux:
-    #   2*T * Gamma = 2*T * (0.25 * v_th * n)      <- Stangeby 2.24 convention
-    #   C++ energy  = 2*T * v_th * n                <- 4x larger (no 0.25 here)
-    # The C++ uses the full energy flux (no 1/4 factor), which comes from integrating
-    # (1/2)*m*v^2 over the half-Maxwellian distribution directly: gives n*<v>*2T.
-    # This is Stangeby eq. 2.21: q_energy = n * c_bar * 2kT (with c_bar = v_th here).
-    neutral_energy_flow = 2.0 * tncore * v_th * nncore * da
+    # Physics: For a static Maxwellian, the energy flux is Q = 2kT * Gamma
+    #   where Gamma = n*<v>/4 is the one-sided particle flux (Stangeby eq. 2.24).
+    #   So Q = 2*T * particle_flow  (particle_flow already has the 1/4 and area factors).
+    #
+    # The previous formula 2*T*v_th*n*da was 4x too large because it used
+    # the full v_th without the 1/4 factor from the particle flux.
+    neutral_energy_flow = 2.0 * tncore * neutral_particle_flow
     ionise_energy_flow = neutral_energy_flow * multiplier
 
     ### Convert flows to volumetric sources/sinks

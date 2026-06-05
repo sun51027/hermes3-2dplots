@@ -173,7 +173,7 @@ def read_files(input_ids, input_name=None):
 
     cs = {}
     for case in toload:
-        cs[case["name"]] = db.load_case_2D(case["id"], use_squash = case["squash"], verbose = True)
+        # cs[case["name"]] = db.load_case_2D(case["id"], use_squash = case["squash"], verbose = True)
         cs[case["name"]] = db.load_case_2D(case["id"], use_squash = case["squash"], verbose = True)
         cs[case["name"]].extract_2d_tokamak_geometry()
 
