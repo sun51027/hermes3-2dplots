@@ -297,16 +297,9 @@ def analyse_core_energy_budget(timestep=-1, csv_path="core_energy_budget.csv"):
       e- izloss / sink  : |izloss| / |neutral sink| as a percentage
     """
 
-    print("=" * 110)
-    print(f" CORE IONISING ENERGY BUDGET   (time step index = {timestep})")
-    print("=" * 110)
-
-    # Markdown table header (renders nicely if you paste it into notes)
-    print("| Run | Ion energy return | e⁻ izloss | Neutral sink (always on) | "
-          "Net system energy offset | e⁻ izloss / sink |")
-    print("| --- | --- | --- | --- | --- | --- |")
-
-    # Collect every row so we can write the CSV at the end
+    # Collect every row first, THEN print the table.
+    # (Loading prints library warnings, so we keep all the numbers together
+    #  at the end instead of mixing warnings between table rows.)
     rows = []
 
     for data_dir in data_dirs:
@@ -333,13 +326,6 @@ def analyse_core_energy_budget(timestep=-1, csv_path="core_energy_budget.csv"):
 
         pct = abs(e_izloss) / abs(n_sink) * 100 if n_sink != 0 else 0.0
 
-        print(f"| {name} "
-              f"| {ion_return:+.2f} kW "
-              f"| {e_izloss:+.2f} kW "
-              f"| {n_sink:+.2f} kW "
-              f"| **{net:+.2f} kW** "
-              f"| {pct:.1f}% |")
-
         rows.append({
             "run": name,
             "ion_energy_return [kW]": round(ion_return, 4),
@@ -349,7 +335,28 @@ def analyse_core_energy_budget(timestep=-1, csv_path="core_energy_budget.csv"):
             "e_izloss / neutral_sink [%]": round(pct, 2),
         })
 
-    print("=" * 110 + "\n")
+    # ---- Print a clean, aligned table (no markdown pipes) ----
+    # Columns: short header text + how each value is formatted
+    columns = [
+        ("Run",               "run",                         "{:<28}", "{:<28}"),
+        ("Ion return",        "ion_energy_return [kW]",      "{:>14}", "{:>+11.2f} kW"),
+        ("e- izloss",         "e_izloss [kW]",               "{:>14}", "{:>+11.2f} kW"),
+        ("Neutral sink",      "neutral_sink [kW]",           "{:>14}", "{:>+11.2f} kW"),
+        ("Net offset",        "net_energy [kW]",             "{:>14}", "{:>+11.2f} kW"),
+        ("izloss/sink",       "e_izloss / neutral_sink [%]", "{:>12}", "{:>10.1f} %"),
+    ]
+
+    header = "  ".join(hfmt.format(title) for title, _, hfmt, _ in columns)
+
+    print("=" * len(header))
+    print(f" CORE IONISING ENERGY BUDGET   (time step index = {timestep})")
+    print("=" * len(header))
+    print(header)
+    print("-" * len(header))
+    for row in rows:
+        line = "  ".join(vfmt.format(row[key]) for _, key, _, vfmt in columns)
+        print(line)
+    print("=" * len(header) + "\n")
 
     # Write the table to a CSV file (plain numbers, no kW/% suffixes so it stays numeric)
     with open(csv_path, "w", newline="") as f:
