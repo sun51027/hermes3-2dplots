@@ -8,7 +8,7 @@ import os, sys
 import xbout
 import scipy
 import xhermes
-from xhermes import *
+# from xhermes import *
 
 sys.path.append(r"/users/jpm590/2dspace/post-processing/sdtools")
 import hermes3
@@ -49,9 +49,9 @@ def plot_multifiles_profiles_fieldline(cs, region_pol, ring, figures_png_path):
             ("Sd+_rec", "Recombination", "Rate [$m^{-3} s^{-1}$]", True),
             ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",          True),
             ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True),
-            # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
-            # ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
-            # ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
         ],
         "flow":[
             ("efe_cond_ylow", "e conduction flow", "[W]", True),
@@ -104,9 +104,9 @@ def plot_multifiles_profiles_radial(cs, region_rad, figures_png_path):
             ("Sd+_rec", "Recombination", "Rate [$m^{-3} s^{-1}$]", True),
             ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",          True),
             ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True),
-            # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
-            # ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
-            # ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
         ],
         "flow":[
             ("efe_cond_ylow", "e conduction flow", "[W]", True),
@@ -119,7 +119,7 @@ def plot_multifiles_profiles_radial(cs, region_rad, figures_png_path):
         print(f"Number of plots = {nitems} in category {category}")
         cols = 3
         rows = math.ceil(nitems / cols)
-        fig, ax = plt.subplots(rows, cols, figsize=(12, 4 * rows), squeeze=False)
+        fig, ax = plt.subplots(rows, cols, figsize=(10, 3 * rows), squeeze=False)
         
         for idx, (param, title, ylabel, logy) in enumerate(items):
             r, c = divmod(idx, 3)
@@ -127,7 +127,8 @@ def plot_multifiles_profiles_radial(cs, region_rad, figures_png_path):
 
             for case_name, case_obj in cs.items():
                 print(f"Plotting {case_name} with {title}...")
-                ds = case_obj.ds.isel(t=-1)
+                ds = case_obj.ds.isel(t=30)
+                # ds = case_obj.ds.isel(t=-1)
                 df = get_1d_radial_data(ds, params=[p[0] for p in items], region=region_rad)
                 
                 axi.plot(df["Srad"], np.abs(df[param]), label=f"{case_name}")

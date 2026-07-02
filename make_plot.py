@@ -1,4 +1,4 @@
-from pltool.plotting_single import * 
+# from pltool.plotting_single import * 
 from pltool.plotting_multi_rings import * 
 from pltool.plotting_multi_files import * 
 from pltool.plotting_polygon import *
@@ -37,8 +37,7 @@ if __name__ == "__main__":
     # # Read Hermes-3 case 
     # case = read_files(args.input, args.input_name)
 
-    # Read SOLPS case 
-    balance = read_solps_balance()
+
 
     ## Create output folder
     figures_png_path = args.output
@@ -48,6 +47,9 @@ if __name__ == "__main__":
 
     ## Run program
     if "benchmark" in args.mode:
+        # Read SOLPS case 
+        balance = read_solps_balance()
+        balance = adapt_solps_conventions(balance)
         print("========================================\n")
         print("Benchmark against single file mode")
         print("========================================")

@@ -8,7 +8,7 @@ import os, sys
 import xbout
 import scipy
 import xhermes
-from xhermes import *
+# from xhermes import *
 
 sys.path.append(r"/users/jpm590/2dspace/post-processing/sdtools")
 import hermes3
@@ -22,6 +22,18 @@ from hermes3.plotting import *
 from hermes3.grid_fields import *
 from hermes3.accessors import *
 from hermes3.selectors import *
+
+def adapt_solps_conventions(bal):
+    """Map solps_pp fields onto Hermes-3 benchmark names, without editing solps_pp."""
+    b = bal.bal
+    b["Pd"] = b["Pa"]                                             # d pressure  = atom pressure (Pa)
+    b["Td"] = b["Tn"]                                             # d temperature = neutral T (Tn), not Ta
+    b["Edd+_cx"] = b["eirene_mc_eapl_shi_bal"].sum(axis=2) / b["vol"]  # CX energy [W/m3]
+    b["Nd"] = b["Na"]
+    b["Nd+"] = b["Ne"] # quasi neutrality
+    bal.params = list(b.keys())
+    return bal
+
 
 def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_path):
 
@@ -43,6 +55,8 @@ def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_
             ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",          True),
             ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True),
             # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            # ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
         ]
     }
 
@@ -65,7 +79,7 @@ def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_
                 axi = ax[r,c]
     
                 # SOLPS
-                df_solps = bal.get_1d_poloidal_data(params=[p[0] for p in items], region=region_pol, sepadd=ring, target_first=True)
+                df_solps = bal.get_1d_poloidal_data(params=[p[0] for p in items], region=region_pol, sepadd=ring, target_first=True, interpolate_midplane=False, interpolate_radial=False )
                 axi.plot(df_solps["Spar"], np.abs(df_solps[param]), label=f"SOLPS", ls = "--")
     
                 # Find SOLPS's x-point
@@ -77,7 +91,7 @@ def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_
                     print(f"Plotting {case_name} with {title}...")
                     # case_name = list(cs.keys())[0] # if input multiple files, select the first one
                     ds = cs[case_name].ds.isel(t=-1)
-                    df = get_1d_poloidal_data(ds, params=[p[0] for p in items], region=region_pol, sepadd=ring, target_first=True)
+                    df = get_1d_poloidal_data(ds, params=[p[0] for p in items], region=region_pol, sepadd=ring, target_first=True, interpolate_midplane=False, interpolate_radial=False)
         
                     # Find Hermes-3's x-point
                     local_Rmin_h = np.argmin(df["R"].values) # return location
@@ -129,7 +143,7 @@ def plot_bm_profiles_radial(cs, bal, region_rad, figures_png_path):
             ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True),
             # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
             # ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
-            # ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
         ]
     }
    

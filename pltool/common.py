@@ -12,7 +12,7 @@ import os, sys, pathlib, shlex, subprocess, glob
 import xbout
 import scipy
 import xhermes
-from xhermes import *
+# from xhermes import *
 
 sys.path.append(r"/Users/zero/workspace/phd_work/hms_output/sdtools/")
 # sys.path.append(r"/users/jpm590/2dspace/post-processing/sdtools")
@@ -219,17 +219,17 @@ def setup_matplotlib() -> None:
     # Base DPI and font
     plt.rcParams["figure.dpi"] = 120
     plt.rcParams["savefig.dpi"] = 300
-    plt.rcParams["font.size"] = 13
+    plt.rcParams["font.size"] = 14
 
     # Axes and lines
     plt.rcParams["axes.grid"] = False  # you turn grid on per-axis
-    plt.rcParams["axes.labelsize"] = 13
-    plt.rcParams["axes.titlesize"] = 13
+    plt.rcParams["axes.labelsize"] = 14
+    plt.rcParams["axes.titlesize"] = 14
     plt.rcParams["lines.linewidth"] = 1.5
     # If compare multiple files
-    # plt.rcParams["axes.prop_cycle"] = plt.cycler(color=plt.cm.Dark2.colors)
+    plt.rcParams["axes.prop_cycle"] = plt.cycler(color=plt.cm.Dark2.colors)
 
     # Legend
     plt.rcParams["legend.frameon"] = True  # do you want the frame or not
-    plt.rcParams["legend.fontsize"] =  13
+    plt.rcParams["legend.fontsize"] =  14
 

@@ -102,8 +102,23 @@
 # python3 make_plot.py -i 260503_reproduce_5e20_neumann_nowallpump 260513_reproduce_6e20_neumann_nowallpump 260504_reproduce_7e20_neumann_nowallpump -in 5e20 6e20 7e20 -o 260518_benchmark_all -r omp -p outer_lower -m special
 # python3 make_plot.py -i 260503_reproduce_5e20_neumann_nowallpump 260513_reproduce_6e20_neumann_nowallpump 260504_reproduce_7e20_neumann_nowallpump -in 5e20 6e20 7e20 -o 260518_benchmark_all -r omp -p outer_lower -m benchmark
 # python3 make_plot.py -i 260526_5e20_neumann_nowallpump 260528_5e20_neumann_nowallpump_coreiz -in normal core_iz -o 260529_5e20_core_iz -r omp -p outer_lower -m special
-python3 make_plot.py -i 260601_reproduce_6e20_neumann_nowallpump_coreiz 260513_reproduce_6e20_neumann_nowallpump -in core_iz normal -o 260603_highresol_6e20_core_iz -r omp -p outer_lower -m special benchmark
-
+# python3 make_plot.py -i 260526_5e20_neumann_nowallpump 260528_5e20_neumann_nowallpump_coreiz 260604_5e20_neumann_nowallpump_coreiz_scratch 260605_5e20_neumann_nowallpump_coreiz_a5 \
+# -in normal core_iz from_scratch alpha_5 -o 260608_5e20_core_iz -r omp -p outer_lower -m benchmark
+# python3 make_plot.py -i 260526_5e20_neumann_nowallpump 260615_5e20_neumann_nowallpump_coreiz_izloss 260610_5e20_neumann_nowallpump_coreiz_onlyPF -in origin izloss_ON onlyPF -o 260615_coreiz -r omp -p outer_lower -m special benchmark
+# python3 make_plot.py -i 260610_5e20_neumann_nowallpump_coreiz_NVd 260615_5e20_neumann_nowallpump_coreiz_izloss 260610_5e20_neumann_nowallpump_coreiz_onlyPF -in izloss_OFF izloss_ON onlyPF -o 260615_coreiz -r omp -p outer_lower -m special benchmark
+# python3 make_plot.py -i 260601_reproduce_6e20_neumann_nowallpump_coreiz 260513_reproduce_6e20_neumann_nowallpump -in core_iz normal -o 260603_highresol_6e20_core_iz -r omp -p outer_lower -m special benchmark
+# python3 make_plot.py -i 260617_5e20_corebc_return_True_izloss_True 260617_5e20_corebc_return_True_izloss_False 260617_5e20_corebc_izloss_True 260617_5e20_corebc_izloss_False 260526_5e20_neumann_nowallpump \
+# -in return_O_izloss_O return_O_izloss_X return_X_izloss_O return_X_izloss_X normal -o 260617_coreiz_compr_all -r omp -p outer_lower -m benchmark
 # python3 make_plot.py -i 260519_1e21_neumann_nowallpump 260521_1e21_nowallpump_core_iz -in normal core_iz -o 270522_core_iz -r omp -p outer_lower -m benchmark
+# python3 make_plot.py -i 260619_lowrsl_5e20_scratch 260619_lowrsl_5e20_restart -in scratch restart -o 270621_5e20_scratch_restart -r omp -p outer_lower -m benchmark
+# python3 make_plot.py -i 260619_lowrsl_5e20_scratch 260619_lowrsl_5e20_corebc_OO_scratch 260619_lowrsl_5e20_corebc_XX_scratch \
+# -in normal corebc_OO corebc_XX -o 270621_lowrsl_5e20_corebc_scratch -r omp -p outer_lower -m benchmark
+# python3 make_plot.py -i 260619_lowrsl_5e20_restart 260619_lowrsl_5e20_corebc_OO_scratch 260619_lowrsl_5e20_corebc_XX_scratch \
+#   -in normal corebc_OO corebc_XX -o 270621_lowrsl_5e20_corebc_restart -r omp -p outer_lower -m benchmark
+python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump 260619_highrsl_6e20_corebc_return_X_izloss_X \
+  -in normal corebc_XX -o 270701_highrsl_6e20_corebc_scratch -r omp -p outer_lower_sol -m benchmark
+# python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump 260619_highrsl_6e20_corebc_return_O_izloss_O 260619_highrsl_6e20_corebc_return_X_izloss_X \
+# -in normal corebc_OO corebc_XX -o 270621_highrsl_6e20_corebc_scratch -r omp -p outer_lower -m benchmark
+
 ######### Low and high resolution comparison
 # python3 make_plot.py -i 260526_5e20_neumann_nowallpump 260513_reproduce_6e20_neumann_nowallpump -in Low_5e21 High_6e20 -o 260527_low_hig_comp -r omp -p outer_lower -m benchmark special

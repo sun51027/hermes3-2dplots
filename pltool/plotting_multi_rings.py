@@ -8,7 +8,7 @@ import os, sys
 import xbout
 import scipy
 import xhermes
-from xhermes import *
+# from xhermes import *
 
 sys.path.append(r"/users/jpm590/2dspace/post-processing/sdtools")
 import hermes3
