@@ -115,10 +115,10 @@
 # -in normal corebc_OO corebc_XX -o 270621_lowrsl_5e20_corebc_scratch -r omp -p outer_lower -m benchmark
 # python3 make_plot.py -i 260619_lowrsl_5e20_restart 260619_lowrsl_5e20_corebc_OO_scratch 260619_lowrsl_5e20_corebc_XX_scratch \
 #   -in normal corebc_OO corebc_XX -o 270621_lowrsl_5e20_corebc_restart -r omp -p outer_lower -m benchmark
-python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump 260619_highrsl_6e20_corebc_return_X_izloss_X \
-  -in normal corebc_XX -o 270701_highrsl_6e20_corebc_scratch -r omp -p outer_lower_sol -m benchmark
+# python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump 260619_highrsl_6e20_corebc_return_X_izloss_X \
+#   -in normal corebc_XX -o 270701_highrsl_6e20_corebc_scratch -r omp -p outer_lower_sol -m benchmark
 # python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump 260619_highrsl_6e20_corebc_return_O_izloss_O 260619_highrsl_6e20_corebc_return_X_izloss_X \
-# -in normal corebc_OO corebc_XX -o 270621_highrsl_6e20_corebc_scratch -r omp -p outer_lower -m benchmark
+# -in normal corebc_OO corebc_XX -o 260703_corebc -r omp -p outer_lower -m benchmark
 
-######### Low and high resolution comparison
-# python3 make_plot.py -i 260526_5e20_neumann_nowallpump 260513_reproduce_6e20_neumann_nowallpump -in Low_5e21 High_6e20 -o 260527_low_hig_comp -r omp -p outer_lower -m benchmark special
+############## Polygon ###############
+python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump -o 260703_solps_polygon -m polygon --solps

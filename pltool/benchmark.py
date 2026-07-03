@@ -100,14 +100,16 @@ def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_
                     # print(f"The coordinate is: {df["Spar"][local_Rmin_h]}")
             
                     # Hermes-3 
-                    axi.plot(np.abs(df["Spar"]), np.abs(df[param]), label=f"Hermes-3 {case_name}")
+                    axi.plot(np.abs(df["Spar"]), (df[param]), label=f"Hermes-3 {case_name}")
+                    # axi.plot(np.abs(df["Spar"]), np.abs(df[param]), label=f"Hermes-3 {case_name}")
                     axi.set_title(title)
                     axi.set_ylabel(ylabel)
                     axi.set_xlabel("")
                     axi.grid(True, alpha=0.7)
                     
                     if logy:
-                        axi.set_yscale("log")
+                        axi.set_yscale("symlog")
+                        # axi.set_yscale("log")
     
             xpt_h = min(xpt_spar_hlist)
             xpt_s = min(xpt_spar_hlist)

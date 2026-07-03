@@ -78,11 +78,14 @@ def build_base_parser():
             type=str, 
             default="linear", 
             help="linear or log")
-    p.add_argument("-m", "--mode",  
+    p.add_argument("-m", "--mode",
             required=True,
             nargs="+",
-            type=str, 
+            type=str,
             help="benchmark? polygon? multifiles? multi_benchmark?")
+    p.add_argument("--solps",
+            action="store_true",
+            help="In polygon mode, add a side-by-side SOLPS polygon column (Hermes-3 | SOLPS)")
 
     return p
 

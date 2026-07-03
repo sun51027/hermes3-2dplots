@@ -70,6 +70,18 @@ if __name__ == "__main__":
         print("Plot two-dim polygon mode")
         print("========================================")
 
+        # Optionally read SOLPS for a side-by-side comparison column
+        bal = None
+        if args.solps:
+            print("SOLPS comparison enabled (Hermes-3 | SOLPS)")
+            bal = read_solps_balance()
+            bal = adapt_solps_conventions(bal)
+
+        plot_temperature(case, figures_png_path, solps=args.solps, bal=bal)
+        plot_density(case, figures_png_path, solps=args.solps, bal=bal)
+        plot_pressure(case, figures_png_path, solps=args.solps, bal=bal)
+        plot_momentum(case, figures_png_path, solps=args.solps, bal=bal)
+
     if "singlefile" in args.mode:
         print("========================================\n")
         print("Plot profiles for single file (may contain several rings)")
