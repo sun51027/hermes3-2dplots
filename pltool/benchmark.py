@@ -1,4 +1,7 @@
-from .common import build_base_parser, read_files, setup_matplotlib, read_solps_balance, format_legend_and_axes
+from .common import (
+    build_base_parser, read_files, setup_matplotlib, read_solps_balance,
+    format_legend_and_axes, H3_COLORS, H3_STYLES, SOLPS_COLOR, SOLPS_STYLE,
+)
 import math
 import numpy as np
 import matplotlib
@@ -23,16 +26,54 @@ from hermes3.grid_fields import *
 from hermes3.accessors import *
 from hermes3.selectors import *
 
-def adapt_solps_conventions(bal):
-    """Map solps_pp fields onto Hermes-3 benchmark names, without editing solps_pp."""
-    b = bal.bal
-    b["Pd"] = b["Pa"]                                             # d pressure  = atom pressure (Pa)
-    b["Td"] = b["Tn"]                                             # d temperature = neutral T (Tn), not Ta
-    b["Edd+_cx"] = b["eirene_mc_eapl_shi_bal"].sum(axis=2) / b["vol"]  # CX energy [W/m3]
-    b["Nd"] = b["Na"]
-    b["Nd+"] = b["Ne"] # quasi neutrality
-    bal.params = list(b.keys())
-    return bal
+
+
+def core_avg_hermes(ds, param, region="core_noguards"):
+    """Volume-weighted mean of `param` over closed flux surfaces (inside separatrix)."""
+    sub = ds.hermesm.select_region(region)   # radial 0..ixseps1, core poloidal range
+    q, dv = sub[param], sub["dv"]
+    return float((q * dv).sum() / dv.sum())
+
+
+def core_avg_solps(bal, param):
+    """Volume-weighted mean of `param` inside the separatrix (SOLPS balance)."""
+    data = np.asarray(bal.bal[param])        # (poloidal, radial)
+    vol = np.asarray(bal.bal["vol"])
+    pol = bal.psel["core"]                    # core poloidal indices (inner + outer)
+    rad = slice(1, bal.g["sep"])              # inside separatrix, drop inner guard ring
+    q = data[pol][:, rad]
+    w = vol[pol][:, rad]
+    return float(np.nansum(q * w) / np.nansum(w))
+
+
+def print_core_averages(cs, bal, params=("Te", "Td+", "Ne", "Nd+"), region="core_noguards"):
+    """Print a volume-weighted core (inside-separatrix) average table: SOLPS vs Hermes-3."""
+    print("\n=== Volume-weighted core averages (inside separatrix) ===")
+
+    header = f"{'param':8s} | {'SOLPS':>12s}"
+    for case_name in cs:
+        header += f" | {'H3 ' + case_name:>20s}"
+    print(header)
+
+    for param in params:
+        try:
+            s_val = core_avg_solps(bal, param)
+        except Exception as e:
+            s_val = float("nan")
+            print(f"  [warn] SOLPS {param}: {e}")
+
+        row = f"{param:8s} | {s_val:12.4g}"
+        for case_name in cs:
+            ds = cs[case_name].ds.isel(t=-1)
+            try:
+                h_val = core_avg_hermes(ds, param, region=region)
+            except Exception as e:
+                h_val = float("nan")
+                print(f"  [warn] Hermes-3 {case_name} {param}: {e}")
+            rel = (h_val - s_val) / s_val * 100.0 if s_val else float("nan")
+            row += f" | {h_val:12.4g} ({rel:+.1f}%)"
+        print(row)
+    print("=" * 60)
 
 
 def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_path):
@@ -80,14 +121,14 @@ def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_
     
                 # SOLPS
                 df_solps = bal.get_1d_poloidal_data(params=[p[0] for p in items], region=region_pol, sepadd=ring, target_first=True, interpolate_midplane=False, interpolate_radial=False )
-                axi.plot(df_solps["Spar"], np.abs(df_solps[param]), label=f"SOLPS", ls = "--")
+                axi.plot(df_solps["Spar"], np.abs(df_solps[param]), label="SOLPS", color=SOLPS_COLOR, **SOLPS_STYLE)
     
                 # Find SOLPS's x-point
                 local_Rmin_solps = np.argmin(df_solps["R"].values) # return location
                 # print(f"SOLPS  location of Rmin: {local_Rmin_solps}, value: {np.min(df_solps['R'].values)}")
                 xpt_spar_slist.append(float(df_solps["Spar"][local_Rmin_solps]))
     
-                for case_name, case_obj in cs.items():
+                for i, (case_name, case_obj) in enumerate(cs.items()):
                     print(f"Plotting {case_name} with {title}...")
                     # case_name = list(cs.keys())[0] # if input multiple files, select the first one
                     ds = cs[case_name].ds.isel(t=-1)
@@ -100,7 +141,7 @@ def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_
                     # print(f"The coordinate is: {df["Spar"][local_Rmin_h]}")
             
                     # Hermes-3 
-                    axi.plot(np.abs(df["Spar"]), (df[param]), label=f"Hermes-3 {case_name}")
+                    axi.plot(np.abs(df["Spar"]), (df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
                     # axi.plot(np.abs(df["Spar"]), np.abs(df[param]), label=f"Hermes-3 {case_name}")
                     axi.set_title(title)
                     axi.set_ylabel(ylabel)
@@ -166,16 +207,16 @@ def plot_bm_profiles_radial(cs, bal, region_rad, figures_png_path):
             # Read SOLPS first (only once if multi Hermes-3 files)
             # SOLPS dist = Srad
             df_solps = bal.get_1d_radial_data(params=[p[0] for p in items], region=region_rad)
-            axi.plot(df_solps["dist"], np.abs(df_solps[param]), label=f"SOLPS", ls = "--")
+            axi.plot(df_solps["dist"], np.abs(df_solps[param]), label="SOLPS", color=SOLPS_COLOR, **SOLPS_STYLE)
 
             # Loop through all profiles for each file
-            for case_name, case_obj in cs.items():
+            for i, (case_name, case_obj) in enumerate(cs.items()):
                 print(f"Plotting {case_name} with {title}...")
                 ds = cs[case_name].ds.isel(t=-1)
                 df = get_1d_radial_data(ds, params=[p[0] for p in items], region=region_rad)
 
                 # Hermes-3 
-                axi.plot(df["Srad"], np.abs(df[param]), label=f"Hermes-3 {case_name}")
+                axi.plot(df["Srad"], np.abs(df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
         
                 axi.set_title(title)
                 axi.set_ylabel(ylabel)

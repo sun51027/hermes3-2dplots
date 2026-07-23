@@ -22,7 +22,8 @@ from hermes3.grid_fields import *
 from hermes3.accessors import *
 from hermes3.selectors import *
 
-def _plot_solps_polygon(bal, solps_param, ax, logscale=False):
+def _plot_solps_polygon(bal, solps_param, ax, logscale=False, cmap="Spectral_r",
+                        vmin=None, vmax=None):
     """Plot a single SOLPS field on the given axis, matching the Hermes-3 style.
 
     solps_param is None when the field has no SOLPS counterpart; in that case
@@ -31,8 +32,41 @@ def _plot_solps_polygon(bal, solps_param, ax, logscale=False):
     if solps_param is None or bal is None:
         ax.set_axis_off()
         return
-    bal.plot_2d(solps_param, ax=ax, cmap="Spectral_r", antialias=True,
-                logscale=logscale, separatrix=True)
+    bal.plot_2d(solps_param, ax=ax, cmap=cmap, antialias=True,
+                logscale=logscale, vmin=vmin, vmax=vmax, separatrix=True)
+
+
+def _log_vlims(values, vmin, vmax):
+    """Default (vmin, vmax) for a log plot of a (possibly signed) field.
+
+    Uses the data's natural range, but keeps the bounds off exactly zero so
+    xbout's norm is valid regardless of sign:
+      * non-negative data -> both bounds positive  (LogNorm)
+      * mixed-sign data    -> vmin < 0 < vmax       (SymLogNorm, negatives shown)
+      * non-positive data  -> vmin < 0, tiny +vmax  (SymLogNorm straddling zero)
+    A zero bound would make SymLogNorm's linthresh zero ("linthresh must be
+    positive"); a signed bound would make LogNorm invalid. Explicit vmin/vmax
+    pass through unchanged so they can be adjusted freely.
+    """
+    vals = np.asarray(values)
+    finite = vals[np.isfinite(vals)]
+    lo = float(finite.min()) if finite.size else 0.0
+    hi = float(finite.max()) if finite.size else 0.0
+    nonzero = np.abs(finite[finite != 0])
+    floor = float(nonzero.min()) if nonzero.size else 1.0  # smallest magnitude present
+    if vmin is None:
+        vmin = floor if lo >= 0 else lo
+    if vmax is None:
+        vmax = hi if hi > 0 else floor
+    return vmin, vmax
+
+
+def _plot_hermes_reaction(da, ax, vmin=None, vmax=None):
+    """Log-plot a Hermes-3 reaction field over its natural range (vmin/vmax optional)."""
+    da = da.hermes.clear_guards()
+    vmin, vmax = _log_vlims(da.values, vmin, vmax)
+    da.bout.polygon(ax=ax, cmap="Spectral_r", antialias=True,
+                    logscale=True, vmin=vmin, vmax=vmax)
 
 
 def plot_temperature(cs, figures_png_path, solps=False, bal=None):
@@ -53,15 +87,15 @@ def plot_temperature(cs, figures_png_path, solps=False, bal=None):
             fig, ax = plt.subplots(2, len(fields), figsize=(4 * len(fields), 8),
                                    constrained_layout=True, squeeze=False)
             for col, (h_param, s_param) in enumerate(fields):
-                ds[h_param].bout.polygon(ax=ax[0, col], cmap="Spectral_r", antialias=True)
-                _plot_solps_polygon(bal, s_param, ax[1, col])
+                ds[h_param].hermes.clear_guards().bout.polygon(ax=ax[0, col], cmap="Spectral_r", antialias=True)
+                _plot_solps_polygon(bal, s_param, ax[1, col], logscale=False)
             ax[0, 0].set_ylabel("Hermes-3")
             ax[1, 0].set_ylabel("SOLPS")
         else:
             fig, ax = plt.subplots(1, 3, figsize=(10, 6), constrained_layout=True)
-            ds["Te"].bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True,) #vmin=1, vmax=100)
-            ds["Td"].bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True,) #vmin=1, vmax=100)
-            ds["Td+"].bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True,)# vmin=1, vmax=100)
+            ds["Te"].hermes.clear_guards().bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True,) #vmin=1, vmax=100)
+            ds["Td"].hermes.clear_guards().bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True,) #vmin=1, vmax=100)
+            ds["Td+"].hermes.clear_guards().bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True,)# vmin=1, vmax=100)
 
         fig.suptitle(f"{case_name}")
         fig.savefig(f"{figures_png_path}/{case_name}_T_polygon.png")
@@ -72,7 +106,7 @@ def plot_density(cs, figures_png_path, solps=False, bal=None):
     fields = [
         ("Ne",  "Ne"),
         ("Nd",  "Nd"),
-        ("Nd+", "Ne"),
+        ("Nd+", "Nd+"),
     ]
 
     for case_name, case_obj in cs.items():
@@ -84,15 +118,15 @@ def plot_density(cs, figures_png_path, solps=False, bal=None):
             fig, ax = plt.subplots(2, len(fields), figsize=(4 * len(fields), 8),
                                    constrained_layout=True, squeeze=False)
             for col, (h_param, s_param) in enumerate(fields):
-                ds[h_param].bout.polygon(ax=ax[0, col], cmap="Spectral_r", antialias=True, logscale=True)
-                _plot_solps_polygon(bal, s_param, ax[1, col], logscale=True)
+                ds[h_param].hermes.clear_guards().bout.polygon(ax=ax[0, col], cmap="Spectral_r", antialias=True, logscale=False)
+                _plot_solps_polygon(bal, s_param, ax[1, col], logscale=False, vmin=1e18 , vmax=3e19 )
             ax[0, 0].set_ylabel("Hermes-3")
             ax[1, 0].set_ylabel("SOLPS")
         else:
             fig, ax = plt.subplots(1, 3, figsize=(10, 6), constrained_layout=True)
-            ds["Ne"].bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True, logscale = True, )
-            ds["Nd"].bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True, logscale = True, )
-            ds["Nd+"].bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True, logscale = True,)
+            ds["Ne"].hermes.clear_guards().bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True, logscale = False, vmin=1e18 , vmax=3e19)
+            ds["Nd"].hermes.clear_guards().bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True, logscale = False, vmin=1e18 , vmax=3e19)
+            ds["Nd+"].hermes.clear_guards().bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True, logscale = False,vmin=1e18 , vmax=3e19)
 
         fig.suptitle(f"{case_name}")
         fig.savefig(f"{figures_png_path}/{case_name}_N_polygon.png")
@@ -102,7 +136,7 @@ def plot_pressure(cs, figures_png_path, solps=False, bal=None):
     # SOLPS: Pd -> Pa (atom pressure)
     fields = [
         ("Pe",  "Pe"),
-        ("Pd",  "Pa"),
+        ("Pd",  "Pd"),
         ("Pd+", "Pd+"),
     ]
 
@@ -115,15 +149,15 @@ def plot_pressure(cs, figures_png_path, solps=False, bal=None):
             fig, ax = plt.subplots(2, len(fields), figsize=(4 * len(fields), 8),
                                    constrained_layout=True, squeeze=False)
             for col, (h_param, s_param) in enumerate(fields):
-                ds[h_param].bout.polygon(ax=ax[0, col], cmap="Spectral_r", antialias=True, logscale=True)
+                ds[h_param].hermes.clear_guards().bout.polygon(ax=ax[0, col], cmap="Spectral_r", antialias=True, logscale=True)
                 _plot_solps_polygon(bal, s_param, ax[1, col], logscale=True)
             ax[0, 0].set_ylabel("Hermes-3")
             ax[1, 0].set_ylabel("SOLPS")
         else:
             fig, ax = plt.subplots(1, 3, figsize=(10, 6), constrained_layout=True)
-            ds["Pe"].bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True, logscale = True, )
-            ds["Pd"].bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True, logscale = True, )
-            ds["Pd+"].bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True, logscale = True,)
+            ds["Pe"].hermes.clear_guards().bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True, logscale = True, )
+            ds["Pd"].hermes.clear_guards().bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True, logscale = True, )
+            ds["Pd+"].hermes.clear_guards().bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True, logscale = True,)
 
         fig.suptitle(f"{case_name}")
         fig.savefig(f"{figures_png_path}/{case_name}_P_polygon.png")
@@ -146,18 +180,53 @@ def plot_momentum(cs, figures_png_path, solps=False, bal=None):
             fig, ax = plt.subplots(2, len(fields), figsize=(4 * len(fields), 8),
                                    constrained_layout=True, squeeze=False)
             for col, (h_param, s_param) in enumerate(fields):
-                ds[h_param].bout.polygon(ax=ax[0, col], cmap="Spectral_r", antialias=True, logscale=True, vmax=1e-3, vmin=-1e-3)
+                ds[h_param].hermes.clear_guards().bout.polygon(ax=ax[0, col], cmap="Spectral_r", antialias=True, logscale=True, vmax=1e-3, vmin=-1e-3)
                 _plot_solps_polygon(bal, s_param, ax[1, col], logscale=True)
             ax[0, 0].set_ylabel("Hermes-3")
             ax[1, 0].set_ylabel("SOLPS")
         else: 
             fig, ax = plt.subplots(1, 3, figsize=(10, 6), constrained_layout=True)
-            ds["NVe"].bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True, logscale = True, )
-            ds["NVd"].bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True, logscale = True, )
-            ds["NVd+"].bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True, logscale = True,)
+            ds["NVe"].hermes.clear_guards().bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True, logscale = True, )
+            ds["NVd"].hermes.clear_guards().bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True, logscale = True, )
+            ds["NVd+"].hermes.clear_guards().bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True, logscale = True,)
 
         fig.suptitle(f"{case_name}") 
         fig.savefig(f"{figures_png_path}/{case_name}_NV_polygon.png")
+
+def plot_reaction(cs, figures_png_path, solps=False, bal=None, vmin=None, vmax=None):
+
+    # SOLPS only provides d+ parallel momentum; NVe/NVd have no counterpart
+    fields = [
+        ("Sd+_rec", "Sd+_rec"),
+        ("Sd+_iz",  "Sd+_iz"),
+        ("Edd+_cx", "Edd+_cx"),
+    ]
+
+    for case_name, case_obj in cs.items():
+        print(f"Plotting reaction polygon for {case_name}")
+
+        ds = case_obj.ds.isel(t=-1)
+
+        if solps:
+            fig, ax = plt.subplots(2, len(fields), figsize=(4 * len(fields), 8),
+                                   constrained_layout=True, squeeze=False)
+            for col, (h_param, s_param) in enumerate(fields):
+                _plot_hermes_reaction(ds[h_param], ax[0, col], vmin=vmin, vmax=vmax)
+                if s_param is not None:
+                    s_vmin, s_vmax = _log_vlims(bal.bal[s_param], vmin, vmax)
+                else:
+                    s_vmin, s_vmax = vmin, vmax
+                _plot_solps_polygon(bal, s_param, ax[1, col], logscale=True,
+                                    vmin=s_vmin, vmax=s_vmax)
+            ax[0, 0].set_ylabel("Hermes-3")
+            ax[1, 0].set_ylabel("SOLPS")
+        else:
+            fig, ax = plt.subplots(1, 3, figsize=(10, 6), constrained_layout=True)
+            for col, (h_param, _) in enumerate(fields):
+                _plot_hermes_reaction(ds[h_param], ax[col], vmin=vmin, vmax=vmax)
+
+        fig.suptitle(f"{case_name}")
+        fig.savefig(f"{figures_png_path}/{case_name}_reaction_polygon.png")
 # def run_polygon():
 
 #     setup_matplotlib()

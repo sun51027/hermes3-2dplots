@@ -127,8 +127,8 @@ def plot_multifiles_profiles_radial(cs, region_rad, figures_png_path):
 
             for case_name, case_obj in cs.items():
                 print(f"Plotting {case_name} with {title}...")
-                ds = case_obj.ds.isel(t=30)
-                # ds = case_obj.ds.isel(t=-1)
+                # ds = case_obj.ds.isel(t=30)
+                ds = case_obj.ds.isel(t=-1)
                 df = get_1d_radial_data(ds, params=[p[0] for p in items], region=region_rad)
                 
                 axi.plot(df["Srad"], np.abs(df[param]), label=f"{case_name}")

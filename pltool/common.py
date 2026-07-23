@@ -32,6 +32,28 @@ from code_comparison.solps_pp import *
 import time
 
 
+# ---- Plot style config for multi-file / benchmark comparisons ----
+
+# Hermes-3 file colours; cycles if more files than entries.
+H3_COLORS = ["royalblue", "limegreen", "darkorange"]
+# H3_COLORS = ["cyan", "darkorange", "magenta"]
+
+# Hermes-3 per-file line/marker styles; cycles if more files than entries.
+# Note: circle marker is lowercase "o"; "X" (filled) and "x" (thin) both valid.
+H3_STYLES = [
+    # dict(ls="none", marker="v"),                # file 1: dashed line
+    # dict(ls="none", marker="o"),  # file 2: X markers only
+    # dict(ls="none", marker="x"),  # file 3: O markers only
+    dict(ls="--", lw=3),                # file 1: dashed line
+    dict(ls="-.", lw=3 ),  # file 2: X markers only
+    dict(ls=":", lw=3),  # file 3: O markers only
+]
+
+# SOLPS reference curve style.
+SOLPS_COLOR = "dimgrey"
+SOLPS_STYLE = dict(ls="solid", alpha = 0.8)        # solid line
+
+
 def build_base_parser():
 # def build_base_parser(description: str) -> argparse.ArgumentParser:
     """Base parser shared by multi and single plot scripts."""
@@ -185,12 +207,26 @@ def read_files(input_ids, input_name=None):
 def read_solps_balance():
 
     # SOLPScase init includes "balance.nc", so only path is required
-    input_path = "/Users/zero/workspace/phd_work/hms_output"
+    # input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_limiter_off"
+    input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_Luciani_off"
+    # input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_Luciani_off_cx100/"
     # input_path = "/users/jpm590/2dspace/post-processing/xhermes"
     bal = SOLPScase(input_path)
 
     return bal
 
+
+
+def adapt_solps_conventions(bal):
+    """Map solps_pp fields onto Hermes-3 benchmark names, without editing solps_pp."""
+    b = bal.bal
+    b["Pd"] = b["Pa"]                                             # d pressure  = atom pressure (Pa)
+    b["Td"] = b["Tn"]                                             # d temperature = neutral T (Tn), not Ta
+    b["Edd+_cx"] = b["eirene_mc_eapl_shi_bal"].sum(axis=2) / b["vol"]  # CX energy [W/m3]
+    b["Nd"] = b["Na"]
+    b["Nd+"] = b["Ne"] # quasi neutrality
+    bal.params = list(b.keys())
+    return bal
 
 def format_legend_and_axes(fig, ax, n_plots, xlabel):
     handles, labels = ax[0, 0].get_legend_handles_labels()
@@ -230,7 +266,8 @@ def setup_matplotlib() -> None:
     plt.rcParams["axes.titlesize"] = 14
     plt.rcParams["lines.linewidth"] = 1.5
     # If compare multiple files
-    plt.rcParams["axes.prop_cycle"] = plt.cycler(color=plt.cm.Dark2.colors)
+    plt.rcParams["axes.prop_cycle"] = plt.cycler(color=H3_COLORS)
+    # plt.rcParams["axes.prop_cycle"] = plt.cycler(color=plt.cm.gist_rainbow.colors)
 
     # Legend
     plt.rcParams["legend.frameon"] = True  # do you want the frame or not

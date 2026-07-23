@@ -54,6 +54,7 @@ if __name__ == "__main__":
         print("Benchmark against single file mode")
         print("========================================")
         sepadd_array = [1]
+        print_core_averages(case, balance)
         plot_bm_profiles_radial(case, balance, args.region_rad, figures_png_path)
         plot_bm_profiles_fieldline(case, balance, args.region_pol, sepadd_array, figures_png_path)
 
@@ -77,10 +78,11 @@ if __name__ == "__main__":
             bal = read_solps_balance()
             bal = adapt_solps_conventions(bal)
 
-        plot_temperature(case, figures_png_path, solps=args.solps, bal=bal)
+        # plot_temperature(case, figures_png_path, solps=args.solps, bal=bal)
         plot_density(case, figures_png_path, solps=args.solps, bal=bal)
-        plot_pressure(case, figures_png_path, solps=args.solps, bal=bal)
-        plot_momentum(case, figures_png_path, solps=args.solps, bal=bal)
+        # plot_pressure(case, figures_png_path, solps=args.solps, bal=bal)
+        # plot_momentum(case, figures_png_path, solps=args.solps, bal=bal)
+        # plot_reaction(case, figures_png_path, solps=args.solps, bal=bal)
 
     if "singlefile" in args.mode:
         print("========================================\n")
