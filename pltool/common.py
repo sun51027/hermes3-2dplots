@@ -37,35 +37,36 @@ import time
 # Hermes-3 file colours; cycles if more files than entries.
 H3_COLORS = ["royalblue", "limegreen", "darkorange","magenta"]
 # H3_COLORS = ["cyan", "darkorange", "magenta"]
-
-# Hermes-3 per-file line/marker styles; cycles if more files than entries.
-# Note: circle marker is lowercase "o"; "X" (filled) and "x" (thin) both valid.
 H3_STYLES = [
-    # dict(ls="none", marker="v"),                # file 1: dashed line
-    # dict(ls="none", marker="o"),  # file 2: X markers only
-    # dict(ls="none", marker="x"),  # file 3: O markers only
-    dict(ls="--", lw=3),                # file 1: dashed line
-    dict(ls="-.", lw=3 ),  # file 2: X markers only
-    dict(ls=":", lw=3),  # file 3: O markers only
-    dict(ls="none", marker="."),  
+    dict(ls="solid", lw=3),                
+    dict(ls="solid", lw=3 ),  
+    dict(ls="solid", lw=3),  
+    dict(ls="solid", lw=3),  
 ]
 
 # SOLPS reference curve style.
-SOLPS_COLOR = "dimgrey"
-SOLPS_STYLE = dict(ls="solid", alpha = 0.8)        # solid line
+SOLPS_COLORS = ["dimgrey",  "saddlebrown", "teal", "black",]
+SOLPS_STYLES = [
+    dict(ls="None",        marker='.',    alpha=0.8),
+    dict(ls="None",     marker='x',   alpha=0.8),
+    dict(ls=(0, (1, 1)),        alpha=0.8),
+    dict(ls=(0, (3, 1, 1, 1)),  alpha=0.8),
+]
+# keep old singular names so nothing else breaks
+# SOLPS_COLOR = SOLPS_COLORS[0]
+# SOLPS_STYLE = SOLPS_STYLES[0]
 
 
 def build_base_parser():
-# def build_base_parser(description: str) -> argparse.ArgumentParser:
     """Base parser shared by multi and single plot scripts."""
     p = argparse.ArgumentParser(
             description = "Assign a input folder and output directory"
     )
-    # p.add_argument("-i", "--input", required=True, type=str, help="Name of netcdf files folder, not path")
+
     p.add_argument(
         "-i", "--input",
         required=True,
-        nargs="+",                 # <-- key change
+        nargs="+",                 
         type=str,
         help="Input file IDs or patterns (e.g. 260207*)"
     )
@@ -73,9 +74,26 @@ def build_base_parser():
     p.add_argument(
         "-in", "--input_name",
         required=False,
-        nargs="+",                 # <-- key change
+        nargs="+",                 
         type=str,
         help="Input file names for printing on plot"
+    )
+    p.add_argument(
+        "-si", "--solps_input",
+        required=False, 
+        nargs="+", 
+        type=str, 
+        default=None,
+        help="SOLPS case folder IDs or patterns (each folder must contain balance.nc)"
+    )
+    p.add_argument(
+        "-sin", 
+        "--solps_name",
+        required=False, 
+        nargs="+", 
+        type=str, 
+        default=None,
+        help="Short names for SOLPS cases, used in legends"
     )
     p.add_argument("-o", "--output", 
             required=True, 
@@ -89,7 +107,7 @@ def build_base_parser():
             )
     p.add_argument("-p", "--region_pol",  
             type=str, 
-            default="outer_lower", 
+            default="outer_lower_sol", 
             help="Must specify sepadd/sepdist ... for more see doc"
             )
     p.add_argument("--sepadd",  
@@ -109,6 +127,7 @@ def build_base_parser():
     p.add_argument("--solps",
             action="store_true",
             help="In polygon mode, add a side-by-side SOLPS polygon column (Hermes-3 | SOLPS)")
+
 
     return p
 
@@ -155,15 +174,6 @@ def read_files(input_ids, input_name=None):
     print("Expanded IDs:", expanded_ids)
 
 
-    # Reduce common prefix, get the short names for plots
-    # prefix = os.path.commonprefix(expanded_ids)
-    # short_names = [name[len(prefix):] for name in expanded_ids]
-    # print(short_names)
-
-    # If you want to type on your own
-    # short_names = ["decaylen", "neumann","neumann_nowallpump"]
-
-    # Build toload
     toload = []
     for i, path in enumerate(expanded_ids):
 
@@ -174,12 +184,9 @@ def read_files(input_ids, input_name=None):
             toload.append(
                 dict(
                     name=input_name[i],          # <-- filename here
-                    # name=expanded_ids[i],          # <-- filename here
-                    # name=short_names[i],          # <-- filename here
                     id=file_name,            # or keep full path if needed
                     unnormalise_geom=True,
                     use_xhermes=True,
-                    # squash=False
                     squash=True
                 )
             )
@@ -187,7 +194,6 @@ def read_files(input_ids, input_name=None):
             toload.append(
                 dict(
                     name=expanded_ids[i],          # <-- filename here
-                    # name=short_names[i],          # <-- filename here
                     id=file_name,            # or keep full path if needed
                     unnormalise_geom=True,
                     use_xhermes=True,
@@ -195,27 +201,60 @@ def read_files(input_ids, input_name=None):
                 )
             )
 
-        # print(file_name)
-
     cs = {}
     for case in toload:
-        # cs[case["name"]] = db.load_case_2D(case["id"], use_squash = case["squash"], verbose = True)
         cs[case["name"]] = db.load_case_2D(case["id"], use_squash = case["squash"], verbose = True)
         cs[case["name"]].extract_2d_tokamak_geometry()
 
     return cs
 
-def read_solps_balance():
+# def read_solps_balance():
 
-    # SOLPScase init includes "balance.nc", so only path is required
-    # input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_limiter_off"
-    # input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_Luciani_off"
-    input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_Luciani_off_cx100/"
-    # input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_Luciani_off_cx100_1e22/"
-    # input_path = "/users/jpm590/2dspace/post-processing/xhermes"
-    bal = SOLPScase(input_path)
+#     # SOLPScase init includes "balance.nc", so only path is required
+#     # input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_limiter_off"
+#     # input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_Luciani_off"
+#     input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_Luciani_off_cx100/"
+#     # input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_Luciani_off_cx100_1e22/"
+#     # input_path = "/users/jpm590/2dspace/post-processing/xhermes"
+#     bal = SOLPScase(input_path)
 
-    return bal
+#     return bal
+SOLPS_DIR = "/Users/zero/workspace/phd_work/hms_output"
+DEFAULT_SOLPS = ["SOLPS_Luciani_off_cx100"]
+
+def read_solps_balance(input_ids=None, input_name=None):
+    """Return {name: SOLPScase}, mirroring read_files() for Hermes-3."""
+    if not input_ids:
+        input_ids = DEFAULT_SOLPS
+
+    expanded = []
+    for pattern in input_ids:
+        exact = os.path.join(SOLPS_DIR, pattern)
+        if any(c in pattern for c in ["*", "?", "["]):
+            matches = sorted(glob.glob(exact))
+        elif os.path.isdir(exact):
+            matches = [exact]
+        else:
+            matches = sorted(glob.glob(exact + "*"))
+        if not matches:
+            print(f"No SOLPS match for {pattern}, using literal")
+            matches = [exact]
+        expanded.extend(matches)
+
+    print("Expanded SOLPS paths:", expanded)
+
+    if input_name and len(input_name) != len(expanded):
+        raise ValueError(
+            f"{len(expanded)} SOLPS cases != {len(input_name)} names "
+            f"(a glob pattern may have expanded to several folders)"
+        )
+
+    bals = {}
+    for i, path in enumerate(expanded):
+        name = input_name[i] if input_name else os.path.basename(path.rstrip("/"))
+        print(f"Reading SOLPS [{i}]: {path} -> {name}")
+        bals[name] = adapt_solps_conventions(SOLPScase(path))   # convention fix applied here
+    return bals
 
 
 

@@ -1,6 +1,6 @@
 from .common import (
     build_base_parser, read_files, setup_matplotlib, read_solps_balance,
-    format_legend_and_axes, H3_COLORS, H3_STYLES, SOLPS_COLOR, SOLPS_STYLE,
+    format_legend_and_axes, H3_COLORS, H3_STYLES, SOLPS_COLORS, SOLPS_STYLES,
 )
 import math
 import numpy as np
@@ -76,7 +76,14 @@ def print_core_averages(cs, bal, params=("Te", "Td+", "Ne", "Nd+"), region="core
     print("=" * 60)
 
 
-def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_path):
+def xpt_spar(df, absolute=False):
+    """Parallel coordinate of the x-point, i.e. Spar where R along the ring is smallest."""
+    imin = int(np.argmin(df["R"].values))
+    spar = df["Spar"].values[imin]
+    return float(abs(spar) if absolute else spar)
+
+
+def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png_path):
 
 
     plots = {
@@ -101,73 +108,68 @@ def plot_bm_profiles_fieldline(cs, bal, region_pol, idx_ring_array, figures_png_
         ]
     }
 
-    # case_name = list(cs.keys())[0]
-    # ds = cs[case_name].ds.isel(t=-1)
-    xpt_spar_hlist = []
-    xpt_spar_slist = []
-
     for ring in idx_ring_array:
 
         for category, items in plots.items():
+            params = [p[0] for p in items]
             nitems = len(items)
             print(f"Number of plots = {nitems} in category {category}")
             cols = 3
             rows = math.ceil(nitems / cols)
             fig, ax = plt.subplots(rows, cols, figsize=(12, 4 * rows), squeeze=False)
 
+            # Read each case once per ring/category, not once per parameter
+            kw = dict(region=region_pol, sepadd=ring, target_first=True,
+                      interpolate_midplane=False, interpolate_radial=False)
+
+            # df_solps = bal.get_1d_poloidal_data(params=params, **kw)
+            solps_dfs = {n: b.get_1d_poloidal_data(params=params, **kw) for n, b in bals.items()}
+
+            h3_dfs = {}
+            for case_name, case_obj in cs.items():
+                print(f"Reading {case_name} ring {ring}...")
+                h3_dfs[case_name] = get_1d_poloidal_data(case_obj.ds.isel(t=-1), params=params, **kw)
+
+            # X-point = Spar where R is smallest, on each code's own x-axis
+            # xpt_s = xpt_spar(df_solps)
+            xpt_s = min(xpt_spar(df) for df in solps_dfs.values())
+            xpt_h = min(xpt_spar(df, absolute=True) for df in h3_dfs.values())
+
             for idx, (param, title, ylabel, logy) in enumerate(items):
-                r, c = divmod(idx, 3)
+                r, c = divmod(idx, cols)
                 axi = ax[r,c]
-    
+
                 # SOLPS
-                df_solps = bal.get_1d_poloidal_data(params=[p[0] for p in items], region=region_pol, sepadd=ring, target_first=True, interpolate_midplane=False, interpolate_radial=False )
-                axi.plot(df_solps["Spar"], np.abs(df_solps[param]), label="SOLPS", color=SOLPS_COLOR, **SOLPS_STYLE)
-    
-                # Find SOLPS's x-point
-                local_Rmin_solps = np.argmin(df_solps["R"].values) # return location
-                # print(f"SOLPS  location of Rmin: {local_Rmin_solps}, value: {np.min(df_solps['R'].values)}")
-                xpt_spar_slist.append(float(df_solps["Spar"][local_Rmin_solps]))
-    
-                for i, (case_name, case_obj) in enumerate(cs.items()):
-                    print(f"Plotting {case_name} with {title}...")
-                    # case_name = list(cs.keys())[0] # if input multiple files, select the first one
-                    ds = cs[case_name].ds.isel(t=-1)
-                    df = get_1d_poloidal_data(ds, params=[p[0] for p in items], region=region_pol, sepadd=ring, target_first=True, interpolate_midplane=False, interpolate_radial=False)
-        
-                    # Find Hermes-3's x-point
-                    local_Rmin_h = np.argmin(df["R"].values) # return location
-                    # print(f"Hermes location of Rmin: {local_Rmin_h}, value: {np.min(df['R'].values)}")
-                    xpt_spar_hlist.append(float(df["Spar"][local_Rmin_h]))
-                    # print(f"The coordinate is: {df["Spar"][local_Rmin_h]}")
-            
-                    # Hermes-3 
+                for j, (sname, df) in enumerate(solps_dfs.items()):
+                    axi.plot(df["Spar"], np.abs(df[param]), label=f"SOLPS {sname}",
+                             color=SOLPS_COLORS[j % len(SOLPS_COLORS)],
+                             **SOLPS_STYLES[j % len(SOLPS_STYLES)])
+                # axi.plot(df_solps["Spar"], np.abs(df_solps[param]), label="SOLPS", color=SOLPS_COLOR, **SOLPS_STYLE)
+
+                # Hermes-3
+                for i, (case_name, df) in enumerate(h3_dfs.items()):
                     axi.plot(np.abs(df["Spar"]), (df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
-                    # axi.plot(np.abs(df["Spar"]), np.abs(df[param]), label=f"Hermes-3 {case_name}")
-                    axi.set_title(title)
-                    axi.set_ylabel(ylabel)
-                    axi.set_xlabel("")
-                    axi.grid(True, alpha=0.7)
-                    
-                    if logy:
-                        axi.set_yscale("symlog")
-                        # axi.set_yscale("log")
-    
-            xpt_h = min(xpt_spar_hlist)
-            xpt_s = min(xpt_spar_hlist)
-            # print(xpt_h)
-           
-            # Plot x-point vertical line
-            for i, axi in enumerate(ax.flat):
+
+                # X-point vertical lines
                 axi.axvline(xpt_h, color='r', alpha = 0.2)
                 axi.axvline(xpt_s, color='r', alpha = 0.2, ls = '--')
-            
+
+                axi.set_title(title)
+                axi.set_ylabel(ylabel)
+                axi.set_xlabel("")
+                axi.grid(True, alpha=0.7)
+
+                if logy:
+                    # axi.set_yscale("symlog")
+                    axi.set_yscale("log")
+
             # Legend setting
             format_legend_and_axes(fig, ax, nitems, "$S_{\\parallel}$")
-            fig.savefig(f"{figures_png_path}/benchmark_rings_{category}.png")
+            fig.savefig(f"{figures_png_path}/benchmark_ring{ring}_{category}.png")
 
 
 
-def plot_bm_profiles_radial(cs, bal, region_rad, figures_png_path):
+def plot_bm_profiles_radial(cs, bals, region_rad, figures_png_path):
     plots = {
         "state_var": [
             ("Te",  "e temperature", "T [eV]",            False),
@@ -204,10 +206,15 @@ def plot_bm_profiles_radial(cs, bal, region_rad, figures_png_path):
             r, c = divmod(idx, 3)
             axi = ax[r,c]
 
-            # Read SOLPS first (only once if multi Hermes-3 files)
             # SOLPS dist = Srad
-            df_solps = bal.get_1d_radial_data(params=[p[0] for p in items], region=region_rad)
-            axi.plot(df_solps["dist"], np.abs(df_solps[param]), label="SOLPS", color=SOLPS_COLOR, **SOLPS_STYLE)
+            for j, (sname, bal) in enumerate(bals.items()):
+                df_solps = bal.get_1d_radial_data(params=[p[0] for p in items], region=region_rad)
+                axi.plot(df_solps["dist"], np.abs(df_solps[param]),
+                         label=f"SOLPS {sname}",
+                         color=SOLPS_COLORS[j % len(SOLPS_COLORS)],
+                         **SOLPS_STYLES[j % len(SOLPS_STYLES)])
+            # df_solps = bal.get_1d_radial_data(params=[p[0] for p in items], region=region_rad)
+            # axi.plot(df_solps["dist"], np.abs(df_solps[param]), label="SOLPS", color=SOLPS_COLOR, **SOLPS_STYLE)
 
             # Loop through all profiles for each file
             for i, (case_name, case_obj) in enumerate(cs.items()):
@@ -312,20 +319,4 @@ def plot_bm_plasma_overlap(cs, bal, region_pol, region_rad, figures_png_path):
     plt.tight_layout()
     fig.savefig(f"{figures_png_path}/benchmark_all_overlap.png")
 
-def run_benchmark():
 
-    setup_matplotlib()
-    parser = build_base_parser()
-    args = parser.parse_args()
-    case = read_files(args.input)
-    balance = read_solps_balance()
-
-    ## create output directory
-    figures_png_path = args.output
-    if not os.path.exists(f"./{figures_png_path}"):
-        os.makedirs(figures_png_path)
-
-    sepadd_array = [1]
-    plot_bm_profiles_radial(case, balance, args.region_rad, figures_png_path)
-    plot_bm_profiles_fieldline(case, balance, args.region_pol, sepadd_array, figures_png_path)
-    # plot_bm_plasma_overlap(case, balance, args.region_pol, args.region_rad, figures_png_path)

@@ -48,13 +48,13 @@ if __name__ == "__main__":
     ## Run program
     if "benchmark" in args.mode:
         # Read SOLPS case 
-        balance = read_solps_balance()
-        balance = adapt_solps_conventions(balance)
+        balance = read_solps_balance(args.solps_input, args.solps_name)
+        # balance = adapt_solps_conventions(balance)
         print("========================================\n")
         print("Benchmark against single file mode")
         print("========================================")
         sepadd_array = [1]
-        print_core_averages(case, balance)
+        # print_core_averages(case, balance)
         plot_bm_profiles_radial(case, balance, args.region_rad, figures_png_path)
         plot_bm_profiles_fieldline(case, balance, args.region_pol, sepadd_array, figures_png_path)
 
@@ -75,13 +75,13 @@ if __name__ == "__main__":
         bal = None
         if args.solps:
             print("SOLPS comparison enabled (Hermes-3 | SOLPS)")
-            bal = read_solps_balance()
-            bal = adapt_solps_conventions(bal)
+            bal = read_solps_balance(args.solps_input, args.solps_name)
+            # bal = adapt_solps_conventions(bal)
 
-        # plot_temperature(case, figures_png_path, solps=args.solps, bal=bal)
+        plot_temperature(case, figures_png_path, solps=args.solps, bal=bal)
         plot_density(case, figures_png_path, solps=args.solps, bal=bal)
-        # plot_pressure(case, figures_png_path, solps=args.solps, bal=bal)
-        # plot_momentum(case, figures_png_path, solps=args.solps, bal=bal)
+        plot_pressure(case, figures_png_path, solps=args.solps, bal=bal)
+        plot_momentum(case, figures_png_path, solps=args.solps, bal=bal)
         # plot_reaction(case, figures_png_path, solps=args.solps, bal=bal)
 
     if "singlefile" in args.mode:
