@@ -35,7 +35,7 @@ import time
 # ---- Plot style config for multi-file / benchmark comparisons ----
 
 # Hermes-3 file colours; cycles if more files than entries.
-H3_COLORS = ["royalblue", "limegreen", "darkorange"]
+H3_COLORS = ["royalblue", "limegreen", "darkorange","magenta"]
 # H3_COLORS = ["cyan", "darkorange", "magenta"]
 
 # Hermes-3 per-file line/marker styles; cycles if more files than entries.
@@ -47,6 +47,7 @@ H3_STYLES = [
     dict(ls="--", lw=3),                # file 1: dashed line
     dict(ls="-.", lw=3 ),  # file 2: X markers only
     dict(ls=":", lw=3),  # file 3: O markers only
+    dict(ls="none", marker="."),  
 ]
 
 # SOLPS reference curve style.
@@ -208,8 +209,9 @@ def read_solps_balance():
 
     # SOLPScase init includes "balance.nc", so only path is required
     # input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_limiter_off"
-    input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_Luciani_off"
-    # input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_Luciani_off_cx100/"
+    # input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_Luciani_off"
+    input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_Luciani_off_cx100/"
+    # input_path = "/Users/zero/workspace/phd_work/hms_output/SOLPS_Luciani_off_cx100_1e22/"
     # input_path = "/users/jpm590/2dspace/post-processing/xhermes"
     bal = SOLPScase(input_path)
 
