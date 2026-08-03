@@ -53,7 +53,7 @@ if __name__ == "__main__":
         print("========================================\n")
         print("Benchmark against single file mode")
         print("========================================")
-        sepadd_array = [1]
+        sepadd_array = [1, 2]
         # print_core_averages(case, balance)
         plot_bm_profiles_radial(case, balance, args.region_rad, figures_png_path)
         plot_bm_profiles_fieldline(case, balance, args.region_pol, sepadd_array, figures_png_path)

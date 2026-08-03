@@ -220,7 +220,7 @@ def read_files(input_ids, input_name=None):
 
 #     return bal
 SOLPS_DIR = "/Users/zero/workspace/phd_work/hms_output"
-DEFAULT_SOLPS = ["SOLPS_Luciani_off_cx100"]
+DEFAULT_SOLPS = ["SOLPS_Luciani_off"]
 
 def read_solps_balance(input_ids=None, input_name=None):
     """Return {name: SOLPScase}, mirroring read_files() for Hermes-3."""

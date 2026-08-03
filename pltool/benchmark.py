@@ -162,6 +162,7 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
                 if logy:
                     # axi.set_yscale("symlog")
                     axi.set_yscale("log")
+                    axi.set_xscale("log")
 
             # Legend setting
             format_legend_and_axes(fig, ax, nitems, "$S_{\\parallel}$")

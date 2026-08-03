@@ -65,19 +65,26 @@
 # python3 make_plot.py -i 260717_highrsl_6e20 -in 6e20 -o 260723_highrsl_6e20_forTAP -r omp -p outer_lower_sol -m benchmark
 # python3 make_plot.py -i 260717_lowrsl_6e20_coreOO 260717_lowrsl_6e20_coreOO_cx100 -in 6e20_coreiz 6e20_coreiz_cx100 -o 260723_lowrsl_6e20_solpscx100 -r omp -p outer_lower_sol -m benchmark
 # python3 make_plot.py -i 260717_lowrsl_6e20_coreOO 260717_lowrsl_6e20_coreOO_cx10 260717_lowrsl_6e20_coreOO_cx0.1 -in normal cx10 cx0.1 -o 260724_lowrsl_6e20cx -r omp -p outer_lower_sol -m benchmark
-# python3 make_plot.py -i 260717_lowrsl_6e20 260707_lowrsl_1e21 -in 6e20 1e21 -o 260723_lowrsl_6e20_1e21_forTAP -r omp -p outer_lower_sol -m benchmark
+# python3 make_plot.py -i 260717_lowrsl_6e20 260707_lowrsl_1e21 -in 6e20 1e21 -o 260723_lowrsl_6e20_1e21_forTAP  -m benchmark
+# python3 make_plot.py -i 260717_highrsl_6e20 260706_highrsl_1e21 -in 6e20 1e21 \
+#  -si SOLPS_Luciani_off -sin 1e21 \
+#  -o 260729_highrsl_6e20_1e21_forPR  -m benchmark
 # python3 make_plot.py -i 260717_lowrsl_6e20 260717_lowrsl_6e20_coreOO 260717_lowrsl_6e20_coreOO_cx0.1 260717_lowrsl_6e20_coreOO_cx100 -in normal coreiz coreiz_cx0.1 coreiz_cx100 \
 # -o 260728_lowrsl_6e20_cx -r omp -p outer_lower_sol -m benchmark
+python3 make_plot.py -i 260717_lowrsl_6e20 260717_lowrsl_6e20_coreOO \
+ -in normal coreiz  \
+  -o 260803_lowrsl_6e20_coreiz_multirings \
+  -m benchmark
 # python3 make_plot.py -i 260717_lowrsl_6e20 260717_lowrsl_6e20_coreOO 260717_lowrsl_6e20_coreOO_cx0.1 260717_lowrsl_6e20_coreOO_cx100 -in normal coreiz coreiz_cx0.1 coreiz_cx100 \
   # -o 260728_lowrsl_6e20_solps_cx100_1e22 -r omp -p outer_lower_sol -m benchmark
 
 ######### Multiple SOLPS files ########
-python3 make_plot.py -m benchmark \
-  -i 260717_lowrsl_6e20_coreOO 260717_lowrsl_6e20_coreOO_cx100 \
-  -in 6e20 6e20_cx100\
-  -si SOLPS_Luciani_off_cx100 SOLPS_Luciani_off_cx100_1e22 \
-  -sin 1e21_cx100 1e22_cx100 \
-  -o 260729_lowrsl_6e20_solps_cx100
+# python3 make_plot.py -m benchmark \
+#   -i 260717_lowrsl_6e20_coreOO 260717_lowrsl_6e20_coreOO_cx100 \
+#   -in 6e20 6e20_cx100\
+#   -si SOLPS_Luciani_off_cx100 SOLPS_Luciani_off_cx100_1e22 \
+#   -sin 1e21_cx100 1e22_cx100 \
+#   -o 260729_lowrsl_6e20_solps_cx100
    #260717_lowrsl_6e20_coreOO_cx0.1 260717_lowrsl_6e20_coreOO_cx100 \
   #coreiz_cx0.1 coreiz_cx100 \
 
