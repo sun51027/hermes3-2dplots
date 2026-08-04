@@ -53,10 +53,12 @@ if __name__ == "__main__":
         print("========================================\n")
         print("Benchmark against single file mode")
         print("========================================")
-        sepadd_array = [1, 2]
+        sepadd_array = [1]
         # print_core_averages(case, balance)
         plot_bm_profiles_radial(case, balance, args.region_rad, figures_png_path)
         plot_bm_profiles_fieldline(case, balance, args.region_pol, sepadd_array, figures_png_path)
+        # plot_bm_profiles_fieldline_multiring(case, balance, args.region_pol, [1, 2, 3], figures_png_path)
+
 
     if "multifiles" in args.mode:
         print("========================================\n")

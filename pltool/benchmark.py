@@ -76,6 +76,7 @@ def print_core_averages(cs, bal, params=("Te", "Td+", "Ne", "Nd+"), region="core
     print("=" * 60)
 
 
+
 def xpt_spar(df, absolute=False):
     """Parallel coordinate of the x-point, i.e. Spar where R along the ring is smallest."""
     imin = int(np.argmin(df["R"].values))
@@ -88,23 +89,25 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
 
     plots = {
         "state_var": [
-            ("Te",  "e temperature", "T [eV]",            False),
-            ("Td+", "d+ temperature","T [eV]",            False),
-            ("Td",  "d temperature", "T [eV]",            False),
-            ("Ne",  "e density",     "density [$m^{-3}$]", True),
-            ("Nd+", "d+ density",    "density [$m^{-3}$]", True),
-            ("Nd",  "d density",     "density [$m^{-3}$]", True),
-            ("Pe",  "e pressure",    "pressure [Pa]",      True),
-            ("Pd+", "d+ pressure",   "pressure [Pa]",      True),
-            ("Pd",  "d pressure",    "pressure [Pa]",      True),
+            ("Te",  "e temperature", "T [eV]",            False,False),
+            ("Td+", "d+ temperature","T [eV]",            False,False),
+            ("Td",  "d temperature", "T [eV]",            False,False),
+            ("Ne",  "e density",     "density [$m^{-3}$]", True,False),
+            ("Nd+", "d+ density",    "density [$m^{-3}$]", True,False),
+            ("Nd",  "d density",     "density [$m^{-3}$]", True,False),
+            ("Pe",  "e pressure",    "pressure [Pa]",      True,False),
+            ("Pd+", "d+ pressure",   "pressure [Pa]",      True,False),
+            ("Pd",  "d pressure",    "pressure [Pa]",      True,False),
+        ],
+        "momentum":[
+            ("Vd",      "d Parallel velocity",    "Velocity [$m s^{-1}$]",         True, True),
+            ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-1}$]",   True, True),
+            ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-1}$]",   True, True),
         ],
         "reactions": [
-            ("Sd+_rec", "Recombination", "Rate [$m^{-3} s^{-1}$]", True),
-            ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",          True),
-            ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True),
-            # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
-            # ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
-            ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            ("Sd+_rec", "Recombination", "Rate [$m^{-3} s^{-1}$]", True, True),
+            ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",          True, False),
+            ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True, False),
         ]
     }
 
@@ -135,7 +138,7 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
             xpt_s = min(xpt_spar(df) for df in solps_dfs.values())
             xpt_h = min(xpt_spar(df, absolute=True) for df in h3_dfs.values())
 
-            for idx, (param, title, ylabel, logy) in enumerate(items):
+            for idx, (param, title, ylabel, logy, symlog) in enumerate(items):
                 r, c = divmod(idx, cols)
                 axi = ax[r,c]
 
@@ -160,9 +163,11 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
                 axi.grid(True, alpha=0.7)
 
                 if logy:
-                    # axi.set_yscale("symlog")
                     axi.set_yscale("log")
-                    axi.set_xscale("log")
+                    # axi.set_xscale("log")
+                if symlog:
+                    axi.set_yscale("symlog")
+
 
             # Legend setting
             format_legend_and_axes(fig, ax, nitems, "$S_{\\parallel}$")
@@ -188,8 +193,8 @@ def plot_bm_profiles_radial(cs, bals, region_rad, figures_png_path):
             ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",          True),
             ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True),
             # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
-            # ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-2}$]",   True),
-            ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]",   True),
+            ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-1}$]",   True),
+            ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-1}$]",   True),
         ]
     }
    
@@ -236,6 +241,133 @@ def plot_bm_profiles_radial(cs, bals, region_rad, figures_png_path):
 
         format_legend_and_axes(fig, ax, nitems, "$X-X_{sep}$ [m]")
         fig.savefig(f"{figures_png_path}/benchmark_radial_{category}.png")
+
+def plot_bm_profiles_fieldline_multiring(cs, bals, region_pol, idx_ring_array,
+                                         figures_png_path,
+                                         alpha_step=0.2, alpha_min=0.2,
+                                         normalise_spar=False):
+    """Overlay several SOL rings on one axis: colour = code/case, alpha = ring.
+
+    idx_ring_array : list of sepadd values, e.g. [1, 2, 3]
+                     first ring gets alpha=1.0, then 0.8, 0.6 ...
+    """
+
+    plots = {
+        "state_var": [
+            ("Te",  "e temperature", "T [eV]",             False),
+            ("Td+", "d+ temperature","T [eV]",             False),
+            ("Td",  "d temperature", "T [eV]",             False),
+            ("Ne",  "e density",     "density [$m^{-3}$]",  True),
+            ("Nd+", "d+ density",    "density [$m^{-3}$]",  True),
+            ("Nd",  "d density",     "density [$m^{-3}$]",  True),
+            ("Pe",  "e pressure",    "pressure [Pa]",       True),
+            ("Pd+", "d+ pressure",   "pressure [Pa]",       True),
+            ("Pd",  "d pressure",    "pressure [Pa]",       True),
+        ],
+        "reactions": [
+            ("Sd+_rec", "Recombination",        "Rate [$m^{-3} s^{-1}$]",        True),
+            ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",        True),
+            ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",            True),
+            ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]", True),
+        ],
+    }
+
+    rings = list(idx_ring_array)
+    # 1.0, 0.8, 0.6 ... never fading below alpha_min
+    ring_alpha = {r: max(1.0 - alpha_step * i, alpha_min) for i, r in enumerate(rings)}
+
+    for category, items in plots.items():
+        params = [p[0] for p in items]
+        nitems = len(items)
+        cols = 3
+        rows = math.ceil(nitems / cols)
+        fig, ax = plt.subplots(rows, cols, figsize=(12, 4 * rows), squeeze=False)
+
+        # ---- read every (case, ring) once ------------------------------------
+        solps_dfs, h3_dfs = {}, {}
+        for ring in rings:
+            kw = dict(region=region_pol, sepadd=ring, target_first=True,
+                      interpolate_midplane=False, interpolate_radial=False)
+
+            for sname, b in bals.items():
+                try:
+                    solps_dfs[(sname, ring)] = b.get_1d_poloidal_data(params=params, **kw)
+                except Exception as e:
+                    print(f"  [warn] SOLPS {sname} ring {ring}: {e}")
+
+            for case_name, case_obj in cs.items():
+                print(f"Reading {case_name} ring {ring}...")
+                try:
+                    h3_dfs[(case_name, ring)] = get_1d_poloidal_data(
+                        case_obj.ds.isel(t=-1), params=params, **kw)
+                except Exception as e:
+                    print(f"  [warn] Hermes-3 {case_name} ring {ring}: {e}")
+
+        def xaxis(df, absolute=False):
+            s = np.abs(df["Spar"]) if absolute else df["Spar"]
+            return s / np.nanmax(np.abs(s)) if normalise_spar else s
+
+        # ---- plot -------------------------------------------------------------
+        for idx, (param, title, ylabel, logy) in enumerate(items):
+            r, c = divmod(idx, cols)
+            axi = ax[r, c]
+
+            # SOLPS
+            for (sname, ring), df in solps_dfs.items():
+                j = list(bals).index(sname)
+                style = dict(SOLPS_STYLES[j % len(SOLPS_STYLES)])   # copy: it already holds alpha
+                style["alpha"] = ring_alpha[ring]
+                axi.plot(xaxis(df), np.abs(df[param]),
+                         color=SOLPS_COLORS[j % len(SOLPS_COLORS)],
+                         label="_nolegend_", **style)
+
+            # Hermes-3
+            for (case_name, ring), df in h3_dfs.items():
+                i = list(cs).index(case_name)
+                style = dict(H3_STYLES[i % len(H3_STYLES)])
+                style["alpha"] = ring_alpha[ring]
+                axi.plot(xaxis(df, absolute=True), df[param],
+                         color=H3_COLORS[i % len(H3_COLORS)],
+                         label="_nolegend_", **style)
+
+            # X-point of each ring, faded the same way
+            for ring in rings:
+                hs = [xpt_spar(df, absolute=True)
+                      for (cn, rg), df in h3_dfs.items() if rg == ring]
+                ss = [xpt_spar(df) for (sn, rg), df in solps_dfs.items() if rg == ring]
+                if hs:
+                    axi.axvline(min(hs), color="r", alpha=0.2 * ring_alpha[ring])
+                if ss:
+                    axi.axvline(min(ss), color="r", ls="--", alpha=0.2 * ring_alpha[ring])
+
+            axi.set_title(title)
+            axi.set_ylabel(ylabel)
+            axi.set_xlabel("")
+            axi.grid(True, alpha=0.7)
+
+            if logy:
+                axi.set_yscale("log")
+                axi.set_xscale("log")
+
+        # ---- two-block legend: one entry per code/case, one per ring ----------
+        leg_ax = ax[0, 0]
+        for i, case_name in enumerate(cs):
+            leg_ax.plot([], [], color=H3_COLORS[i % len(H3_COLORS)],
+                        label=f"Hermes-3 {case_name}",
+                        **H3_STYLES[i % len(H3_STYLES)])
+        for j, sname in enumerate(bals):
+            style = dict(SOLPS_STYLES[j % len(SOLPS_STYLES)])
+            style["alpha"] = 1.0
+            leg_ax.plot([], [], color=SOLPS_COLORS[j % len(SOLPS_COLORS)],
+                        label=f"SOLPS {sname}", **style)
+        for ring in rings:
+            leg_ax.plot([], [], color="k", lw=3, alpha=ring_alpha[ring],
+                        label=f"ring {ring} ($\\alpha$={ring_alpha[ring]:.1f})")
+
+        format_legend_and_axes(fig, ax, nitems, "$S_{\\parallel}$")
+        tag = "-".join(str(r) for r in rings)
+        fig.savefig(f"{figures_png_path}/benchmark_multiring{tag}_{category}.png")
+
 
 def plot_bm_plasma_overlap(cs, bal, region_pol, region_rad, figures_png_path):
 

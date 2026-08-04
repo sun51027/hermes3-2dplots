@@ -205,6 +205,12 @@ def read_files(input_ids, input_name=None):
     for case in toload:
         cs[case["name"]] = db.load_case_2D(case["id"], use_squash = case["squash"], verbose = True)
         cs[case["name"]].extract_2d_tokamak_geometry()
+        # Poloidal projection of the parallel neutral flow, to match SOLPS fort.44
+        ds = cs[case["name"]].ds
+        bratio = abs(ds["Bpxy"] / abs(ds["Bxy"]))
+        ds["Vd_pol"] = ds["Vd"] * bratio
+        if "NVd" in ds:
+            ds["NVd_pol"] = ds["NVd"] * bratio
 
     return cs
 
@@ -266,8 +272,72 @@ def adapt_solps_conventions(bal):
     b["Edd+_cx"] = b["eirene_mc_eapl_shi_bal"].sum(axis=2) / b["vol"]  # CX energy [W/m3]
     b["Nd"] = b["Na"]
     b["Nd+"] = b["Ne"] # quasi neutrality
+    # --- neutral poloidal flow from fort.44 (atoms only, = Hermes-3 'd') ---
+    try:
+        b["pfluxa"] = read_fort44_field(bal, "pfluxa")
+    except Exception as e:
+        print(f"[warn] no pfluxa for {bal.path}: {e}")
+    else:
+        Na = b["Na"]
+        b["Vd_pol"] = np.divide(b["pfluxa"], Na, out=np.zeros_like(Na), where=Na != 0)
+        b["NVd_pol"] = Na * 2 * constants("mass_p") * b["Vd_pol"]
+        # pfluxa is positive along +ix. Hermes-3's Vd_pol keeps the sign of the
+        # PARALLEL Vd, so if Bpol < 0 on a ring the two are mirrored. Uncomment
+        # to align (no-op where Bpol > 0):
+        # b["Vd_pol"]  *= np.sign(bal.g["Bpol"])
+        # b["NVd_pol"] *= np.sign(bal.g["Bpol"])
+        # Bonus, free from the same file: radial neutral flow
+                # Parallel = poloidal / (Bpol/Btot), i.e. assume the neutral flow that
+        # carries the poloidal flux is field-aligned (Hermes-3's own assumption).
+        # Signed Bpol, so the parallel sign comes out right even if Bpol < 0.
+        Bpol, Btot = b["Bpol"], b["Btot"]
+        bratio = np.divide(Btot, Bpol, out=np.zeros_like(Btot), where=Bpol != 0)
+        b["Vd"] = b["Vd_pol"] * bratio
+        b["NVd"] = b["NVd_pol"] * bratio
+
+        rfluxa = read_fort44_field(bal, "rfluxa")
+        b["Vd_perp"] = np.divide(rfluxa, Na, out=np.zeros_like(Na), where=Na != 0)
+        b["NVd_perp"] = Na * 2 * constants("mass_p") * b["Vd_perp"]
+
     bal.params = list(b.keys())
+
     return bal
+
+def read_fort44_field(bal, var_name):
+    """
+    Read one '*eirene data field <var>' block from <case>/fort.44 and return it
+    padded with zeros to the balance grid shape (nx, ny).
+
+    fort.44 is written without guard cells, in Fortran order (poloidal fastest).
+    """
+    nx, ny = bal.g["nx"], bal.g["ny"]
+    path = os.path.join(bal.path, "fort.44")
+
+    if os.path.exists(path):
+        with open(path, "r") as f:
+            lines = f.readlines()
+        data, found = [], False
+        for line in lines:
+            if line.startswith(f"*eirene data field {var_name}"):
+                found = True
+                continue
+            if found:
+                if line.startswith("*"):
+                    break
+                data.extend(float(x) for x in line.split())
+        if not found:
+            raise KeyError(f"{var_name} not found in {path}")
+        out = np.zeros((nx, ny))
+        out[1:-1, 1:-1] = np.array(data).reshape((nx - 2, ny - 2), order="F")
+        return out
+
+    # Fallback: balance.nc carries the same fort.44 tallies (dab2-style layout,
+    # 5 trailing EIRENE cells). Covers the cases that have no fort.44 on disk.
+    if var_name in bal.bal:
+        return bal.bal[var_name][:-5, :, 0]
+
+    raise FileNotFoundError(f"no fort.44 and no {var_name} in balance.nc: {bal.path}")
+
 
 def format_legend_and_axes(fig, ax, n_plots, xlabel):
     handles, labels = ax[0, 0].get_legend_handles_labels()
