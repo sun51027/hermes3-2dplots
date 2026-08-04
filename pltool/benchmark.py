@@ -100,14 +100,14 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
             ("Pd",  "d pressure",    "pressure [Pa]",      True,False),
         ],
         "momentum":[
-            ("Vd",      "d Parallel velocity",    "Velocity [$m s^{-1}$]",         True, True),
-            ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-1}$]",   True, True),
-            ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-1}$]",   True, True),
+            ("Vd",      "d Parallel velocity",    "Velocity [$m s^{-1}$]",       False  , True),
+            ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-1}$]", False  , True),
+            ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-1}$]", False  , True),
         ],
         "reactions": [
-            ("Sd+_rec", "Recombination", "Rate [$m^{-3} s^{-1}$]", True, True),
-            ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",          True, False),
-            ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True, False),
+            ("Sd+_rec", "Recombination", "Rate [$m^{-3} s^{-1}$]",        True, True),
+            ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]", True, False),
+            ("Edd+_cx", "Charge exchange",      "Energy [$W m^{-3}$]",    True, False),
         ]
     }
 
@@ -144,14 +144,14 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
 
                 # SOLPS
                 for j, (sname, df) in enumerate(solps_dfs.items()):
-                    axi.plot(df["Spar"], np.abs(df[param]), label=f"SOLPS {sname}",
+                    axi.plot(df["Spar"], (df[param]), label=f"SOLPS {sname}",
                              color=SOLPS_COLORS[j % len(SOLPS_COLORS)],
                              **SOLPS_STYLES[j % len(SOLPS_STYLES)])
                 # axi.plot(df_solps["Spar"], np.abs(df_solps[param]), label="SOLPS", color=SOLPS_COLOR, **SOLPS_STYLE)
 
                 # Hermes-3
                 for i, (case_name, df) in enumerate(h3_dfs.items()):
-                    axi.plot(np.abs(df["Spar"]), (df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
+                    axi.plot((df["Spar"]), (df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
 
                 # X-point vertical lines
                 axi.axvline(xpt_h, color='r', alpha = 0.2)
@@ -268,7 +268,7 @@ def plot_bm_profiles_fieldline_multiring(cs, bals, region_pol, idx_ring_array,
             ("Sd+_rec", "Recombination",        "Rate [$m^{-3} s^{-1}$]",        True),
             ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",        True),
             ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",            True),
-            ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-2}$]", True),
+            ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-1}$]", True),
         ],
     }
 
@@ -317,7 +317,7 @@ def plot_bm_profiles_fieldline_multiring(cs, bals, region_pol, idx_ring_array,
                 j = list(bals).index(sname)
                 style = dict(SOLPS_STYLES[j % len(SOLPS_STYLES)])   # copy: it already holds alpha
                 style["alpha"] = ring_alpha[ring]
-                axi.plot(xaxis(df), np.abs(df[param]),
+                axi.plot(xaxis(df), (df[param]),
                          color=SOLPS_COLORS[j % len(SOLPS_COLORS)],
                          label="_nolegend_", **style)
 
@@ -326,7 +326,7 @@ def plot_bm_profiles_fieldline_multiring(cs, bals, region_pol, idx_ring_array,
                 i = list(cs).index(case_name)
                 style = dict(H3_STYLES[i % len(H3_STYLES)])
                 style["alpha"] = ring_alpha[ring]
-                axi.plot(xaxis(df, absolute=True), df[param],
+                axi.plot(xaxis(df, absolute=False), df[param],
                          color=H3_COLORS[i % len(H3_COLORS)],
                          label="_nolegend_", **style)
 

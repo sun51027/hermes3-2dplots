@@ -207,7 +207,8 @@ def read_files(input_ids, input_name=None):
         cs[case["name"]].extract_2d_tokamak_geometry()
         # Poloidal projection of the parallel neutral flow, to match SOLPS fort.44
         ds = cs[case["name"]].ds
-        bratio = abs(ds["Bpxy"] / abs(ds["Bxy"]))
+        bratio = abs(ds["Bpxy"] / (ds["Bxy"]))
+        print(f"bratio = {bratio.values}")
         ds["Vd_pol"] = ds["Vd"] * bratio
         if "NVd" in ds:
             ds["NVd_pol"] = ds["NVd"] * bratio
