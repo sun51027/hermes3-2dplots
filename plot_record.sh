@@ -59,15 +59,18 @@
 #   -in 1e21_normal 1e21_OO 1e21_XX -o 260715_highrsl_1e21_corebc_lucinai -r omp -p outer_lower_sol -m benchmark
 # python3 make_plot.py -i 260619_lowrsl_5e20_restart 260513_reproduce_6e20_neumann_nowallpump -in 5e20_low 6e20_high -o 260717_low5e20_high6e20 -r omp -p outer_lower_sol -m benchmark
 # python3 make_plot.py -i 260717_lowrsl_6e20_coreOO 260717_lowrsl_6e20_coreOO_cx10 -in core_iz core_iz_cx10 -o 260721_lowrsl_6e20_cx10 -r omp -p outer_lower_sol -m benchmark
-# python3 make_plot.py -i 260717_lowrsl_6e20_coreOO 260717_lowrsl_6e20_coreOO_nlmx100 260717_lowrsl_6e20_coreOO_cx0.1 -in core_iz core_iz_nlmx100 core_iz_cx0.1 -o 260718_lowrsl_6e20 -r omp -p outer_lower_sol -m benchmark
+# python3 make_plot.py -i 260717_lowrsl_6e20_coreOO 260717_lowrsl_6e20_coreOO_nlmx100 \
+#   -in core_iz core_iz_nlmx100 \
+#   -o 260805_lowrsl_6e20_nlmx100 \
+#   -m benchmark
 # python3 make_plot.py -i 260717_lowrsl_6e20 -o 260723_lowrsl_6e20_forTAP -r omp -p outer_lower_sol -m benchmark
 # python3 make_plot.py -i 260717_lowrsl_6e20 260717_lowrsl_6e20_coreOO -in normal core_iz -o 260723_lowrsl_6e20_forTAP -r omp -p outer_lower_sol -m benchmark
-# python3 make_plot.py -i 260717_highrsl_6e20 -in 6e20 -o 260723_highrsl_6e20_forTAP -r omp -p outer_lower_sol -m benchmark
+# python3 make_plot.py -i 260717_highrsl_6e20 260706_highrsl_1e21 -in 6e20 1e21 -o 260806_highrsl_6e20_1e21_origin -m benchmark
 # python3 make_plot.py -i 260717_lowrsl_6e20_coreOO 260717_lowrsl_6e20_coreOO_cx100 -in 6e20_coreiz 6e20_coreiz_cx100 -o 260723_lowrsl_6e20_solpscx100 -r omp -p outer_lower_sol -m benchmark
 # python3 make_plot.py -i 260717_lowrsl_6e20_coreOO 260717_lowrsl_6e20_coreOO_cx10 260717_lowrsl_6e20_coreOO_cx0.1 -in normal cx10 cx0.1 -o 260724_lowrsl_6e20cx -r omp -p outer_lower_sol -m benchmark
 # python3 make_plot.py -i 260717_lowrsl_6e20 260707_lowrsl_1e21 -in 6e20 1e21 -o 260723_lowrsl_6e20_1e21_forTAP  -m benchmark
 # python3 make_plot.py -i 260717_highrsl_6e20 260706_highrsl_1e21 -in 6e20 1e21 \
-#  -si SOLPS_Luciani_off -sin 1e21 \ 
+#  -si SOLPS_Luciani_off -sin 1e21 \
 #  -o 260729_highrsl_6e20_1e21_forPR  -m benchmark
 # python3 make_plot.py -i 260717_lowrsl_6e20 260717_lowrsl_6e20_coreOO 260717_lowrsl_6e20_coreOO_cx0.1 260717_lowrsl_6e20_coreOO_cx100 -in normal coreiz coreiz_cx0.1 coreiz_cx100 \
 # -o 260728_lowrsl_6e20_cx -r omp -p outer_lower_sol -m benchmark
@@ -76,13 +79,14 @@
 #   -o 260803_lowrsl_6e20_coreiz_polygon \
 #   -m benchmark \
 #   --solps
-python3 make_plot.py -i 260717_highrsl_6e20 260717_highrsl_6e20_coreOO \
- -in normal coreiz  \
-  -o 260803_highrsl_6e20_coreiz_rings \
-  -m benchmark \
-  --solps
+# python3 make_plot.py -i 260717_highrsl_6e20 260717_highrsl_6e20_coreOO \
+#  -in normal coreiz  \
+#   -o 260803_highrsl_6e20_coreiz_rings \
+#   -m benchmark \
+#   --solps
 # python3 make_plot.py -i 260717_lowrsl_6e20 260717_lowrsl_6e20_coreOO 260717_lowrsl_6e20_coreOO_cx0.1 260717_lowrsl_6e20_coreOO_cx100 -in normal coreiz coreiz_cx0.1 coreiz_cx100 \
-  # -o 260728_lowrsl_6e20_solps_cx100_1e22 -r omp -p outer_lower_sol -m benchmark
+# -o 260728_lowrsl_6e20_solps_cx100_1e22 -r omp -p outer_lower_sol -m benchmark
+python3 make_plot.py -i 260806_highrsl_6e20_solps_1e21_plasmainit -in fix_plasma_bg -o 260807_fix_pls_bg -m benchmark
 
 ######### Multiple SOLPS files ########
 # python3 make_plot.py -m benchmark \
@@ -91,8 +95,8 @@ python3 make_plot.py -i 260717_highrsl_6e20 260717_highrsl_6e20_coreOO \
 #   -si SOLPS_Luciani_off_cx100 SOLPS_Luciani_off_cx100_1e22 \
 #   -sin 1e21_cx100 1e22_cx100 \
 #   -o 260729_lowrsl_6e20_solps_cx100
-   #260717_lowrsl_6e20_coreOO_cx0.1 260717_lowrsl_6e20_coreOO_cx100 \
-  #coreiz_cx0.1 coreiz_cx100 \
+#260717_lowrsl_6e20_coreOO_cx0.1 260717_lowrsl_6e20_coreOO_cx100 \
+#coreiz_cx0.1 coreiz_cx100 \
 
 ############## Polygon ###############
 # python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump -o 260703_solps_polygon -m polygon --solps

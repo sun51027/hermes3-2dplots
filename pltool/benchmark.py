@@ -102,7 +102,7 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
         "momentum":[
             ("Vd",      "d Parallel velocity",    "Velocity [$m s^{-1}$]",       False  , True),
             ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-1}$]", False  , True),
-            ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-1}$]", False  , True),
+            # ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-1}$]", False  , True),
         ],
         "reactions": [
             ("Sd+_rec", "Recombination", "Rate [$m^{-3} s^{-1}$]",        True, True),
@@ -188,13 +188,16 @@ def plot_bm_profiles_radial(cs, bals, region_rad, figures_png_path):
             ("Pd+", "d+ pressure",   "pressure [Pa]",      True),
             ("Pd",  "d pressure",    "pressure [Pa]",      True),
         ],
+        "momentum":[
+            ("Vd",      "d Parallel velocity",    "Velocity [$m s^{-1}$]",       False  ),
+            ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-1}$]", False  ),
+            # ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-1}$]", False),
+        ],
         "reactions": [
             ("Sd+_rec", "Recombination", "Rate [$m^{-3} s^{-1}$]", True),
             ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",          True),
             ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True),
             # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
-            ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-1}$]",   True),
-            ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-1}$]",   True),
         ]
     }
    
