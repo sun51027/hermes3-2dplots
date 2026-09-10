@@ -124,6 +124,7 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
             # Read each case once per ring/category, not once per parameter
             kw = dict(region=region_pol, sepadd=ring, target_first=True,
                       interpolate_midplane=False, interpolate_radial=False)
+                    #   interpolate_midplane=False, interpolate_radial=False)
 
             # df_solps = bal.get_1d_poloidal_data(params=params, **kw)
             solps_dfs = {n: b.get_1d_poloidal_data(params=params, **kw) for n, b in bals.items()}
@@ -144,18 +145,18 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
 
                 # SOLPS
                 for j, (sname, df) in enumerate(solps_dfs.items()):
-                    axi.plot(df["Spar"], (df[param]), label=f"SOLPS {sname}",
+                    axi.plot(df["Spol"], (df[param]), label=f"SOLPS {sname}",
                              color=SOLPS_COLORS[j % len(SOLPS_COLORS)],
                              **SOLPS_STYLES[j % len(SOLPS_STYLES)])
                 # axi.plot(df_solps["Spar"], np.abs(df_solps[param]), label="SOLPS", color=SOLPS_COLOR, **SOLPS_STYLE)
 
                 # Hermes-3
                 for i, (case_name, df) in enumerate(h3_dfs.items()):
-                    axi.plot((df["Spar"]), (df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
+                    axi.plot((df["Spol"]), (df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
 
                 # X-point vertical lines
-                axi.axvline(xpt_h, color='r', alpha = 0.2)
-                axi.axvline(xpt_s, color='r', alpha = 0.2, ls = '--')
+                # axi.axvline(xpt_h, color='r', alpha = 0.2)
+                # axi.axvline(xpt_s, color='r', alpha = 0.2, ls = '--')
 
                 axi.set_title(title)
                 axi.set_ylabel(ylabel)
