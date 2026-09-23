@@ -53,10 +53,18 @@ if __name__ == "__main__":
         print("========================================\n")
         print("Benchmark against single file mode")
         print("========================================")
-        sepadd_array = [4]
-        # print_core_averages(case, balance)
+        # Select the SOL ring(s) either by index (--sepadd) or by distance
+        # from the separatrix at the midplane (--sepdist). Either way both codes
+        # end up on the same flux surface, see benchmark.ring_kwargs.
+        if args.sepdist is not None:
+            rings, ring_mode = args.sepdist, "sepdist"
+        else:
+            rings, ring_mode = [args.sepadd], "sepadd"
+
+        print_core_averages(case, balance)
         plot_bm_profiles_radial(case, balance, args.region_rad, figures_png_path)
-        plot_bm_profiles_fieldline(case, balance, args.region_pol, sepadd_array, figures_png_path)
+        plot_bm_profiles_fieldline(case, balance, args.region_pol, rings,
+                                   figures_png_path, ring_mode=ring_mode)
         # plot_bm_profiles_fieldline_multiring(case, balance, args.region_pol, [1, 2, 3], figures_png_path)
 
 
@@ -77,14 +85,16 @@ if __name__ == "__main__":
         bal = None
         if args.solps:
             print("SOLPS comparison enabled (Hermes-3 | SOLPS)")
+            # read_solps_balance() already applies adapt_solps_conventions()
+            # and patch_fpsi() to each case, and returns {name: SOLPScase}
             bal = read_solps_balance(args.solps_input, args.solps_name)
-            # bal = adapt_solps_conventions(bal)
 
-        plot_temperature(case, figures_png_path, solps=args.solps, bal=bal)
-        plot_density(case, figures_png_path, solps=args.solps, bal=bal)
-        plot_pressure(case, figures_png_path, solps=args.solps, bal=bal)
-        plot_momentum(case, figures_png_path, solps=args.solps, bal=bal)
-        # plot_reaction(case, figures_png_path, solps=args.solps, bal=bal)
+        same_limit = args.same_limit
+        plot_temperature(case, figures_png_path, solps=args.solps, bal=bal, same_limit=same_limit)
+        plot_density(case, figures_png_path, solps=args.solps, bal=bal, same_limit=same_limit)
+        plot_pressure(case, figures_png_path, solps=args.solps, bal=bal, same_limit=same_limit)
+        plot_momentum(case, figures_png_path, solps=args.solps, bal=bal, same_limit=same_limit)
+        plot_reaction(case, figures_png_path, solps=args.solps, bal=bal, same_limit=same_limit)
 
     if "singlefile" in args.mode:
         print("========================================\n")
