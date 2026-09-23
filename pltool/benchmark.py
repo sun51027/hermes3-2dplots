@@ -46,23 +46,48 @@ def core_avg_solps(bal, param):
     return float(np.nansum(q * w) / np.nansum(w))
 
 
-def print_core_averages(cs, bal, params=("Te", "Td+", "Ne", "Nd+"), region="core_noguards"):
-    """Print a volume-weighted core (inside-separatrix) average table: SOLPS vs Hermes-3."""
-    print("\n=== Volume-weighted core averages (inside separatrix) ===")
+def print_core_averages(cs, bals, params=("Te", "Td+", "Td","Ne", "Nd+","Nd"), region="core_noguards"):
+    """Print a volume-weighted core (inside-separatrix) average table: SOLPS vs Hermes-3.
 
-    header = f"{'param':8s} | {'SOLPS':>12s}"
+    `bals` is the {name: SOLPScase} dict from read_solps_balance(); a bare
+    SOLPScase is still accepted. Percentages are relative to the FIRST SOLPS
+    case, which acts as the reference.
+    """
+    # Accept both a dict of cases and a single SOLPScase
+    if not isinstance(bals, dict):
+        bals = {"SOLPS": bals}
+
+    ref_name = next(iter(bals)) if bals else None
+    print("\n=== Volume-weighted core averages (inside separatrix) ===")
+    if ref_name is not None:
+        print(f"(percentages are relative to SOLPS {ref_name})")
+
+    header = f"{'param':8s}"
+    for sname in bals:
+        header += f" | {'SOLPS ' + sname:>20s}"
     for case_name in cs:
         header += f" | {'H3 ' + case_name:>20s}"
     print(header)
 
     for param in params:
-        try:
-            s_val = core_avg_solps(bal, param)
-        except Exception as e:
-            s_val = float("nan")
-            print(f"  [warn] SOLPS {param}: {e}")
+        s_vals = {}
+        for sname, bal in bals.items():
+            try:
+                s_vals[sname] = core_avg_solps(bal, param)
+            except Exception as e:
+                s_vals[sname] = float("nan")
+                print(f"  [warn] SOLPS {sname} {param}: {e}")
 
-        row = f"{param:8s} | {s_val:12.4g}"
+        ref = s_vals.get(ref_name, float("nan"))
+
+        def cell(val):
+            rel = (val - ref) / ref * 100.0 if ref else float("nan")
+            return f" | {val:12.4g} ({rel:+.1f}%)"
+
+        row = f"{param:8s}"
+        for sname in bals:
+            row += cell(s_vals[sname])
+
         for case_name in cs:
             ds = cs[case_name].ds.isel(t=-1)
             try:
@@ -70,8 +95,7 @@ def print_core_averages(cs, bal, params=("Te", "Td+", "Ne", "Nd+"), region="core
             except Exception as e:
                 h_val = float("nan")
                 print(f"  [warn] Hermes-3 {case_name} {param}: {e}")
-            rel = (h_val - s_val) / s_val * 100.0 if s_val else float("nan")
-            row += f" | {h_val:12.4g} ({rel:+.1f}%)"
+            row += cell(h_val)
         print(row)
     print("=" * 60)
 
@@ -84,12 +108,45 @@ def xpt_spar(df, absolute=False):
     return float(abs(spar) if absolute else spar)
 
 
-def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png_path):
+def ring_kwargs(ds, region_pol, sepadd=None, sepdist=None,
+                target_first=True, interpolate_midplane=False):
+    """Put both codes on the SAME flux surface.
+
+    Hermes-3 uses its own ring index; SOLPS is radially interpolated to that
+    ring's distance from the separatrix, which is how interpolateSOLPStoHermes
+    matched them in the first place. Give either sepadd or sepdist.
+    """
+    radial_region = "omp" if "outer" in region_pol else "imp"
+    rad = get_1d_radial_data(ds, params=["R"], region=radial_region, guards=False)
+    sol = rad[rad["region"] == "sol"]
+
+    if (sepadd is None) == (sepdist is None):
+        raise ValueError("Give either sepadd or sepdist, not both")
+
+    if sepdist is not None:
+        idx = (sol["Srad"] - sepdist).abs().idxmin()
+        sepadd = sol.index.get_loc(idx)
+
+    sepdist_used = sol.iloc[sepadd]["Srad"]
+    print(f"[ring] sepadd = {sepadd}, sepdist = {sepdist_used * 1e3:.2f} mm")
+
+    hermes_kw = dict(region=region_pol, sepadd=sepadd, target_first=target_first,
+                     interpolate_midplane=interpolate_midplane,
+                     interpolate_radial=False)
+    solps_kw = dict(region=f"{region_pol}_extra" if interpolate_midplane else region_pol,
+                    sepdist=sepdist_used, target_first=target_first,
+                    interpolate_midplane=interpolate_midplane,
+                    interpolate_radial=False, extrapolate_radial=False)
+    return hermes_kw, solps_kw, sepadd, sepdist_used
 
 
+def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png_path,
+                               ring_mode="sepadd"):
+
+    # param, title, ylabel, logy, symlog
     plots = {
         "state_var": [
-            ("Te",  "e temperature", "T [eV]",            False,False),
+            ("Te",  "e temperature", "T [eV]",            True,False),
             ("Td+", "d+ temperature","T [eV]",            False,False),
             ("Td",  "d temperature", "T [eV]",            False,False),
             ("Ne",  "e density",     "density [$m^{-3}$]", True,False),
@@ -121,18 +178,18 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
             rows = math.ceil(nitems / cols)
             fig, ax = plt.subplots(rows, cols, figsize=(12, 4 * rows), squeeze=False)
 
-            # Read each case once per ring/category, not once per parameter
-            kw = dict(region=region_pol, sepadd=ring, target_first=True,
-                      interpolate_midplane=False, interpolate_radial=False)
-                    #   interpolate_midplane=False, interpolate_radial=False)
+            # Read each case once per ring/category, not once per parameter.
+            # Both codes are matched onto the same flux surface, see ring_kwargs.
+            ref_ds = cs[next(iter(cs))].ds.isel(t=-1)
+            h_kw, s_kw, sepadd, sepdist_used = ring_kwargs(ref_ds, region_pol,
+                                                           **{ring_mode: ring})
 
-            # df_solps = bal.get_1d_poloidal_data(params=params, **kw)
-            solps_dfs = {n: b.get_1d_poloidal_data(params=params, **kw) for n, b in bals.items()}
+            solps_dfs = {n: b.get_1d_poloidal_data(params=params, **s_kw) for n, b in bals.items()}
 
             h3_dfs = {}
             for case_name, case_obj in cs.items():
-                print(f"Reading {case_name} ring {ring}...")
-                h3_dfs[case_name] = get_1d_poloidal_data(case_obj.ds.isel(t=-1), params=params, **kw)
+                print(f"Reading {case_name} ring {sepadd}...")
+                h3_dfs[case_name] = get_1d_poloidal_data(case_obj.ds.isel(t=-1), params=params, **h_kw)
 
             # X-point = Spar where R is smallest, on each code's own x-axis
             # xpt_s = xpt_spar(df_solps)
@@ -145,14 +202,15 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
 
                 # SOLPS
                 for j, (sname, df) in enumerate(solps_dfs.items()):
-                    axi.plot(df["Spol"], (df[param]), label=f"SOLPS {sname}",
+                    # axi.plot(df["Spol"], (df[param]), label=f"SOLPS {sname}",
+                    axi.plot(df["Spar"], (df[param]), label=f"SOLPS {sname}",
                              color=SOLPS_COLORS[j % len(SOLPS_COLORS)],
                              **SOLPS_STYLES[j % len(SOLPS_STYLES)])
-                # axi.plot(df_solps["Spar"], np.abs(df_solps[param]), label="SOLPS", color=SOLPS_COLOR, **SOLPS_STYLE)
 
                 # Hermes-3
                 for i, (case_name, df) in enumerate(h3_dfs.items()):
-                    axi.plot((df["Spol"]), (df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
+                    # axi.plot((df["Spol"]), (df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
+                    axi.plot((df["Spar"]), (df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
 
                 # X-point vertical lines
                 # axi.axvline(xpt_h, color='r', alpha = 0.2)
@@ -171,8 +229,10 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
 
 
             # Legend setting
-            format_legend_and_axes(fig, ax, nitems, "$S_{\\parallel}$")
-            fig.savefig(f"{figures_png_path}/benchmark_ring{ring}_{category}.png")
+            # format_legend_and_axes(fig, ax, nitems, "$S_{pol}$ [m]")
+            format_legend_and_axes(fig, ax, nitems, "$S_{\\parallel}$ [m]")
+            # fig.suptitle(f"ring {sepadd}  (sepdist = {sepdist_used * 1e3:.2f} mm)")
+            fig.savefig(f"{figures_png_path}/benchmark_ring{sepadd}_{category}.png")
 
 
 
@@ -190,8 +250,8 @@ def plot_bm_profiles_radial(cs, bals, region_rad, figures_png_path):
             ("Pd",  "d pressure",    "pressure [Pa]",      True),
         ],
         "momentum":[
-            ("Vd",      "d Parallel velocity",    "Velocity [$m s^{-1}$]",       False  ),
-            ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-1}$]", False  ),
+            ("Vd",      "d Parallel velocity",    "Velocity [$m s^{-1}$]",       True),
+            ("NVd",     "d Parallel momentum",  "Momentum [$kg m^{-2} s^{-1}$]", True  ),
             # ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-1}$]", False),
         ],
         "reactions": [
@@ -219,7 +279,7 @@ def plot_bm_profiles_radial(cs, bals, region_rad, figures_png_path):
             # SOLPS dist = Srad
             for j, (sname, bal) in enumerate(bals.items()):
                 df_solps = bal.get_1d_radial_data(params=[p[0] for p in items], region=region_rad)
-                axi.plot(df_solps["dist"], np.abs(df_solps[param]),
+                axi.plot(df_solps["dist"], (df_solps[param]),
                          label=f"SOLPS {sname}",
                          color=SOLPS_COLORS[j % len(SOLPS_COLORS)],
                          **SOLPS_STYLES[j % len(SOLPS_STYLES)])
@@ -233,7 +293,7 @@ def plot_bm_profiles_radial(cs, bals, region_rad, figures_png_path):
                 df = get_1d_radial_data(ds, params=[p[0] for p in items], region=region_rad)
 
                 # Hermes-3 
-                axi.plot(df["Srad"], np.abs(df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
+                axi.plot(df["Srad"], (df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
         
                 axi.set_title(title)
                 axi.set_ylabel(ylabel)
@@ -241,7 +301,8 @@ def plot_bm_profiles_radial(cs, bals, region_rad, figures_png_path):
                 axi.grid(True, alpha=0.7)
             
                 if logy:
-                    axi.set_yscale("log")
+                    axi.set_yscale("symlog")
+                    # axi.set_yscale("log")
 
         format_legend_and_axes(fig, ax, nitems, "$X-X_{sep}$ [m]")
         fig.savefig(f"{figures_png_path}/benchmark_radial_{category}.png")

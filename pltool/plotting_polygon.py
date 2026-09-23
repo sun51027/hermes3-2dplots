@@ -35,10 +35,22 @@ def _as_solps_dict(bal):
     return {"SOLPS": bal}
 
 
+def _limits(vmin, vmax, same_limit):
+    """Colour limits for one field.
+
+
+    same_limit=True  -> the (vmin, vmax) written in the fields table, so the
+                        Hermes-3 row and every SOLPS row share one colour scale
+                        and can actually be compared by eye.
+    same_limit=False -> (None, None), i.e. every axis autoscales as before.
+    """
+    return (vmin, vmax) if same_limit else (None, None)
+
+
 def _solps_grid(nfields, bals):
     """Figure with one Hermes-3 row on top and one row per SOLPS case below."""
     nrows = 1 + len(bals)
-    fig, ax = plt.subplots(nrows, nfields, figsize=(4 * nfields, 4 * nrows),
+    fig, ax = plt.subplots(nrows, nfields, figsize=(2.5 * nfields, 4 * nrows),
                            constrained_layout=True, squeeze=False)
     return fig, ax
 
@@ -47,6 +59,29 @@ def _label_rows(ax, bals):
     ax[0, 0].set_ylabel("Hermes-3")
     for row, sname in enumerate(bals, start=1):
         ax[row, 0].set_ylabel(sname)
+
+
+# Font sizes for the polygon figures only; the 1D profile plots keep the
+# global rcParams set in setup_matplotlib().
+POLYGON_FONT = dict(title=12, label=11, tick=9, suptitle=15)
+
+
+def _apply_fonts(fig, font=None):
+    """Resize every text element of a polygon figure.
+
+    Neither bout.polygon() nor SOLPScase.plot_2d() takes a fontsize argument,
+    so the sizes are applied afterwards, once the axes (including the colorbar
+    axes plot_2d appends) already exist. Pass e.g. font=dict(tick=7) to
+    override individual entries of POLYGON_FONT.
+    """
+    f = dict(POLYGON_FONT, **(font or {}))
+    for axi in fig.axes:
+        axi.title.set_fontsize(f["title"])
+        axi.xaxis.label.set_fontsize(f["label"])
+        axi.yaxis.label.set_fontsize(f["label"])
+        axi.tick_params(axis="both", which="both", labelsize=f["tick"])
+    if fig._suptitle is not None:
+        fig._suptitle.set_fontsize(f["suptitle"])
 
 
 def _plot_solps_polygon(bal, solps_param, ax, logscale=False, cmap="Spectral_r",
@@ -60,7 +95,7 @@ def _plot_solps_polygon(bal, solps_param, ax, logscale=False, cmap="Spectral_r",
         ax.set_axis_off()
         return
     bal.plot_2d(solps_param, ax=ax, cmap=cmap, antialias=True,
-                logscale=logscale, vmin=vmin, vmax=vmax, separatrix=True)
+                logscale=logscale, vmin=vmin, vmax=vmax, separatrix=True, )
 
 
 def _log_vlims(values, vmin, vmax):
@@ -96,178 +131,167 @@ def _plot_hermes_reaction(da, ax, vmin=None, vmax=None):
                     logscale=True, vmin=vmin, vmax=vmax)
 
 
-def plot_temperature(cs, figures_png_path, solps=False, bal=None):
+def plot_temperature(cs, figures_png_path, solps=False, bal=None, same_limit=False, font=None):
 
-    # (hermes_param, solps_param); solps_param=None -> no SOLPS counterpart
+    # (hermes_param, solps_param, vmin, vmax); solps_param=None -> no SOLPS counterpart
+    # vmin/vmax are only used when same_limit=True; tune them per machine/case.
     fields = [
-        ("Te",  "Te"),
-        ("Td",  "Td"),
-        ("Td+", "Td+"),
+        ("Td",  "Td",  0, 500),
+        ("Te",  "Te",  0, 500),
+        ("Td+", "Td+", 0, 500),
     ]
+
+    bals = _as_solps_dict(bal) if solps else {}
 
     for case_name, case_obj in cs.items():
         print(f"Plotting T polygon for {case_name}")
 
         ds = case_obj.ds.isel(t=-1)
 
-        if solps:
-            bals = _as_solps_dict(bal)
-            fig, ax = _solps_grid(len(fields), bals)
-            for col, (h_param, s_param) in enumerate(fields):
-                ds[h_param].hermes.clear_guards().bout.polygon(ax=ax[0, col], cmap="Spectral_r", antialias=True)
-                for row, b in enumerate(bals.values(), start=1):
-                    _plot_solps_polygon(b, s_param, ax[row, col], logscale=False)
-            _label_rows(ax, bals)
-        else:
-            fig, ax = plt.subplots(1, 3, figsize=(10, 6), constrained_layout=True)
-            ds["Te"].hermes.clear_guards().bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True,) #vmin=1, vmax=100)
-            ds["Td"].hermes.clear_guards().bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True,) #vmin=1, vmax=100)
-            ds["Td+"].hermes.clear_guards().bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True,)# vmin=1, vmax=100)
+        fig, ax = _solps_grid(len(fields), bals)
+        for col, (h_param, s_param, fvmin, fvmax) in enumerate(fields):
+            vmin, vmax = _limits(fvmin, fvmax, same_limit)
+            ds[h_param].hermes.clear_guards().bout.polygon(
+                ax=ax[0, col], cmap="Spectral_r", antialias=True,
+                logscale=False, vmin=vmin, vmax=vmax)
+            for row, b in enumerate(bals.values(), start=1):
+                _plot_solps_polygon(b, s_param, ax[row, col], logscale=False,
+                                    vmin=vmin, vmax=vmax)
+        _label_rows(ax, bals)
 
         fig.suptitle(f"{case_name}")
+        _apply_fonts(fig, font)
         fig.savefig(f"{figures_png_path}/{case_name}_T_polygon.png")
 
-def plot_density(cs, figures_png_path, solps=False, bal=None):
+def plot_density(cs, figures_png_path, solps=False, bal=None, same_limit=False, font=None):
 
     # SOLPS: Nd -> Na (already aliased as "Nd"); Nd+ -> Ne (quasi-neutrality)
     fields = [
-        ("Ne",  "Ne"),
-        ("Nd",  "Nd"),
-        ("Nd+", "Nd+"),
+        ("Nd",  "Nd",  1e11, 1e19),
+        ("Ne",  "Ne",  1e11, 1e19),
+        ("Nd+", "Nd+", 1e11, 1e19),
     ]
+
+    bals = _as_solps_dict(bal) if solps else {}
 
     for case_name, case_obj in cs.items():
         print(f"Plotting N polygon for {case_name}")
 
         ds = case_obj.ds.isel(t=-1)
 
-        if solps:
-            bals = _as_solps_dict(bal)
-            fig, ax = _solps_grid(len(fields), bals)
-            for col, (h_param, s_param) in enumerate(fields):
-                ds[h_param].hermes.clear_guards().bout.polygon(ax=ax[0, col], cmap="Spectral_r", antialias=True, logscale=False)
-                for row, b in enumerate(bals.values(), start=1):
-                    _plot_solps_polygon(b, s_param, ax[row, col], logscale=False )
-            _label_rows(ax, bals)
-        else:
-            fig, ax = plt.subplots(1, 3, figsize=(10, 6), constrained_layout=True)
-            ds["Ne"].hermes.clear_guards().bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True, logscale = False, vmin=1e18 , vmax=3e19)
-            ds["Nd"].hermes.clear_guards().bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True, logscale = False, vmin=1e18 , vmax=3e19)
-            ds["Nd+"].hermes.clear_guards().bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True, logscale = False,vmin=1e18 , vmax=3e19)
+        fig, ax = _solps_grid(len(fields), bals)
+        for col, (h_param, s_param, fvmin, fvmax) in enumerate(fields):
+            vmin, vmax = _limits(fvmin, fvmax, same_limit)
+            ds[h_param].hermes.clear_guards().bout.polygon(
+                ax=ax[0, col], cmap="Spectral_r", antialias=True,
+                logscale=True, vmin=vmin, vmax=vmax)
+            for row, b in enumerate(bals.values(), start=1):
+                _plot_solps_polygon(b, s_param, ax[row, col], logscale=True,
+                                    vmin=vmin, vmax=vmax)
+        _label_rows(ax, bals)
 
         fig.suptitle(f"{case_name}")
+        _apply_fonts(fig, font)
         fig.savefig(f"{figures_png_path}/{case_name}_N_polygon.png")
 
-def plot_pressure(cs, figures_png_path, solps=False, bal=None):
+def plot_pressure(cs, figures_png_path, solps=False, bal=None, same_limit=False, font=None):
 
     # SOLPS: Pd -> Pa (atom pressure)
     fields = [
-        ("Pe",  "Pe"),
-        ("Pd",  "Pd"),
-        ("Pd+", "Pd+"),
+        ("Pd",  "Pd",  1e-6, 1e1),
+        ("Pe",  "Pe",  1e-2, 1e2),
+        ("Pd+", "Pd+", 1e-2, 1e2),
     ]
+
+    bals = _as_solps_dict(bal) if solps else {}
 
     for case_name, case_obj in cs.items():
         print(f"Plotting P polygon for {case_name}")
 
         ds = case_obj.ds.isel(t=-1)
 
-        if solps:
-            bals = _as_solps_dict(bal)
-            fig, ax = _solps_grid(len(fields), bals)
-            for col, (h_param, s_param) in enumerate(fields):
-                ds[h_param].hermes.clear_guards().bout.polygon(ax=ax[0, col], cmap="Spectral_r", antialias=True, logscale=True)
-                for row, b in enumerate(bals.values(), start=1):
-                    _plot_solps_polygon(b, s_param, ax[row, col], logscale=True)
-            _label_rows(ax, bals)
-        else:
-            fig, ax = plt.subplots(1, 3, figsize=(10, 6), constrained_layout=True)
-            ds["Pe"].hermes.clear_guards().bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True, logscale = True, )
-            ds["Pd"].hermes.clear_guards().bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True, logscale = True, )
-            ds["Pd+"].hermes.clear_guards().bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True, logscale = True,)
+        fig, ax = _solps_grid(len(fields), bals)
+        for col, (h_param, s_param, fvmin, fvmax) in enumerate(fields):
+            vmin, vmax = _limits(fvmin, fvmax, same_limit)
+            ds[h_param].hermes.clear_guards().bout.polygon(
+                ax=ax[0, col], cmap="Spectral_r", antialias=True,
+                logscale=True, vmin=vmin, vmax=vmax)
+            for row, b in enumerate(bals.values(), start=1):
+                _plot_solps_polygon(b, s_param, ax[row, col], logscale=True,
+                                    vmin=vmin, vmax=vmax)
+        _label_rows(ax, bals)
 
         fig.suptitle(f"{case_name}")
+        _apply_fonts(fig, font)
         fig.savefig(f"{figures_png_path}/{case_name}_P_polygon.png")
 
-def plot_momentum(cs, figures_png_path, solps=False, bal=None):
+def plot_momentum(cs, figures_png_path, solps=False, bal=None, same_limit=False, font=None):
 
-    # SOLPS only provides d+ parallel momentum; NVe/NVd have no counterpart
+    # SOLPS only provides d+ parallel momentum; NVe/NVd have no counterpart.
+    # Momentum changes sign, so the limits straddle zero (SymLogNorm).
     fields = [
-        ("NVe",  None),
-        ("NVd",  None),
-        ("NVd+", "NVd+"),
+        ("NVe",  None,   -1e-3, 1e-3),
+        # ("NVd+", "NVd+", -1e-3, 1e-3),
+        ("NVd",  None,   -1e-3, 1e-3),
     ]
+
+    bals = _as_solps_dict(bal) if solps else {}
 
     for case_name, case_obj in cs.items():
         print(f"Plotting NV polygon for {case_name}")
 
         ds = case_obj.ds.isel(t=-1)
 
-        if solps:
-            bals = _as_solps_dict(bal)
-            fig, ax = _solps_grid(len(fields), bals)
-            for col, (h_param, s_param) in enumerate(fields):
-                ds[h_param].hermes.clear_guards().bout.polygon(ax=ax[0, col], cmap="Spectral_r", antialias=True, logscale=True, vmax=1e-3, vmin=-1e-3)
-                for row, b in enumerate(bals.values(), start=1):
-                    _plot_solps_polygon(b, s_param, ax[row, col], logscale=True)
-            _label_rows(ax, bals)
-        else: 
-            fig, ax = plt.subplots(1, 3, figsize=(10, 6), constrained_layout=True)
-            ds["NVe"].hermes.clear_guards().bout.polygon(ax = ax[0], cmap = "Spectral_r", antialias = True, logscale = True, )
-            ds["NVd"].hermes.clear_guards().bout.polygon(ax = ax[1], cmap = "Spectral_r", antialias = True, logscale = True, )
-            ds["NVd+"].hermes.clear_guards().bout.polygon(ax = ax[2], cmap = "Spectral_r", antialias = True, logscale = True,)
+        fig, ax = _solps_grid(len(fields), bals)
+        for col, (h_param, s_param, fvmin, fvmax) in enumerate(fields):
+            vmin, vmax = _limits(fvmin, fvmax, same_limit)
+            ds[h_param].hermes.clear_guards().bout.polygon(
+                ax=ax[0, col], cmap="Spectral_r", antialias=True,
+                logscale=True, vmin=vmin, vmax=vmax)
+            for row, b in enumerate(bals.values(), start=1):
+                _plot_solps_polygon(b, s_param, ax[row, col], logscale=True,
+                                    vmin=vmin, vmax=vmax)
+        _label_rows(ax, bals)
 
-        fig.suptitle(f"{case_name}") 
+        fig.suptitle(f"{case_name}")
+        _apply_fonts(fig, font)
         fig.savefig(f"{figures_png_path}/{case_name}_NV_polygon.png")
 
-def plot_reaction(cs, figures_png_path, solps=False, bal=None, vmin=None, vmax=None):
+def plot_reaction(cs, figures_png_path, solps=False, bal=None, vmin=None, vmax=None,
+                  same_limit=False, font=None):
 
-    # SOLPS only provides d+ parallel momentum; NVe/NVd have no counterpart
+    # Reaction rates span many decades, hence the log limits below
     fields = [
-        ("Sd+_rec", "Sd+_rec"),
-        ("Sd+_iz",  "Sd+_iz"),
-        ("Edd+_cx", "Edd+_cx"),
+        ("Sd+_rec", "Sd+_rec", -1e18, 1e18),
+        ("Sd+_iz",  "Sd+_iz",  1e16, 1e24),
+        # ("Edd+_cx", "Edd+_cx", 1e2,  1e6),
     ]
+
+    bals = _as_solps_dict(bal) if solps else {}
 
     for case_name, case_obj in cs.items():
         print(f"Plotting reaction polygon for {case_name}")
 
         ds = case_obj.ds.isel(t=-1)
 
-        if solps:
-            bals = _as_solps_dict(bal)
-            fig, ax = _solps_grid(len(fields), bals)
-            for col, (h_param, s_param) in enumerate(fields):
-                _plot_hermes_reaction(ds[h_param], ax[0, col], vmin=vmin, vmax=vmax)
-                for row, b in enumerate(bals.values(), start=1):
-                    if s_param is not None:
-                        s_vmin, s_vmax = _log_vlims(b.bal[s_param], vmin, vmax)
-                    else:
-                        s_vmin, s_vmax = vmin, vmax
-                    _plot_solps_polygon(b, s_param, ax[row, col], logscale=True,
-                                        vmin=s_vmin, vmax=s_vmax)
-            _label_rows(ax, bals)
-        else:
-            fig, ax = plt.subplots(1, 3, figsize=(10, 6), constrained_layout=True)
-            for col, (h_param, _) in enumerate(fields):
-                _plot_hermes_reaction(ds[h_param], ax[col], vmin=vmin, vmax=vmax)
+        fig, ax = _solps_grid(len(fields), bals)
+        for col, (h_param, s_param, fvmin, fvmax) in enumerate(fields):
+            cvmin, cvmax = _limits(fvmin, fvmax, same_limit)
+            # explicit vmin/vmax arguments still override the table
+            cvmin = vmin if vmin is not None else cvmin
+            cvmax = vmax if vmax is not None else cvmax
+
+            _plot_hermes_reaction(ds[h_param], ax[0, col], vmin=cvmin, vmax=cvmax)
+            for row, b in enumerate(bals.values(), start=1):
+                if s_param is not None and not same_limit:
+                    # autoscale each SOLPS panel over its own range
+                    s_vmin, s_vmax = _log_vlims(b.bal[s_param], cvmin, cvmax)
+                else:
+                    s_vmin, s_vmax = cvmin, cvmax
+                _plot_solps_polygon(b, s_param, ax[row, col], logscale=True,
+                                    vmin=s_vmin, vmax=s_vmax)
+        _label_rows(ax, bals)
 
         fig.suptitle(f"{case_name}")
+        _apply_fonts(fig, font)
         fig.savefig(f"{figures_png_path}/{case_name}_reaction_polygon.png")
-# def run_polygon():
-
-#     setup_matplotlib()
-#     parser = build_base_parser()
-#     args = parser.parse_args()
-#     case= read_files(args.input)
-
-#     ## create output directory
-#     figures_png_path = args.output + "_figures_png"
-#     if not os.path.exists(f"./{figures_png_path}"):
-#         os.makedirs(figures_png_path)
-
-
-#     ## Run
-#     plot_density(case, figures_png_path)
-#     plot_temperature(case, figures_png_path)
-#     plot_pressure(case, figures_png_path)

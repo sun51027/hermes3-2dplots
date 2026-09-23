@@ -45,7 +45,8 @@ H3_STYLES = [
 ]
 
 # SOLPS reference curve style.
-SOLPS_COLORS = ["dimgrey",  "saddlebrown", "teal", "black",]
+SOLPS_COLORS = ["royalblue", "limegreen", "darkorange","magenta"]
+# SOLPS_COLORS = ["dimgrey",  "saddlebrown", "teal", "black",]
 SOLPS_STYLES = [
     dict(ls="None",        marker='.',    alpha=0.8),
     dict(ls="None",     marker='x',   alpha=0.8),
@@ -110,10 +111,16 @@ def build_base_parser():
             default="outer_lower_sol", 
             help="Must specify sepadd/sepdist ... for more see doc"
             )
-    p.add_argument("--sepadd",  
-            type=int, 
-            default=1, 
+    p.add_argument("--sepadd",
+            type=int,
+            default=1,
             help="Index of the SOL ring based on nx. Default SOL ring = 1"
+            )
+    p.add_argument("--sepdist",
+            type=float,
+            nargs="+",
+            default=None,
+            help="Distance(s) from the separatrix at the midplane [m]. Overrides --sepadd"
             )
     p.add_argument("-s", "--scale",  
             type=str, 
@@ -127,6 +134,10 @@ def build_base_parser():
     p.add_argument("--solps",
             action="store_true",
             help="In polygon mode, add a side-by-side SOLPS polygon column (Hermes-3 | SOLPS)")
+    p.add_argument("--same_limit",
+            action="store_true",
+            help="In polygon mode, use the fixed vmin/vmax from each plot's fields "
+                 "table so Hermes-3 and SOLPS share one colour scale (default: autoscale)")
 
 
     return p
@@ -260,8 +271,34 @@ def read_solps_balance(input_ids=None, input_name=None):
     for i, path in enumerate(expanded):
         name = input_name[i] if input_name else os.path.basename(path.rstrip("/"))
         print(f"Reading SOLPS [{i}]: {path} -> {name}")
-        bals[name] = adapt_solps_conventions(SOLPScase(path))   # convention fix applied here
+        bals[name] = patch_fpsi(adapt_solps_conventions(SOLPScase(path)))
     return bals
+
+
+GEQDSK_PATH = os.path.join(SOLPS_DIR, "46895_forward_ip.geqdsk")
+
+
+def patch_fpsi(bal, geqdsk_path=GEQDSK_PATH):
+    """b2fgmtry stores fpsi as all zeros; rebuild it from the geqdsk.
+
+    fpsi is the variable get_1d_poloidal_data(interpolate_radial=True) interpolates
+    on, so without this the radial interpolation silently returns garbage instead
+    of failing.
+    """
+    import scipy.interpolate
+    from code_comparison.interpolate import read_geqdsk
+
+    if np.ptp(bal.g["fpsi"]) != 0:
+        return bal
+
+    with open(geqdsk_path) as f:
+        eq = read_geqdsk(f.read())
+    spline = scipy.interpolate.RectBivariateSpline(eq["R1d"], eq["Z1d"], eq["psi"].T)
+    bal.g["fpsi"] = spline.ev(bal.g["R"], bal.g["Z"])
+
+    assert np.isfinite(bal.g["fpsi"]).all(), "fpsi patch produced non-finite values"
+    print(f"  fpsi was all zeros -> rebuilt from {os.path.basename(geqdsk_path)}")
+    return bal
 
 
 
