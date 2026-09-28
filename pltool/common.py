@@ -219,7 +219,7 @@ def read_files(input_ids, input_name=None):
         # Poloidal projection of the parallel neutral flow, to match SOLPS fort.44
         ds = cs[case["name"]].ds
         bratio = abs(ds["Bpxy"] / (ds["Bxy"]))
-        print(f"bratio = {bratio.values}")
+        # print(f"bratio = {bratio.values}")
         ds["Vd_pol"] = ds["Vd"] * bratio
         if "NVd" in ds:
             ds["NVd_pol"] = ds["NVd"] * bratio
@@ -307,7 +307,9 @@ def adapt_solps_conventions(bal):
     b = bal.bal
     b["Pd"] = b["Pa"]                                             # d pressure  = atom pressure (Pa)
     b["Td"] = b["Tn"]                                             # d temperature = neutral T (Tn), not Ta
-    b["Edd+_cx"] = b["eirene_mc_eapl_shi_bal"].sum(axis=2) / b["vol"]  # CX energy [W/m3]
+    # axis=2 is EIRENE strata (nstra); sum(axis=2) sums contributions from all neutral sources
+    b["Edd+_cxiz"] = b["eirene_mc_eapl_shi_bal"].sum(axis=2) / b["vol"]  # CX energy [W/m3]
+    # b["Edd+_cx"] = b["eirene_mc_eapl_shi_bal"].sum(axis=2) / b["vol"]  # CX energy [W/m3]
     b["Nd"] = b["Na"]
     b["Nd+"] = b["Ne"] # quasi neutrality
     # --- neutral poloidal flow from fort.44 (atoms only, = Hermes-3 'd') ---
@@ -322,6 +324,7 @@ def adapt_solps_conventions(bal):
         # pfluxa is positive along +ix. Hermes-3's Vd_pol keeps the sign of the
         # PARALLEL Vd, so if Bpol < 0 on a ring the two are mirrored. Uncomment
         # to align (no-op where Bpol > 0):
+        print(bal.g["Bpol"][bal.g["Bpol"] < 0])
         # b["Vd_pol"]  *= np.sign(bal.g["Bpol"])
         # b["NVd_pol"] *= np.sign(bal.g["Bpol"])
         # Bonus, free from the same file: radial neutral flow
