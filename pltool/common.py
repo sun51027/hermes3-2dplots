@@ -312,6 +312,22 @@ def adapt_solps_conventions(bal):
     # b["Edd+_cx"] = b["eirene_mc_eapl_shi_bal"].sum(axis=2) / b["vol"]  # CX energy [W/m3]
     b["Nd"] = b["Na"]
     b["Nd+"] = b["Ne"] # quasi neutrality
+
+
+    # Ion (D+) particle flux into each target [s^-1], from balance.nc fna_tot.
+    # fna is stored on the LHS (west) cell face; sign makes "into target" positive.
+    target_faces = {
+        "inner_lower": ("inner_lower_target",       -1),
+        "inner_upper": ("inner_upper_target_guard", +1),
+        "outer_upper": ("outer_upper_target",       -1),
+        "outer_lower": ("outer_lower_target_guard", +1),
+    }
+    bal.target_flux = {
+        name: sign * b["fna_tot"][bal.psel[key], 1:-1, 0, 1].sum()
+        for name, (key, sign) in target_faces.items()
+    }
+    bal.target_flux["total"] = sum(bal.target_flux.values())
+
     # --- neutral poloidal flow from fort.44 (atoms only, = Hermes-3 'd') ---
     try:
         b["pfluxa"] = read_fort44_field(bal, "pfluxa")
@@ -339,6 +355,22 @@ def adapt_solps_conventions(bal):
         rfluxa = read_fort44_field(bal, "rfluxa")
         b["Vd_perp"] = np.divide(rfluxa, Na, out=np.zeros_like(Na), where=Na != 0)
         b["NVd_perp"] = Na * 2 * constants("mass_p") * b["Vd_perp"]
+
+        # Below are what solps_pp has done (just for reference)
+        # bal["Rd+_exiz"] = (
+        # bal["eirene_mc_eael_she_bal"].sum(axis=2) / bal["vol"]
+        # )  # Loss of energy due to excitation and 13.6 iz potential [W/m3]
+        # bal["Rd+_mol"] = (
+        #     bal["eirene_mc_emel_she_bal"].sum(axis=2) / bal["vol"]
+        # )  # Molecule radiation summed over all strata [W/m3]
+
+        # bal["Sd+_iz"] = (
+        #     bal["eirene_mc_papl_sna_bal"][:, :, 1, :].sum(axis=2) / bal["vol"]
+        # )  # Choose ion species and sum over strata
+        # bal["Sd+_rec"] = (
+        #     bal["eirene_mc_pppl_sna_bal"][:, :, 1, :].sum(axis=2) / bal["vol"]
+        # )  # Choose ion species and sum over strata
+
 
     bal.params = list(b.keys())
 
