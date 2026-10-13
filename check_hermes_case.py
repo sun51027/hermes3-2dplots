@@ -10,6 +10,9 @@ and writes for every case:
     check_reports/<case_id>/figures/fig_XX.png
     check_reports/<case_id>/<case_id>_report_history.csv  (version 1, 2, 3, ... with dates)
 
+This file holds the settings and the checks. Printing, Markdown, PDF and the version
+history are in check_hermes_case_output.py (same folder, normally no need to edit it).
+
 Every section of the report has: the formulas, the variables used, and result tables.
 Every PDF page has a footer: case name, page number, report version and date.
 Delete the history CSV to restart the version count at 1.
@@ -55,10 +58,7 @@ Status words used in the report:
 """
 
 import argparse
-import datetime
 import re
-import shutil
-import subprocess
 import sys
 import traceback
 import warnings
@@ -77,6 +77,12 @@ from hermes3.accessors import _select_region   # returns the (x, theta) indices 
 from hermes3.case_db import CaseDB
 from hermes3.selectors import get_1d_poloidal_data, get_1d_radial_data
 from hermes3.utils import constants
+
+# Output part (terminal, Markdown, PDF, version history) lives in check_hermes_case_output.py,
+# in the same folder as this script.
+sys.path.append(str(Path(__file__).resolve().parent))
+from check_hermes_case_output import (STATUS_RANK, format_number, format_status,
+                                      print_results, write_report_files)
 
 
 # ============================================================================
@@ -116,7 +122,7 @@ INPUT_VALUES_TO_SHOW = [
     "timestep",
     "mesh:file",
     "hermes:components",
-    "hermes:Nnorm",
+    # "hermes:Nnorm",
     "d+:type",
     "e:type",
     "d:type",
@@ -128,15 +134,15 @@ INPUT_VALUES_TO_SHOW = [
     "Pd+:core_volume",
     "Pd+:pressure_source",
     "Pd+:source",
-    "d+:target_recycle_multiplier",
-    "d+:target_recycle_energy",
+    # "d+:target_recycle_multiplier",
+    # "d+:target_recycle_energy",
     "d+:neutral_pump",
-    "d+:pump_recycle_multiplier",
+    # "d+:pump_recycle_multiplier",
     "d:K_cx_multiplier",
     "d:flux_limit",
     "d:neutral_lmax",
-    "d:ionising_core",
-    "d:ionising_core_iz_energy_loss",
+    # "d:ionising_core",
+    # "d:ionising_core_iz_energy_loss",
 ]
 
 
@@ -261,8 +267,6 @@ class CaseData:
         self.input_file_path = input_file_path
         self.result_file_path = result_file_path
 
-
-STATUS_RANK = {"INFO": 0, "PASS": 1, "WARN": 2, "FAIL": 3}
 
 # Where a variable comes from (used in the "Variables used" tables)
 FROM_RESULT = "result file (nc)"
@@ -450,26 +454,6 @@ def find_heaviside_window(source_expression):
     if upper_match is not None:
         upper_bound = float(upper_match.group(1))
     return lower_bound, upper_bound
-
-
-def format_number(value):
-    """Short readable number: 1.2345e+21, 0.035, or n/a."""
-    if value is None:
-        return "n/a"
-    if isinstance(value, str):
-        return value
-    if np.isnan(value):
-        return "n/a"
-    if value == 0:
-        return "0"
-    if abs(value) >= 1e4 or abs(value) < 1e-3:
-        return f"{value:.4e}"
-    return f"{value:.5g}"
-
-
-def format_status(status):
-    """Status word in bold, e.g. **PASS**. The PDF colours it."""
-    return f"**{status}**"
 
 
 def judge_difference(calculated_value, expected_value):
@@ -1099,7 +1083,7 @@ def plot_one_polygon(ds, axis, variable_settings):
             smallest_positive_value = float(data.where(data > 0).min())
             data = data.where(data > 0, smallest_positive_value / 10)
 
-    data.bout.polygon(ax=axis, cmap="Spectral_r", antialias=True, logscale=use_logscale)
+    data.hermes.clear_guards().bout.polygon(ax=axis, cmap="Spectral_r", antialias=True, logscale=use_logscale)
     axis.set_title(title, fontsize=10)
 
 
@@ -1385,528 +1369,21 @@ def run_checks(case, make_plots=True, make_history_plot=True):
 
 
 # ============================================================================
-# 8. OUTPUT: MARKDOWN REPORT
+# 8. OUTPUT  (the work is done in check_hermes_case_output.py)
 # ============================================================================
-def format_table_cell(value):
-    """Turn any value into the text of one Markdown table cell."""
-    if value is None:
-        text = "n/a"
-    elif isinstance(value, (bool, np.bool_)):
-        if value:
-            text = "yes"
-        else:
-            text = "no"
-    elif isinstance(value, (int, np.integer)):
-        text = str(int(value))
-    elif isinstance(value, (float, np.floating)):
-        text = format_number(float(value))
-    else:
-        text = str(value)
-    # a "|" would end the cell, a newline would end the row
-    text = text.replace("|", "\\|").replace("\n", " ")
-    return text
-
-
-def build_markdown_table(rows):
-    """List of dicts -> list of Markdown table lines."""
-    if len(rows) == 0:
-        return ["(empty table)"]
-    column_names = list(rows[0].keys())
-    header_cells = []
-    separator_cells = []
-    for column_name in column_names:
-        header_cells.append(format_table_cell(column_name))
-        separator_cells.append("---")
-    table_lines = ["| " + " | ".join(header_cells) + " |",
-                   "| " + " | ".join(separator_cells) + " |"]
-    for row in rows:
-        row_cells = []
-        for column_name in column_names:
-            row_cells.append(format_table_cell(row.get(column_name, "")))
-        table_lines.append("| " + " | ".join(row_cells) + " |")
-    return table_lines
-
-
-def get_file_modified_time(file_path):
-    """'2026-10-09 15:45' = last time the file was written, or 'not found'."""
-    file_path = Path(file_path)
-    if not file_path.exists():
-        return "not found"
-    modified_time = datetime.datetime.fromtimestamp(file_path.stat().st_mtime)
-    return modified_time.strftime("%Y-%m-%d %H:%M")
-
-
-def update_report_history(case, results, output_directory):
-    """
-    Add one line to <case_id>_report_history.csv (next to the report) and return
-    (version_number, created_text, history_table). Version 1, 2, 3, ... per case.
-    Delete the CSV file to restart from version 1.
-    """
-    history_path = Path(output_directory) / f"{case.case_id}_report_history.csv"
-    created_text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-
-    status_counts = {"PASS": 0, "WARN": 0, "FAIL": 0, "INFO": 0}
-    for result in results:
-        status_counts[result.status] += 1
-
-    if history_path.exists():
-        old_history_table = pd.read_csv(history_path)
-        version_number = int(old_history_table["Version"].max()) + 1
-    else:
-        old_history_table = None
-        version_number = 1
-
-    new_row = {
-        "Version": version_number,
-        "Report created": created_text,
-        "Result file": case.result_file_path.name,
-        "Result file modified": get_file_modified_time(case.result_file_path),
-        "BOUT.inp modified": get_file_modified_time(case.input_file_path),
-        "Time steps": int(case.ds_all_times.sizes["t"]),
-        "Last t [s]": float(case.ds_all_times["t"][-1]),
-        "PASS": status_counts["PASS"],
-        "WARN": status_counts["WARN"],
-        "FAIL": status_counts["FAIL"],
-    }
-    if old_history_table is None:
-        history_table = pd.DataFrame([new_row])
-    else:
-        history_table = pd.concat([old_history_table, pd.DataFrame([new_row])], ignore_index=True)
-    history_table.to_csv(history_path, index=False)
-    print(f"Report history updated: {history_path} (version {version_number})")
-    return version_number, created_text, history_table
-
-
-def build_summary_markdown(case, results, version_number, created_text, history_table):
-    """Title, version line, summary and report history of the report."""
-    ds = case.ds_all_times
-    info_rows = [
-        {"Item": "Case", "Value": f"`{case.case_id}`"},
-        {"Item": "Report version", "Value": f"**{version_number}** (created {created_text})"},
-        {"Item": "Input file", "Value": f"`{case.input_file_path}` (modified "
-                                        f"{get_file_modified_time(case.input_file_path)})"},
-        {"Item": "Result file", "Value": f"`{case.result_file_path.name}` (modified "
-                                         f"{get_file_modified_time(case.result_file_path)})"},
-        {"Item": "Time steps", "Value": f"{ds.sizes['t']} (last t = {format_number(float(ds['t'][-1]))} s)"},
-    ]
-    status_rows = []
-    for result in results:
-        status_rows.append({"Check": result.title, "Status": format_status(result.status)})
-
-    # newest version first
-    history_rows = []
-    for row_index in range(len(history_table) - 1, -1, -1):
-        history_rows.append(history_table.iloc[row_index].to_dict())
-
-    markdown_lines = ["# Hermes-3 case check report", "",
-                      f"**Version {version_number}**, created {created_text}", "",
-                      "## Summary", ""]
-    markdown_lines.extend(build_markdown_table(info_rows))
-    markdown_lines.extend(["", "### Report history", ""])
-    markdown_lines.extend(build_markdown_table(history_rows))
-    markdown_lines.extend(["", "### Checks", ""])
-    markdown_lines.extend(build_markdown_table(status_rows))
-    markdown_lines.extend([
-        "", "### How to read the status", "",
-        r"$$ \delta = \frac{|X_{\rm calculated} - X_{\rm expected}|}{|X_{\rm expected}|} $$", "",
-        f"- **PASS**: difference $\\delta$ at most {PASS_TOLERANCE:.0%}",
-        f"- **WARN**: difference $\\delta$ at most {WARN_TOLERANCE:.0%}",
-        "- **FAIL**: larger difference, or the check crashed",
-        "- **INFO**: nothing to compare, information only",
-        "",
-    ])
-    return markdown_lines
-
-
-def build_markdown_report(case, results, output_directory, version_number, created_text, history_table):
-    """
-    Whole report as Markdown text. Figures are saved as PNG files in
-    <output_directory>/figures/ and linked from the Markdown.
-    """
-    figure_directory = Path(output_directory) / "figures"
-    figure_directory.mkdir(parents=True, exist_ok=True)
-
-    markdown_lines = build_summary_markdown(case, results, version_number, created_text, history_table)
-    figure_number = 0
-    for result in results:
-        markdown_lines.extend([f"## {result.title} ({format_status(result.status)})", ""])
-        if result.description != "":
-            markdown_lines.extend([result.description, ""])
-
-        if len(result.formulas) > 0:
-            markdown_lines.extend(["### Formulas", ""])
-            for formula in result.formulas:
-                markdown_lines.extend([f"$$ {formula} $$", ""])
-
-        if len(result.variables) > 0:
-            markdown_lines.extend(["### Variables used", ""])
-            markdown_lines.extend(build_markdown_table(result.variables))
-            markdown_lines.append("")
-
-        if len(result.blocks) > 0:
-            markdown_lines.extend(["### Results", ""])
-        for block in result.blocks:
-            if block["type"] == "text":
-                markdown_lines.extend([block["text"], ""])
-            elif block["type"] == "table":
-                if block["caption"] != "":
-                    markdown_lines.extend([f"**{block['caption']}**", ""])
-                markdown_lines.extend(build_markdown_table(block["rows"]))
-                markdown_lines.append("")
-            elif block["type"] == "figure":
-                figure_number += 1
-                file_name = f"fig_{figure_number:02d}.png"
-                block["figure"].savefig(figure_directory / file_name, dpi=150, bbox_inches="tight")
-                plt.close(block["figure"])
-                markdown_lines.extend([f"![{block['caption']}](figures/{file_name})", ""])
-    return "\n".join(markdown_lines)
-
-
-def make_plain_text(text):
-    r"""Remove Markdown/LaTeX markup for the terminal: `x` -> x, **x** -> x, $\Gamma_{\rm puff}$ -> Gamma_puff."""
-    plain_text = str(text)
-    replacements = [("\\|", "|"), ("**", ""), ("`", ""), ("\\rm ", ""), ("\\le", "<="),
-                    ("\\ge", ">="), ("\\,", " "), ("$", ""), ("{", ""), ("}", ""), ("\\", "")]
-    for old_text, new_text in replacements:
-        plain_text = plain_text.replace(old_text, new_text)
-    return plain_text
-
-
-def print_table_in_terminal(rows):
-    """
-    Comparison tables (with Calculated / Expected / Status) are printed one line per row:
-        [PASS] [Pe] power: calculated 4.9999e+05 W, expected 5.0000e+05 W, difference 0.00%
-    Other tables are printed as aligned columns.
-    """
-    if len(rows) == 0:
-        return
-    first_row = rows[0]
-    is_comparison_table = ("Calculated" in first_row and "Expected" in first_row
-                           and "Status" in first_row)
-    if is_comparison_table:
-        for row in rows:
-            unit = make_plain_text(row["Unit"])
-            print(f"[{make_plain_text(row['Status'])}] {make_plain_text(row['Item'])}: "
-                  f"calculated {row['Calculated']} {unit}, expected {row['Expected']} {unit}, "
-                  f"difference {row['Difference']}")
-        return
-
-    plain_rows = []
-    for row in rows:
-        plain_row = {}
-        for column_name, value in row.items():
-            plain_row[make_plain_text(column_name)] = make_plain_text(format_table_cell(value))
-        plain_rows.append(plain_row)
-    with pd.option_context("display.width", 250, "display.max_columns", 30,
-                           "display.max_rows", 500, "display.max_colwidth", 90):
-        print(pd.DataFrame(plain_rows).to_string(index=False))
-
-
-def print_results(results):
-    """Terminal output, same layout as the first version of this script."""
-    for result in results:
-        print("\n" + "=" * 78)
-        print(f"[{result.status}] {result.title}")
-        print("=" * 78)
-        if result.description != "":
-            print(make_plain_text(result.description))
-        for block in result.blocks:
-            if block["type"] == "text":
-                print(make_plain_text(block["text"]))
-            elif block["type"] == "table":
-                if block["caption"] != "":
-                    print(f"\n-- {make_plain_text(block['caption'])}")
-                print_table_in_terminal(block["rows"])
-            elif block["type"] == "figure":
-                print(f"  (figure in the report: {block['caption']})")
-
-
-# ============================================================================
-# 9. OUTPUT: MARKDOWN -> LATEX -> PDF
-#    A small converter for the Markdown written above (headings, tables,
-#    $$formulas$$, bullet lists, images, `code`, **bold**, $math$).
-# ============================================================================
-LATEX_PREAMBLE = r"""\documentclass[10pt,a4paper]{article}
-\usepackage{fontspec}
-\usepackage[margin=18mm,includefoot]{geometry}
-\usepackage{amsmath,amssymb}
-\usepackage{graphicx}
-\usepackage{longtable,booktabs,array}
-\usepackage{xcolor}
-\usepackage{fancyhdr}
-\usepackage[hidelinks]{hyperref}
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{4pt}
-\definecolor{statusPASS}{RGB}{0,140,0}
-\definecolor{statusWARN}{RGB}{220,120,0}
-\definecolor{statusFAIL}{RGB}{200,0,0}
-\definecolor{statusINFO}{RGB}{90,90,90}
-\pagestyle{fancy}
-\fancyhf{}
-\renewcommand{\headrulewidth}{0pt}
-"""
-
-LATEX_SPECIAL_CHARACTERS = {
-    "\\": r"\textbackslash{}", "&": r"\&", "%": r"\%", "$": r"\$", "#": r"\#",
-    "_": r"\_", "{": r"\{", "}": r"\}", "~": r"\textasciitilde{}",
-    "^": r"\textasciicircum{}", "|": r"\textbar{}", "<": r"\textless{}", ">": r"\textgreater{}",
-    # "[" right after a LaTeX line break "\\" is read as a spacing option -> crash. Braces stop that.
-    "[": r"{[}", "]": r"{]}",
-}
-INLINE_MARKDOWN_PATTERN = re.compile(r"(`[^`]+`|\$[^$]+\$|\*\*.+?\*\*)")
-LATEX_ENGINES = ["xelatex", "lualatex"]
-TEX_BIN_DIRECTORY = "/Library/TeX/texbin"   # MacTeX; used if the engine is not on PATH
-
-
-def escape_latex(text, allow_line_breaks=False):
-    """Make plain text safe for LaTeX. allow_line_breaks: long names may break after _ / ,"""
-    escaped_pieces = []
-    for character in text:
-        if character in LATEX_SPECIAL_CHARACTERS:
-            piece = LATEX_SPECIAL_CHARACTERS[character]
-        else:
-            piece = character
-        if allow_line_breaks and character in "_/,":
-            piece = piece + r"\allowbreak{}"
-        escaped_pieces.append(piece)
-    return "".join(escaped_pieces)
-
-
-def convert_inline_markdown(text):
-    """`code` -> \\texttt, **bold** -> \\textbf (status words coloured), $math$ kept, rest escaped."""
-    converted_pieces = []
-    for piece in INLINE_MARKDOWN_PATTERN.split(text):
-        if piece == "":
-            continue
-        if len(piece) >= 2 and piece.startswith("`") and piece.endswith("`"):
-            converted_pieces.append(r"\texttt{" + escape_latex(piece[1:-1], allow_line_breaks=True) + "}")
-        elif len(piece) >= 2 and piece.startswith("$") and piece.endswith("$"):
-            converted_pieces.append(piece)
-        elif len(piece) >= 4 and piece.startswith("**") and piece.endswith("**"):
-            inner_text = piece[2:-2]
-            if inner_text in STATUS_RANK:
-                converted_pieces.append(r"\textbf{\textcolor{status" + inner_text + "}{" + inner_text + "}}")
-            else:
-                converted_pieces.append(r"\textbf{" + convert_inline_markdown(inner_text) + "}")
-        else:
-            converted_pieces.append(escape_latex(piece))
-    return "".join(converted_pieces)
-
-
-def split_markdown_table_row(line):
-    """'| a | b \\| c |' -> ['a', 'b | c']"""
-    inner_text = line.strip()
-    if inner_text.startswith("|"):
-        inner_text = inner_text[1:]
-    if inner_text.endswith("|") and not inner_text.endswith("\\|"):
-        inner_text = inner_text[:-1]
-    cells = []
-    current_cell = ""
-    previous_character = ""
-    for character in inner_text:
-        if character == "|" and previous_character != "\\":
-            cells.append(current_cell)
-            current_cell = ""
-        else:
-            current_cell = current_cell + character
-        previous_character = character
-    cells.append(current_cell)
-
-    clean_cells = []
-    for cell in cells:
-        clean_cells.append(cell.replace("\\|", "|").strip())
-    return clean_cells
-
-
-def visible_text_length(cell_text):
-    """Rough printed length of a cell (markup characters removed)."""
-    return len(cell_text.replace("`", "").replace("**", "").replace("$", "").replace("\\rm", ""))
-
-
-def choose_latex_column_spec(header_cells, body_rows):
-    """Short tables: plain 'l' columns. Wide tables: wrapping columns sized by content."""
-    number_of_columns = len(header_cells)
-    longest_text = []
-    for column_index in range(number_of_columns):
-        longest_length = visible_text_length(header_cells[column_index])
-        for row_cells in body_rows:
-            if column_index < len(row_cells):
-                longest_length = max(longest_length, visible_text_length(row_cells[column_index]))
-        longest_text.append(longest_length)
-
-    if sum(longest_text) + 3 * number_of_columns <= 100:
-        return "l" * number_of_columns
-
-    column_weights = []
-    for longest_length in longest_text:
-        column_weights.append(min(longest_length, 40) + 4)
-    total_weight = sum(column_weights)
-    column_specs = []
-    for weight in column_weights:
-        fraction = weight / total_weight
-        column_specs.append(r">{\raggedright\arraybackslash}p{\dimexpr " + f"{fraction:.3f}"
-                            + r"\linewidth-2\tabcolsep\relax}")
-    return "".join(column_specs)
-
-
-def convert_markdown_table_to_latex(table_lines):
-    """Markdown table lines (header, ---, rows) -> LaTeX longtable."""
-    header_cells = split_markdown_table_row(table_lines[0])
-    body_rows = []
-    for row_line in table_lines[2:]:
-        body_rows.append(split_markdown_table_row(row_line))
-    number_of_columns = len(header_cells)
-
-    latex_lines = [r"{\small",
-                   r"\begin{longtable}{" + choose_latex_column_spec(header_cells, body_rows) + "}",
-                   r"\toprule"]
-    header_latex = []
-    for cell in header_cells:
-        header_latex.append(r"\textbf{" + convert_inline_markdown(cell) + "}")
-    latex_lines.append(" & ".join(header_latex) + r" \\")
-    latex_lines.extend([r"\midrule", r"\endhead"])
-    for row_cells in body_rows:
-        while len(row_cells) < number_of_columns:
-            row_cells.append("")
-        row_latex = []
-        for cell in row_cells[:number_of_columns]:
-            row_latex.append(convert_inline_markdown(cell))
-        latex_lines.append(" & ".join(row_latex) + r" \\")
-    latex_lines.extend([r"\bottomrule", r"\end{longtable}", "}"])
-    return "\n".join(latex_lines)
-
-
-def markdown_to_latex(markdown_text, footer_left_text="", footer_right_text=""):
-    """
-    Convert the report Markdown into a full LaTeX document.
-    The footer texts are printed at the bottom of every page (page number in the middle).
-    """
-    latex_lines = [LATEX_PREAMBLE,
-                   r"\fancyfoot[L]{\footnotesize " + escape_latex(footer_left_text) + "}",
-                   r"\fancyfoot[C]{\footnotesize \thepage}",
-                   r"\fancyfoot[R]{\footnotesize " + escape_latex(footer_right_text) + "}",
-                   r"\begin{document}"]
-    markdown_lines = markdown_text.splitlines()
-    inside_bullet_list = False
-    line_number = 0
-    while line_number < len(markdown_lines):
-        stripped_line = markdown_lines[line_number].strip()
-
-        if inside_bullet_list and not stripped_line.startswith("- "):
-            latex_lines.append(r"\end{itemize}")
-            inside_bullet_list = False
-
-        if stripped_line.startswith("|"):
-            table_lines = []
-            while line_number < len(markdown_lines) and markdown_lines[line_number].strip().startswith("|"):
-                table_lines.append(markdown_lines[line_number].strip())
-                line_number += 1
-            latex_lines.append(convert_markdown_table_to_latex(table_lines))
-            continue
-
-        image_match = re.match(r"!\[(.*)\]\((.*)\)", stripped_line)
-        if stripped_line.startswith("### "):
-            latex_lines.append(r"\subsection*{" + convert_inline_markdown(stripped_line[4:]) + "}")
-        elif stripped_line.startswith("## "):
-            latex_lines.append(r"\section*{" + convert_inline_markdown(stripped_line[3:]) + "}")
-        elif stripped_line.startswith("# "):
-            latex_lines.append(r"\begin{center}{\LARGE\bfseries " + convert_inline_markdown(stripped_line[2:])
-                               + r"}\end{center}")
-        elif len(stripped_line) > 4 and stripped_line.startswith("$$") and stripped_line.endswith("$$"):
-            latex_lines.append(r"\[ " + stripped_line[2:-2].strip() + r" \]")
-        elif image_match is not None:
-            caption_text = image_match.group(1)
-            image_path = image_match.group(2)
-            latex_lines.append(r"\begin{center}")
-            latex_lines.append(r"\includegraphics[width=\linewidth,height=0.8\textheight,keepaspectratio]{"
-                               + image_path + r"}\\")
-            latex_lines.append(r"{\small " + convert_inline_markdown(caption_text) + "}")
-            latex_lines.append(r"\end{center}")
-        elif stripped_line.startswith("- "):
-            if not inside_bullet_list:
-                latex_lines.append(r"\begin{itemize}")
-                inside_bullet_list = True
-            latex_lines.append(r"\item " + convert_inline_markdown(stripped_line[2:]))
-        elif stripped_line == "":
-            latex_lines.append("")
-        else:
-            latex_lines.append(convert_inline_markdown(stripped_line))
-        line_number += 1
-
-    if inside_bullet_list:
-        latex_lines.append(r"\end{itemize}")
-    latex_lines.append(r"\end{document}")
-    return "\n".join(latex_lines)
-
-
-def find_latex_engine():
-    """Full path of xelatex or lualatex, or None if not installed."""
-    for engine_name in LATEX_ENGINES:
-        engine_path = shutil.which(engine_name)
-        if engine_path is not None:
-            return engine_path
-        mactex_path = Path(TEX_BIN_DIRECTORY) / engine_name
-        if mactex_path.exists():
-            return str(mactex_path)
-    return None
-
-
-def convert_markdown_to_pdf(markdown_path, footer_left_text="", footer_right_text=""):
-    """Markdown file -> .tex next to it -> .pdf with xelatex. Returns the PDF path or None."""
-    markdown_path = Path(markdown_path)
-    tex_path = markdown_path.with_suffix(".tex")
-    tex_path.write_text(markdown_to_latex(markdown_path.read_text(), footer_left_text, footer_right_text))
-
-    engine_path = find_latex_engine()
-    if engine_path is None:
-        print("No xelatex/lualatex found: only the Markdown report was written.")
-        return None
-
-    # run twice so that the table column widths settle
-    for latex_run in range(2):  # noqa: B007  (counter not needed)
-        completed = subprocess.run([engine_path, "-interaction=nonstopmode", "-halt-on-error", tex_path.name],
-                                   cwd=tex_path.parent, capture_output=True, text=True, errors="replace")
-        if completed.returncode != 0:
-            print(f"LaTeX failed (the PDF is incomplete). See {tex_path.with_suffix('.log')}")
-            for line in completed.stdout.splitlines()[-15:]:
-                print("   " + line)
-            return None
-
-    for extension in [".aux", ".out", ".log"]:
-        leftover_file = tex_path.with_suffix(extension)
-        if leftover_file.exists():
-            leftover_file.unlink()
-    return tex_path.with_suffix(".pdf")
-
-
 def write_report(case, results, output_directory=None):
     """
-    Write <case_id>_check_report.md (+ .tex, .pdf), figures/ and
-    <case_id>_report_history.csv into output_directory.
+    Write the Markdown + PDF report and update the version history.
     Default output_directory: REPORT_DIRECTORY/<case_id>/
     Returns (markdown_path, pdf_path). pdf_path is None if LaTeX failed.
     """
     if output_directory is None:
         output_directory = REPORT_DIRECTORY / case.case_id
-    output_directory = Path(output_directory)
-    output_directory.mkdir(parents=True, exist_ok=True)
-
-    version_number, created_text, history_table = update_report_history(case, results, output_directory)
-    markdown_text = build_markdown_report(case, results, output_directory,
-                                          version_number, created_text, history_table)
-    markdown_path = output_directory / f"{case.case_id}_check_report.md"
-    markdown_path.write_text(markdown_text)
-    print(f"\nMarkdown report written to: {markdown_path}")
-
-    footer_right_text = f"Report version {version_number}, {created_text}"
-    pdf_path = convert_markdown_to_pdf(markdown_path, case.case_id, footer_right_text)
-    if pdf_path is not None:
-        print(f"PDF report written to:      {pdf_path}")
-    return markdown_path, pdf_path
+    return write_report_files(case, results, output_directory, PASS_TOLERANCE, WARN_TOLERANCE)
 
 
 # ============================================================================
-# 10. COMMAND LINE
+# 9. COMMAND LINE
 # ============================================================================
 def main():
     global EXPECTED_PUFF_RATE, EXPECTED_PUFF_ENERGY_EV, PASS_TOLERANCE, WARN_TOLERANCE
