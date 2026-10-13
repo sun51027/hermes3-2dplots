@@ -9,7 +9,8 @@ import argparse
 import numpy as np
 import sys
 
-sys.path.append(r"/users/jpm590/2dspace/post-processing/sdtools")
+sys.path.append(r"/Users/zero/workspace/phd_work/hms_output/sdtools")
+# sys.path.append(r"/users/jpm590/2dspace/post-processing/sdtools")
 
 from hermes3.case_db import *
 from hermes3.load import *
@@ -145,7 +146,8 @@ def apply_sources(new_grid_path: Path, total_N: float, puff_loc: str):
         print(f"Total flow: {total_flow} [s-1]")
         print(f"Total flow per volume: {total_flow_per_volume.sum():.2e} [s-1 m-3]")
         
-        heat_source = total_flow * 3 * 2/3 * constants("q_e")  #  3eV per particle (assume dissociated molecules)
+        heat_source = total_flow * 2.53300E-02 * 2/3 * constants("q_e")  #  3eV per particle (assume dissociated molecules)
+        # heat_source = total_flow * 3 * 2/3 * constants("q_e")  #  3eV per particle (assume dissociated molecules)
         heat_source_per_volume = heat_source * (region_vol/region_vol.sum()) / region_vol 
         print(f"Total heat source: {heat_source:.2e} [W]")
         print(f"Total heat source per volume: {heat_source_per_volume.sum():.2e} [W m-3]")

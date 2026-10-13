@@ -1,54 +1,3 @@
-################ Local run #####################
-
-# python3 make_plot.py -i 260503_reproduce_5e20_neumann_nowallpump 260504_reproduce_7e20_neumann_nowallpump 260427_reproduce_1e21_neumann_nowallpump \
-# -in 5e20 7e20 1e21 -o 260512_puff_compare -r omp -p outer_lower -m special
-# python3 make_plot.py -i 260504_reproduce_7e20_neumann_nowallpump -o 260512_benchmark_7e20 -r omp -p outer_lower -m special
-# python3 make_plot.py -i 260513_6e20_neumann_nowallpump_newgrid 260519_7e20_neumann_nowallpump 260519_1e21_neumann_nowallpump 260513_reproduce_6e20_neumann_nowallpump \
-# -in 6e20 7e20 1e21 6e20_high -o 260520_lowresol_compr -r omp -p outer_lower -m benchmark special
-
-# python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump 260513_6e20_neumann_nowallpump_newgrid -in high low -o 260519_high_lowresol_6e20 -r omp -p outer_lower -m benchmark
-# python3 make_plot.py -i 260513_6e20_neumann_nowallpump_newgrid -o 260519_lowresol_6e20 -r omp -p outer_lower -m benchmark
-# python3 make_plot.py -i 260519_1e21_neumann_nowallpump 260513_reproduce_6e20_neumann_nowallpump -in Low_1e21 High_6e20 -o 260526_low_hig_comp -r omp -p outer_lower -m benchmark
-# python3 make_plot.py -i 260513_6e20_neumann_nowallpump_newgrid -o 260516_lowresol_6e20 -r omp -p outer_lower -m special
-# python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump -o 260518_highresol_6e20 -r omp -p outer_lower -m special
-# python3 make_plot.py -i 260503_reproduce_5e20_neumann_nowallpump -o 260518_highresol_6e20 -r omp -p outer_lower -m special
-# python3 make_plot.py -i 260504_reproduce_7e20_neumann_nowallpump -o 260518_highresol_6e20 -r omp -p outer_lower -m special
-# python3 make_plot.py -i 260518_re_6.5e20_from_6e20 260518_re_6.5e20_from_7e20 260513_reproduce_6e20_neumann_nowallpump -in 6.5e20_from_6e20 6.5e20_from_7e20 6e20 -o 260518_6.5e20_compare -r omp -p outer_lower -m special
-# python3 make_plot.py -i 260503_reproduce_5e20_neumann_nowallpump 260513_reproduce_6e20_neumann_nowallpump 260504_reproduce_7e20_neumann_nowallpump -in 5e20 6e20 7e20 -o 260518_benchmark_all -r omp -p outer_lower -m special
-# python3 make_plot.py -i 260503_reproduce_5e20_neumann_nowallpump 260513_reproduce_6e20_neumann_nowallpump 260504_reproduce_7e20_neumann_nowallpump -in 5e20 6e20 7e20 -o 260518_benchmark_all -r omp -p outer_lower -m benchmark
-# python3 make_plot.py -i 260526_5e20_neumann_nowallpump 260528_5e20_neumann_nowallpump_coreiz -in normal core_iz -o 260529_5e20_core_iz -r omp -p outer_lower -m special
-# python3 make_plot.py -i 260526_5e20_neumann_nowallpump 260528_5e20_neumann_nowallpump_coreiz 260604_5e20_neumann_nowallpump_coreiz_scratch 260605_5e20_neumann_nowallpump_coreiz_a5 \
-# -in normal core_iz from_scratch alpha_5 -o 260608_5e20_core_iz -r omp -p outer_lower -m benchmark
-# python3 make_plot.py -i 260526_5e20_neumann_nowallpump 260615_5e20_neumann_nowallpump_coreiz_izloss 260610_5e20_neumann_nowallpump_coreiz_onlyPF -in origin izloss_ON onlyPF -o 260615_coreiz -r omp -p outer_lower -m special benchmark
-# python3 make_plot.py -i 260610_5e20_neumann_nowallpump_coreiz_NVd 260615_5e20_neumann_nowallpump_coreiz_izloss 260610_5e20_neumann_nowallpump_coreiz_onlyPF -in izloss_OFF izloss_ON onlyPF -o 260615_coreiz -r omp -p outer_lower -m special benchmark
-# python3 make_plot.py -i 260601_reproduce_6e20_neumann_nowallpump_coreiz 260513_reproduce_6e20_neumann_nowallpump -in core_iz normal -o 260603_highresol_6e20_core_iz -r omp -p outer_lower -m special benchmark
-# python3 make_plot.py -i 260617_5e20_corebc_return_True_izloss_True 260617_5e20_corebc_return_True_izloss_False 260617_5e20_corebc_izloss_True 260617_5e20_corebc_izloss_False 260526_5e20_neumann_nowallpump \
-# -in return_O_izloss_O return_O_izloss_X return_X_izloss_O return_X_izloss_X normal -o 260617_coreiz_compr_all -r omp -p outer_lower -m benchmark
-# python3 make_plot.py -i 260519_1e21_neumann_nowallpump 260521_1e21_nowallpump_core_iz -in normal core_iz -o 270522_core_iz -r omp -p outer_lower -m benchmark
-# python3 make_plot.py -i 260619_lowrsl_5e20_scratch 260619_lowrsl_5e20_restart -in scratch restart -o 270621_5e20_scratch_restart -r omp -p outer_lower -m benchmark
-# python3 make_plot.py -i 260619_lowrsl_5e20_scratch 260619_lowrsl_5e20_corebc_OO_scratch 260619_lowrsl_5e20_corebc_XX_scratch \
-# -in normal corebc_OO corebc_XX -o 270621_lowrsl_5e20_corebc_scratch -r omp -p outer_lower -m benchmark
-# python3 make_plot.py -i 260619_lowrsl_5e20_restart 260619_lowrsl_5e20_corebc_OO_scratch 260619_lowrsl_5e20_corebc_XX_scratch \
-#   -in normal corebc_OO corebc_XX -o 270621_lowrsl_5e20_corebc_restart -r omp -p outer_lower -m benchmark
-# python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump 260619_highrsl_6e20_corebc_return_X_izloss_X \
-#   -in normal corebc_XX -o 270701_highrsl_6e20_corebc_scratch -r omp -p outer_lower_sol -m benchmark
-
-################ Updated sdtool #####################
-# python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump 260619_highrsl_6e20_corebc_return_O_izloss_O 260619_highrsl_6e20_corebc_return_X_izloss_X \
-# -in normal corebc_OO corebc_XX -o 260703_corebc_OO_XX -r omp -p outer_lower_sol -m benchmark
-# python3 make_plot.py -i 260504_reproduce_7e20_neumann_nowallpump 260705_highrsl_7e20_corebc_XX 260705_highrsl_7e20_corebc_OO \
-#   -in normal corebc_XX corebc_OO -o 260717_7e20_corebc_OO_XX -r omp -p outer_lower_sol -m benchmark
-# python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump 260504_reproduce_7e20_neumann_nowallpum 260705_highrsl_7e20_corebc_XX 260705_highrsl_7e20_corebc_OO \
-#   -in normal_6e20 normal_7e20 core_XX_7e20 corebc_OO_7e20 -o 260706_7e20_corebc_OO_XX -r omp -p outer_lower_sol -m benchmark
-# python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump 260703_highrsl_6e20_corebc_XX_alpha_10 260619_highrsl_6e20_corebc_return_X_izloss_X \
-# -in normal XX_alpha_10 XX_1 -o 260703_nalpha -r omp -p outer_lower_sol -m benchmark
-# python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump 260427_reproduce_1e21_neumann_nowallpump 260619_highrsl_6e20_corebc_return_X_izloss_X \
-#   -in 6e20 1e21 6e20_coreXX -o 260706_6e20_1e21 -r omp -p outer_lower_sol -m benchmark
-#
-# python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump 260706_highrsl_1e21 260706_highrsl_1e21_corebc_OO 260706_highrsl_1e21_corebc_XX \
-# -in 6e20 1e21 1e20_coreOO 1e21_coreXX -o 260707_6e20_1e21_corebc -r omp -p outer_lower_sol -m benchmark
-# python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump 260706_highrsl_1e21 260706_highrsl_1e21_corebc_OO \
-# -in 6e20 1e21 1e21_coreOO -o 260707_6e20_1e21_corebc -r omp -p outer_lower_sol -m benchmark
 # python3 make_plot.py -i 260619_highrsl_6e20_corebc_return_X_izloss_X 260706_highrsl_1e21 260706_highrsl_1e21_corebc_OO \
 #   -in 6e20_XX 1e21 1e21_coreOO -o 260707_6e20_1e21_corebc_v2 -r omp -p outer_lower_sol -m benchmark
 # python3 make_plot.py -i 260706_highrsl_1e21 260707_lowrsl_1e21 \
@@ -86,9 +35,123 @@
 #   --solps
 # python3 make_plot.py -i 260717_lowrsl_6e20 260717_lowrsl_6e20_coreOO 260717_lowrsl_6e20_coreOO_cx0.1 260717_lowrsl_6e20_coreOO_cx100 -in normal coreiz coreiz_cx0.1 coreiz_cx100 \
 # -o 260728_lowrsl_6e20_solps_cx100_1e22 -r omp -p outer_lower_sol -m benchmark
-# python3 make_plot.py -i 260717_highrsl_6e20 260717_highrsl_6e20_coreOO -in origin core_ionisation -sin . -o 260824_benchmark_forPR -m benchmark
+# python3 make_plot.py \
+#   -i 260717_highrsl_6e20 260717_highrsl_6e20_coreOO \
+#   -in original ionising_core \
+#   -si SOLPS_origin_1e21 \
+#   -sin 1e21 \
+#   -o 261005_benchmark_poster -m benchmark
 # python3 make_plot.py -i 260310_neutralimit_gcc12_9497476 -in restart_dep -sin . -o 260824_restart_dep_forPR -m polygon --solps
-python3 make_plot.py -i 260806_highrsl_6e20_solps_1e21_plasmainit -in fix_plasma_bg -o 260907_fix_pls_bg_Spol -m benchmark
+# python3 make_plot.py -i 260806_highrsl_6e20_solps_1e21_plasmainit -in fix_plasma_bg -o 260907_fix_pls_bg_Spol -m benchmark
+# python3 make_plot.py -i 260916_highrsl_fixplsbg_fromsolps -in fix_plasma_bg -o 260918_fix_pls_bg_Spar -m benchmark
+# python3 make_plot.py -i 260916_highrsl_fixplsbg_fromsolps_cx100_1e21 -in fix_plasma_bg -si SOLPS_Luciani_off_cx100 -sin SOLPS_cx100_1e21 -o 260917_fix_pls_bg_Spar_cx_1e21 -m benchmark
+# python3 make_plot.py -i 260916_highrsl_fixplsbg_fromsolps_cx100_1e22 -in fix_plasma_bg -si SOLPS_Luciani_off_cx100_1e22 -sin SOLPS_cx100_1e22 -o 260917_fix_pls_bg_Spar_cx_1e22 -m benchmark
+# python3 make_plot.py -i 260916_highrsl_fixplsbg_fromsolps 260916_highrsl_fixplsbg_fromsolps_cx100_1e21 260916_highrsl_fixplsbg_fromsolps_cx100_1e22 \
+#     -in fixbg fixbg_cx100_1e21 fixbg_cx100_1e22  \
+#     -sin origin cx100_1e21 cx100_1e22 \
+#     -si SOLPS_Luciani_off SOLPS_Luciani_off_cx100 SOLPS_Luciani_off_cx100_1e22 \
+#     -o 260918_fix_pls_bg_all -m benchmark
+# python3 make_plot.py -i 260916_highrsl_fixplsbg_fromsolps 260717_highrsl_6e20_coreOO \
+#   -in fixbg_1e21 6e20_coreiz \
+#   -sin origin_1e21 \
+#   -si SOLPS_Luciani_off \
+#   -o 260918_fix_pls_bg_vs_6e20_coreiz -m benchmark
+# python3 make_plot.py -i 260916_highrsl_fixplsbg_fromsolps 260916_highrsl_fixplsbg_fromsolps_cx100_1e21 \
+#   -in fixbg_1e21 fixbg_cx100_1e21 \
+#   -si SOLPS_Luciani_off SOLPS_Luciani_off_cx100 \
+#   -sin origin_1e21 cx100_1e21 \
+#   -o 260918_fix_pls_bg_vs_origin_cx100_1e21 -m benchmark
+# python3 make_plot.py -i 260921_highrsl_fixplsbg_fromsolps_1e21 260707_lowrsl_1e21_core_OO \
+#   -in fixbg_1e21 lowrsl_origin_1e21\
+#   -si SOLPS_Luciani_off \
+#   -sin origin_1e21 \
+#   -o 260921_fixplsbg_1e21_vs_lowrsl_1e21 -m benchmark
+# python3 make_plot.py -i 260921_highrsl_fixplsbg_fromsolps_1e21 260717_highrsl_6e20_coreOO \
+#   -in fixbg_1e21 origin_6e20\
+#   -si SOLPS_Luciani_off \
+#   -sin origin_1e21 \
+#   -o 260921_fixplsbg_1e21_vs_normal_6e20 -m benchmark
+# python3 make_plot.py -i 260921_highrsl_fixplsbg_fromsolps_1e21 \
+#   -in fixbg_1e21 \
+#   -si SOLPS_Luciani_off \
+#   -sin origin_1e21 \
+#   -o 260921_fixplsbg_vs_1e21_coreiz -m benchmark
+
+
+# python3 make_plot.py -i 260921_highrsl_fixplsbg_fromsolps_1e21 260921_highrsl_fixplsbg_fromsolps_cx100_1e22_hermes_cx100 \
+#   -in fixbg_1e21 fixbg_cx100_1e22\
+#   -si SOLPS_Luciani_off SOLPS_Luciani_off_cx100_1e22 \
+#   -sin origin_1e21 cx100_1e22 \
+#   -o 260921_fixplsbg_1e21_vs_cx100_1e22 -m benchmark
+# python3 make_plot.py -i 260921_highrsl_fixplsbg_fromsolps_1e21 260923_highrsl_fixplsbg_fromsolps_1e21_roomT \
+#   -in fixbg_1e21 fixbg_1e21_roomT \
+#   -si SOLPS_Luciani_off \
+#   -sin origin_1e21 \
+#   -o 260923_fixplsbg_1e21_roomT -m benchmark
+
+# python3 make_plot.py -i 260923_highrsl_fixplsbg_fromsolps_1e21_roomT 260923_highrsl_fixplsbg_fromsolps_1e21_roomT_nlmx0.01 260923_highrsl_fixplsbg_fromsolps_1e21_roomT_nlmx100 \
+#   -in nlmx0.1 nlmx0.01 nlmx100\
+#   -si SOLPS_origin_1e21 \
+#   -sin origin_1e21 \
+#   -o 260924_fixplsbg_1e21_nlmx -m benchmark
+
+# python3 make_plot.py -i 260923_highrsl_fixplsbg_fromsolps_1e21_roomT 261001_highrsl_fixplsbg_fromsolps_1e21_roomT_gd \
+#   -in original fix_guardcell\
+#   -si SOLPS_origin_1e21 \
+#   -sin origin_1e21 \
+#   -o 261001_fixplsbg_guardcell -m benchmark
+
+# python3 make_plot.py -i 261001_highrsl_fixplsbg_fromsolps_1e21_roomT_gd \
+#   -in fixed_plasma_1e21\
+#   -si SOLPS_origin_1e21 \
+#   -sin 1e21\
+#   -o 261005_fixplsbg_poster\
+#   -m benchmark
+# python3 make_plot.py -i  261001_highrsl_fixplsbg_fromsolps_cx100_1e21_roomT_gd 260923_highrsl_fixplsbg_fromsolps_cx100_1e21_hermes_cx100_roomT \
+#   -in 1e21_cx100_gd 1e21_cx100 \
+#   -si SOLPS_1e21_cx100 \
+#   -sin 1e21_cx100 \
+#   -o 261013_1e21_cx100_gdfix\
+#   -m benchmark
+# python3 make_plot.py -i  261001_highrsl_fixplsbg_fromsolps_cx100_1e21_roomT_gd \
+#   -in 1e21_cx100 \
+#   -si SOLPS_1e21_cx100 \
+#   -sin 1e21_cx100 \
+#   -o 261013_1e21_cx100\
+#   -m benchmark polygon \
+#   --solps \
+#   --same_limit 
+# python3 make_plot.py -i 261001_highrsl_fixplsbg_fromsolps_cx100_1e22_roomT_gd \
+#   -in 1e22_cx100 \
+#   -si SOLPS_1e22_cx100 \
+#   -sin 1e22_cx100 \
+#   -o 261013_1e22cx100\
+#   -m benchmark polygon \
+#   --solps \
+#   --same_limit
+python3 make_plot.py -i 261001_highrsl_fixplsbg_fromsolps_cx100_1e21_roomT_gd 261001_highrsl_fixplsbg_fromsolps_cx100_1e22_roomT_gd \
+  -in 1e21_cx100 1e22_cx100 \
+  -si SOLPS_1e21_cx100 SOLPS_1e22_cx100 \
+  -sin 1e21_cx100 1e22_cx100 \
+  -o 261013_all_cx100\
+  -m benchmark
+
+# python3 make_plot.py -i 260706_highrsl_1e21_corebc_OO 260717_highrsl_6e20_coreOO \
+#   -in 1e21 6e20 \
+#   -si SOLPS_origin_1e21 \
+#   -o 261013_highrsl_1e21_6e20_preview \
+#   -m benchmark
+
+# python3 make_plot.py -i 260717_highrsl_6e20_coreOO 260717_highrsl_6e20\
+#   -in 6e20_coreOO 6e20 \
+#   -si SOLPS_origin_1e21 \
+#   -o 261013_highrsl_6e20_polygon \
+#   -m polygon \
+#   --solps \
+#   --same_limit
+# python analyse_penetration.py --case 261001_highrsl_fixplsbg_fromsolps_1e21_roomT_gd --solps ../SOLPS_origin_1e21 -o 261005_fixplsbg_poster
+# python analyse_penetration.py --case 261001_highrsl_fixplsbg_fromsolps_cx100_1e21_roomT_gd --solps ../SOLPS_1e21_cx100 -o 261013_1e21_cx100
+# python analyse_penetration.py --case 261001_highrsl_fixplsbg_fromsolps_cx100_1e22_roomT_gd --solps ../SOLPS_1e22_cx100 -o 261013_1e22_cx100
 
 ######### Multiple SOLPS files ########
 # python3 make_plot.py -m benchmark \
@@ -104,3 +167,10 @@ python3 make_plot.py -i 260806_highrsl_6e20_solps_1e21_plasmainit -in fix_plasma
 # python3 make_plot.py -i 260513_reproduce_6e20_neumann_nowallpump -o 260703_solps_polygon -m polygon --solps
 # python3 make_plot.py -i 260707_lowrsl_1e21 -o 260706_1e21_polygon -m polygon --solps
 # python3 make_plot.py -i 260427_reproduce_1e21_neumann_nowallpump -o 260706_1e21_polygon -m polygon --solps
+
+# python3 make_plot.py -i 260923_highrsl_fixplsbg_fromsolps_1e21_roomT \
+#   -si SOLPS_Luciani_off \
+#   -o 260923_fixplsbg_1e21_roomT \
+#   -m polygon \
+#   --solps \
+#   --same_limit

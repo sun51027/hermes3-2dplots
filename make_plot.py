@@ -11,9 +11,9 @@ if __name__ == "__main__":
     
     start_time = time.time()
 
-    setup_matplotlib()
     parser = build_base_parser()
     args = parser.parse_args()
+    setup_matplotlib(args.font)
 
     # Multiple files argument
     if len(args.input) > 1 and not args.input_name:

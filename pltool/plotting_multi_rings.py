@@ -263,9 +263,9 @@ def plot_plasma_overlap(cs, region_pol, region_rad, figures_png_path):
 
 def run_multi_plots():
 
-    setup_matplotlib()
     parser = build_base_parser()
     args = parser.parse_args()
+    setup_matplotlib(args.font)
     case = read_files(args.input)
 
     ## create output directory

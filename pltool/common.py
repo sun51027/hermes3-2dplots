@@ -138,6 +138,11 @@ def build_base_parser():
             action="store_true",
             help="In polygon mode, use the fixed vmin/vmax from each plot's fields "
                  "table so Hermes-3 and SOLPS share one colour scale (default: autoscale)")
+    p.add_argument("--font",
+            type=str,
+            default="cm",
+            choices=list(FONT_PRESETS),
+            help="Figure font: sans (default), times (Times New Roman), cm (LaTeX-like)")
 
 
     return p
@@ -418,17 +423,42 @@ def format_legend_and_axes(fig, ax, n_plots, xlabel):
     
     fig.legend(handles, labels, loc='lower center', ncol=3)
     
-    for i, axi in enumerate(ax.flat):
-        if i >= n_plots:
-            axi.axis('off')
-            continue
+    # for i, axi in enumerate(ax.flat):
+    #     if i >= n_plots:
+    #         axi.axis('off')
+    #         continue
             
-        if i >= (n_plots - 3):
-            axi.set_xlabel(xlabel)
+    #     if i >= (n_plots - 3):
+    #         axi.set_xlabel(xlabel)
             
     plt.tight_layout(rect=[0, 0.02, 1, 1])
 
-def setup_matplotlib() -> None:
+# Font presets selectable with --font
+FONT_PRESETS = {
+    # Matplotlib default (DejaVu Sans)
+    "sans": {
+        "font.family": "sans-serif",
+        "mathtext.fontset": "dejavusans",
+        "mathtext.default": "it",
+    },
+    # Times New Roman, common in journals
+    "times": {
+        "font.family": "serif",
+        "font.serif": ["Times New Roman", "Times", "STIXGeneral", "DejaVu Serif"],
+        "mathtext.fontset": "stix",
+        "mathtext.default": "regular",
+    },
+    # LaTeX-like Computer Modern
+    "cm": {
+        "font.family": "serif",
+        "font.serif": ["CMU Serif", "cmr10", "DejaVu Serif"],
+        "mathtext.fontset": "cm",
+        "mathtext.default": "regular",
+        "axes.formatter.use_mathtext": True,  # cmr10 lacks a minus sign glyph
+    },
+}
+
+def setup_matplotlib(font: str = "sans") -> None:
     """
     Central place for Matplotlib rcParams / styling.
     Call this once at program start (e.g. in run_single_plots / run_multi_plots).
@@ -442,12 +472,13 @@ def setup_matplotlib() -> None:
     # Base DPI and font
     plt.rcParams["figure.dpi"] = 120
     plt.rcParams["savefig.dpi"] = 300
-    plt.rcParams["font.size"] = 14
+    plt.rcParams["font.size"] = 15
+    plt.rcParams.update(FONT_PRESETS[font])
 
     # Axes and lines
     plt.rcParams["axes.grid"] = False  # you turn grid on per-axis
-    plt.rcParams["axes.labelsize"] = 14
-    plt.rcParams["axes.titlesize"] = 14
+    plt.rcParams["axes.labelsize"] = 15
+    plt.rcParams["axes.titlesize"] = 15
     plt.rcParams["lines.linewidth"] = 1.5
     # If compare multiple files
     plt.rcParams["axes.prop_cycle"] = plt.cycler(color=H3_COLORS)
@@ -455,5 +486,5 @@ def setup_matplotlib() -> None:
 
     # Legend
     plt.rcParams["legend.frameon"] = True  # do you want the frame or not
-    plt.rcParams["legend.fontsize"] =  14
+    plt.rcParams["legend.fontsize"] =  15
 

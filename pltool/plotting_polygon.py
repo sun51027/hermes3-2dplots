@@ -167,9 +167,9 @@ def plot_density(cs, figures_png_path, solps=False, bal=None, same_limit=False, 
 
     # SOLPS: Nd -> Na (already aliased as "Nd"); Nd+ -> Ne (quasi-neutrality)
     fields = [
-        ("Nd",  "Nd",  1e11, 1e19),
-        ("Ne",  "Ne",  1e11, 1e19),
-        ("Nd+", "Nd+", 1e11, 1e19),
+        ("Nd",  "Nd",  1e11, 5e20),
+        ("Ne",  "Ne",  1e17, 1e19),
+        ("Nd+", "Nd+", 1e17, 1e19),
     ]
 
     bals = _as_solps_dict(bal) if solps else {}

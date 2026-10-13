@@ -45,6 +45,15 @@ def core_avg_solps(bal, param):
     w = vol[pol][:, rad]
     return float(np.nansum(q * w) / np.nansum(w))
 
+# def target_flux_hermes(cs, param, region="outer_lower_target_guards"):
+#     ds = cs[case_name].ds.isel(t=-1)
+#     sub = ds.hermesm.select_region(region)   # radial 0..ixseps1, core poloidal range
+#     dv = sub["dv"]
+#     print(f"dv shape = {dv.shape}")
+    # df = get_1d_radial_data(ds, params=[p[0] for p in items], region=region_rad)
+
+
+    
 
 def print_core_averages(cs, bals, params=("Te", "Td+", "Td","Ne", "Nd+","Nd"), region="core_noguards"):
     """Print a volume-weighted core (inside-separatrix) average table: SOLPS vs Hermes-3.
@@ -147,13 +156,13 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
     plots = {
         "state_var": [
             ("Te",  "e temperature", "T [eV]",            True,False),
-            ("Td+", "d+ temperature","T [eV]",            False,False),
-            ("Td",  "d temperature", "T [eV]",            False,False),
             ("Ne",  "e density",     "density [$m^{-3}$]", True,False),
-            ("Nd+", "d+ density",    "density [$m^{-3}$]", True,False),
-            ("Nd",  "d density",     "density [$m^{-3}$]", True,False),
             ("Pe",  "e pressure",    "pressure [Pa]",      True,False),
+            ("Td+", "d+ temperature","T [eV]",            False,False),
+            ("Nd+", "d+ density",    "density [$m^{-3}$]", True,False),
             ("Pd+", "d+ pressure",   "pressure [Pa]",      True,False),
+            ("Td",  "d temperature", "T [eV]",            False,False),
+            ("Nd",  "d density",     "density [$m^{-3}$]", True,False),
             ("Pd",  "d pressure",    "pressure [Pa]",      True,False),
         ],
         "momentum":[
@@ -162,9 +171,10 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
             # ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-1}$]", False  , True),
         ],
         "reactions": [
-            ("Sd+_rec", "Recombination", "Rate [$m^{-3} s^{-1}$]",        True, True),
-            ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]", True, False),
-            ("Edd+_cx", "Charge exchange",      "Energy [$W m^{-3}$]",    True, False),
+            ("Sd+_rec", "Recombination", "Source [$m^{-3} s^{-1}$]",        True, True),
+            ("Sd+_iz",  "Ionisation",           "Source [$m^{-3} s^{-1}$]", True, False),
+            # ("Edd+_cx", "Ion energy source due to charge exchange",  "Energy [$W m^{-3}$]",    True, False),
+            # ("Ed+_iz",  "Ion energy source due to ionisation ",      "Energy [$W m^{-3}$]",    True, False),
         ]
     }
 
@@ -176,7 +186,7 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
             print(f"Number of plots = {nitems} in category {category}")
             cols = 3
             rows = math.ceil(nitems / cols)
-            fig, ax = plt.subplots(rows, cols, figsize=(12, 4 * rows), squeeze=False)
+            fig, ax = plt.subplots(rows, cols, figsize=(11, 3 * rows), squeeze=False)
 
             # Read each case once per ring/category, not once per parameter.
             # Both codes are matched onto the same flux surface, see ring_kwargs.
@@ -210,7 +220,10 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
                 # Hermes-3
                 for i, (case_name, df) in enumerate(h3_dfs.items()):
                     # axi.plot((df["Spol"]), (df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
-                    axi.plot((df["Spar"]), (df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
+                    if params=="Edd+_cx":
+                        axi.plot((df["Spar"]), np.abs(df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
+                    else:
+                        axi.plot((df["Spar"]), (df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
 
                 # X-point vertical lines
                 # axi.axvline(xpt_h, color='r', alpha = 0.2)
@@ -218,7 +231,7 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
 
                 axi.set_title(title)
                 axi.set_ylabel(ylabel)
-                axi.set_xlabel("")
+                axi.set_xlabel("$S_{\\parallel}$")
                 axi.grid(True, alpha=0.7)
 
                 if logy:
@@ -240,13 +253,13 @@ def plot_bm_profiles_radial(cs, bals, region_rad, figures_png_path):
     plots = {
         "state_var": [
             ("Te",  "e temperature", "T [eV]",            False),
-            ("Td+", "d+ temperature","T [eV]",            False),
-            ("Td",  "d temperature", "T [eV]",            False),
             ("Ne",  "e density",     "density [$m^{-3}$]", True),
-            ("Nd+", "d+ density",    "density [$m^{-3}$]", True),
-            ("Nd",  "d density",     "density [$m^{-3}$]", True),
             ("Pe",  "e pressure",    "pressure [Pa]",      True),
+            ("Td+", "d+ temperature","T [eV]",            False),
+            ("Nd+", "d+ density",    "density [$m^{-3}$]", True),
             ("Pd+", "d+ pressure",   "pressure [Pa]",      True),
+            ("Td",  "d temperature", "T [eV]",            False),
+            ("Nd",  "d density",     "density [$m^{-3}$]", True),
             ("Pd",  "d pressure",    "pressure [Pa]",      True),
         ],
         "momentum":[
@@ -255,9 +268,16 @@ def plot_bm_profiles_radial(cs, bals, region_rad, figures_png_path):
             # ("NVd+",    "d+ Parallel momentum", "Momentum [$kg m^{-2} s^{-1}$]", False),
         ],
         "reactions": [
-            ("Sd+_rec", "Recombination", "Rate [$m^{-3} s^{-1}$]", True),
-            ("Sd+_iz",  "Ionisation",           "Rate [$m^{-3} s^{-1}$]",          True),
-            ("Edd+_cx", "Charge exchange",      "Energy [$W m^{3}$]",   True),
+            ("Sd+_rec", "Ion density source due to recombination",        "$m^{-3} s^{-1}$", True),
+            ("Sd+_iz",  "Ion desnity source due to ionisation",           "$m^{-3} s^{-1}$",          True),
+            # ("Edd+_cx", "Ion energy source due to charge exchange \n (-Edd+_cx)",  "Energy source [$W m^{-3}$]",   True),
+            # ("Ed+_iz",  "Ion energy source due to ionisation \n (Ed+_iz) ",      "Energy source [$W m^{-3}$]",    True),
+            ("Edd+_cxiz",  "Ion energy source due to iz & cx \n ",      "$W m^{-3}$",    True),
+            # ("Edd+_cxiz",  "Ion energy source due to iz & cx \n (-Edd+_cx + Ed+_iz)",      "$W m^{-3}$",    True),
+            # ("Edd+_cx", "Neutral energy source due to charge exchange \n (Edd+_cx)",  "Energy source [$W m^{-3}$]",   True),
+            # ("Ed+_iz",  "Ion energy source due to ionisation \n (Ed+_iz) ",      "Energy source [$W m^{-3}$]",    True),
+            # ("Edd+_cxiz",  "Neutral energy source due to iz & cx \n ",      "Energy source[$W m^{-3}$]",    True),
+            # ("Edd+_cxiz",  "Neutral energy source due to iz & cx \n (Edd+_cx - Ed+_iz)",      "Energy source[$W m^{-3}$]",    True),
             # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
         ]
     }
@@ -265,10 +285,15 @@ def plot_bm_profiles_radial(cs, bals, region_rad, figures_png_path):
     for category, items in plots.items():
         nitems = len(items)
         print(f"Number of plots = {nitems} in category {category}")
-        
+
+        # Variables to load: plotted ones + dependencies of derived quantities
+        params = [p[0] for p in items]
+        if "Edd+_cxiz" in params:
+            params += [p for p in ("Edd+_cx", "Ed+_iz") if p not in params]
+
         cols = 3
         rows = math.ceil(nitems / cols)
-        fig, ax = plt.subplots(rows, cols, figsize=(12, 4 * rows), squeeze=False)
+        fig, ax = plt.subplots(rows, cols, figsize=(12, 3.5 * rows), squeeze=False)
 
         # Loop through all the profiles
         for idx, (param, title, ylabel, logy) in enumerate(items):
@@ -276,28 +301,54 @@ def plot_bm_profiles_radial(cs, bals, region_rad, figures_png_path):
             r, c = divmod(idx, 3)
             axi = ax[r,c]
 
-            # SOLPS dist = Srad
+            # SOLPS loop
             for j, (sname, bal) in enumerate(bals.items()):
+
                 df_solps = bal.get_1d_radial_data(params=[p[0] for p in items], region=region_rad)
-                axi.plot(df_solps["dist"], (df_solps[param]),
+                
+                if param=="Edd+_cx" or param=="Ed+_iz":
+                    continue
+                elif param=="Edd+_cxiz":
+                    # To show "neutral eneryg source",
+                    # need to flip the sign of eirene_mc_eapl_shi_bal (ion energy srouce)
+                    y_s = -df_solps[param]
+                else:
+                    y_s = df_solps[param]
+
+                axi.plot(df_solps["dist"], y_s,
                          label=f"SOLPS {sname}",
                          color=SOLPS_COLORS[j % len(SOLPS_COLORS)],
                          **SOLPS_STYLES[j % len(SOLPS_STYLES)])
             # df_solps = bal.get_1d_radial_data(params=[p[0] for p in items], region=region_rad)
             # axi.plot(df_solps["dist"], np.abs(df_solps[param]), label="SOLPS", color=SOLPS_COLOR, **SOLPS_STYLE)
 
-            # Loop through all profiles for each file
+            # Hermes-3 loop
             for i, (case_name, case_obj) in enumerate(cs.items()):
                 print(f"Plotting {case_name} with {title}...")
                 ds = cs[case_name].ds.isel(t=-1)
-                df = get_1d_radial_data(ds, params=[p[0] for p in items], region=region_rad)
+                df = get_1d_radial_data(ds, params=params, region=region_rad)
 
-                # Hermes-3 
-                axi.plot(df["Srad"], (df[param]), label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
+                # Hermes-3
+                if param=="Edd+_cx":
+                    # Show in "neutral energy source"
+                    y = df[param]
+
+                    # If you want to show "ion source"
+                    # y = -df[param]
+                elif param=="Edd+_cxiz":
+                    # Show in "neutral energy source"
+                    y = df["Edd+_cx"] - df["Ed+_iz"]
+
+                    # If you want to show "ion source"
+                    # y = -df["Edd+_cx"] + df["Ed+_iz"]
+                else:
+                    y = df[param]
+
+                axi.plot(df["Srad"], y, label=f"Hermes-3 {case_name}", **H3_STYLES[i % len(H3_STYLES)])
         
                 axi.set_title(title)
                 axi.set_ylabel(ylabel)
-                axi.set_xlabel("")
+                axi.set_xlabel("$X-X_{sep}$ [m]")
                 axi.grid(True, alpha=0.7)
             
                 if logy:
@@ -346,7 +397,7 @@ def plot_bm_profiles_fieldline_multiring(cs, bals, region_pol, idx_ring_array,
         nitems = len(items)
         cols = 3
         rows = math.ceil(nitems / cols)
-        fig, ax = plt.subplots(rows, cols, figsize=(12, 4 * rows), squeeze=False)
+        fig, ax = plt.subplots(rows, cols, figsize=(12, 3.5 * rows), squeeze=False)
 
         # ---- read every (case, ring) once ------------------------------------
         solps_dfs, h3_dfs = {}, {}
