@@ -186,7 +186,7 @@ def plot_bm_profiles_fieldline(cs, bals, region_pol, idx_ring_array, figures_png
             print(f"Number of plots = {nitems} in category {category}")
             cols = 3
             rows = math.ceil(nitems / cols)
-            fig, ax = plt.subplots(rows, cols, figsize=(11, 3 * rows), squeeze=False)
+            fig, ax = plt.subplots(rows, cols, figsize=(10, 3.5 * rows), squeeze=False)
 
             # Read each case once per ring/category, not once per parameter.
             # Both codes are matched onto the same flux surface, see ring_kwargs.
@@ -270,12 +270,11 @@ def plot_bm_profiles_radial(cs, bals, region_rad, figures_png_path):
         "reactions": [
             ("Sd+_rec", "Ion density source due to recombination",        "$m^{-3} s^{-1}$", True),
             ("Sd+_iz",  "Ion desnity source due to ionisation",           "$m^{-3} s^{-1}$",          True),
-            # ("Edd+_cx", "Ion energy source due to charge exchange \n (-Edd+_cx)",  "Energy source [$W m^{-3}$]",   True),
-            # ("Ed+_iz",  "Ion energy source due to ionisation \n (Ed+_iz) ",      "Energy source [$W m^{-3}$]",    True),
+            ("Edd+_cx", "Ion energy source due to charge exchange \n (-Edd+_cx)",  "Energy source [$W m^{-3}$]",   True),
+            ("Ed+_iz",  "Ion energy source due to ionisation \n (Ed+_iz) ",      "Energy source [$W m^{-3}$]",    True),
             ("Edd+_cxiz",  "Ion energy source due to iz & cx \n ",      "$W m^{-3}$",    True),
             # ("Edd+_cxiz",  "Ion energy source due to iz & cx \n (-Edd+_cx + Ed+_iz)",      "$W m^{-3}$",    True),
             # ("Edd+_cx", "Neutral energy source due to charge exchange \n (Edd+_cx)",  "Energy source [$W m^{-3}$]",   True),
-            # ("Ed+_iz",  "Ion energy source due to ionisation \n (Ed+_iz) ",      "Energy source [$W m^{-3}$]",    True),
             # ("Edd+_cxiz",  "Neutral energy source due to iz & cx \n ",      "Energy source[$W m^{-3}$]",    True),
             # ("Edd+_cxiz",  "Neutral energy source due to iz & cx \n (Edd+_cx - Ed+_iz)",      "Energy source[$W m^{-3}$]",    True),
             # ("Fdd+_cx", "Charge exchange",      "Momentum [$kg m^{-2} s^{-2}$]",   True),
@@ -293,7 +292,7 @@ def plot_bm_profiles_radial(cs, bals, region_rad, figures_png_path):
 
         cols = 3
         rows = math.ceil(nitems / cols)
-        fig, ax = plt.subplots(rows, cols, figsize=(12, 3.5 * rows), squeeze=False)
+        fig, ax = plt.subplots(rows, cols, figsize=(10, 3.5 * rows), squeeze=False)
 
         # Loop through all the profiles
         for idx, (param, title, ylabel, logy) in enumerate(items):

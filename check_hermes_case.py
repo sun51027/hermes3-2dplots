@@ -114,6 +114,11 @@ EXPECTED_PUFF_ENERGY_EV  = None     # [eV per atom], e.g. 0.02533 (room temperat
 # Section in BOUT.inp that holds target_recycle_multiplier
 RECYCLING_ION_SECTION = "d+"
 
+# Core ionising (neutral_boundary with d:ionising_core = true): neutrals that reach
+# the core boundary are removed (neutral sink) and put back as ions (ion source).
+CORE_IONISING_NEUTRAL_SINK = "Nd_core_sink"     # [1/s/m^3], negative
+CORE_IONISING_ION_SOURCE   = "Nd+_core_source"  # [1/s/m^3], positive
+
 
 # ---- 1a. Values from BOUT.inp to list in the report --------------------------
 # Format "section:key". Use just "key" for values at the top of BOUT.inp.
@@ -923,15 +928,24 @@ def check_particle_balance(case):
     result.add_formula(r"\Gamma_{\rm target} = \frac{\Gamma_{\rm recycle}}{R}, \qquad "
                        r"\Gamma_{\rm loss} = (1 - R)\,\Gamma_{\rm target}")
     result.add_formula(r"\Gamma_{\rm net} = \Gamma_{\rm puff} + \Gamma_{\rm pump} - \Gamma_{\rm loss}"
+                       r" + (\Gamma_{\rm core,n} + \Gamma_{\rm core,i})"
                        r"\;\to\; 0 \text{ at steady state}")
+    result.add_formula(r"\Gamma_{\rm net,n} = \Gamma_{\rm puff} + \Gamma_{\rm pump} + \Gamma_{\rm recycle}"
+                       r" + \Gamma_{\rm wall} - \Gamma_{\rm iz} - \Gamma_{\rm rec} + \Gamma_{\rm core,n}"
+                       r"\;\to\; 0 \text{ at steady state (neutrals only)}")
     for variable_name, meaning, unit in [("Nd+", "ion density", "m$^{-3}$"),
                                          ("Nd", "neutral density", "m$^{-3}$"),
                                          ("Ne", "electron density", "m$^{-3}$"),
                                          ("Sd_src", "puff source", "m$^{-3}$ s$^{-1}$"),
-                                         ("Sd+_iz", "ionisation source", "m$^{-3}$ s$^{-1}$"),
-                                         ("Sd+_rec", "recombination source", "m$^{-3}$ s$^{-1}$"),
+                                         ("Sd+_iz", "ionisation source of ions (> 0)", "m$^{-3}$ s$^{-1}$"),
+                                         ("Sd+_rec", "recombination source of ions (< 0)", "m$^{-3}$ s$^{-1}$"),
                                          ("Sd_target_recycle", "target recycling source", "m$^{-3}$ s$^{-1}$"),
+                                         ("Sd_wall_recycle", "SOL/PFR wall recycling source", "m$^{-3}$ s$^{-1}$"),
                                          ("Sd_pump", "pump sink (negative)", "m$^{-3}$ s$^{-1}$"),
+                                         (CORE_IONISING_NEUTRAL_SINK,
+                                          r"core ionising neutral sink $\Gamma_{\rm core,n}$ (< 0)", "m$^{-3}$ s$^{-1}$"),
+                                         (CORE_IONISING_ION_SOURCE,
+                                          r"core ionising ion source $\Gamma_{\rm core,i}$ (> 0)", "m$^{-3}$ s$^{-1}$"),
                                          ("dv", r"cell volume $\Delta V$", "m$^3$")]:
         result.add_variable(variable_name, FROM_RESULT, meaning, unit)
     result.add_variable(f"{RECYCLING_ION_SECTION}:target_recycle_multiplier", FROM_INPUT,
@@ -950,13 +964,45 @@ def check_particle_balance(case):
                   ("Ionisation", "Sd+_iz"),
                   ("Recombination", "Sd+_rec"),
                   ("Target recycling $\\Gamma_{\\rm recycle}$", "Sd_target_recycle"),
-                  ("Pump $\\Gamma_{\\rm pump}$", "Sd_pump")]
+                  ("Wall recycling $\\Gamma_{\\rm wall}$", "Sd_wall_recycle"),
+                  ("Pump $\\Gamma_{\\rm pump}$", "Sd_pump"),
+                  ("Core ionising neutral sink $\\Gamma_{\\rm core,n}$", CORE_IONISING_NEUTRAL_SINK),
+                  ("Core ionising ion source $\\Gamma_{\\rm core,i}$", CORE_IONISING_ION_SOURCE)]
     rates = {}
     for label, variable_name in rate_names:
         rates[variable_name] = integrate_over_region(ds, variable_name)
         inventory_rows.append({"Quantity": label, "Variable": f"`{variable_name}`",
                                "Value": format_number(rates[variable_name]), "Unit": "s$^{-1}$"})
     result.add_table(inventory_rows, "Inventories and rates")
+
+    # Rates missing from the result file count as zero in the balances below
+    rates_or_zero = {}
+    for variable_name, rate in rates.items():
+        if rate is None:
+            rates_or_zero[variable_name] = 0.0
+        else:
+            rates_or_zero[variable_name] = rate
+
+    # Core ionising moves particles from neutrals to ions: the two terms should cancel
+    core_ionising_net = (rates_or_zero[CORE_IONISING_NEUTRAL_SINK]
+                         + rates_or_zero[CORE_IONISING_ION_SOURCE])
+
+    # Neutral-only balance: the only place where core ionising does not cancel.
+    # Sd+_iz > 0 removes neutrals; Sd+_rec < 0 (ion loss) adds neutrals.
+    neutral_net_balance = (rates_or_zero["Sd_src"] + rates_or_zero["Sd_pump"]
+                           + rates_or_zero["Sd_target_recycle"] + rates_or_zero["Sd_wall_recycle"]
+                           - rates_or_zero["Sd+_iz"] - rates_or_zero["Sd+_rec"]
+                           + rates_or_zero[CORE_IONISING_NEUTRAL_SINK])
+    neutral_rows = [
+        {"Quantity": r"Core ionising $\Gamma_{\rm core,n} + \Gamma_{\rm core,i}$ (should be 0)",
+         "Value": format_number(core_ionising_net), "Unit": "s$^{-1}$"},
+        {"Quantity": r"Neutral net $\Gamma_{\rm net,n}$",
+         "Value": format_number(neutral_net_balance), "Unit": "s$^{-1}$"},
+    ]
+    if rates_or_zero["Sd+_iz"] != 0:
+        neutral_rows.append({"Quantity": r"$\Gamma_{\rm net,n} / \Gamma_{\rm iz}$",
+                             "Value": f"{neutral_net_balance / rates_or_zero['Sd+_iz']:.2%}", "Unit": ""})
+    result.add_table(neutral_rows, "Core ionising and neutral-only balance")
 
     if recycle_multiplier is None or rates["Sd_target_recycle"] is None:
         result.add_text("No target recycling: target loss estimate skipped.")
@@ -976,7 +1022,7 @@ def check_particle_balance(case):
     if puff_rate is not None and puff_rate != 0:
         if pump_rate is None:
             pump_rate = 0.0
-        net_balance = puff_rate + pump_rate - ion_loss_at_targets
+        net_balance = puff_rate + pump_rate - ion_loss_at_targets + core_ionising_net
         derived_rows.append({"Quantity": r"Net $\Gamma_{\rm net}$", "Value": format_number(net_balance),
                              "Unit": "s$^{-1}$"})
         derived_rows.append({"Quantity": r"$\Gamma_{\rm net} / \Gamma_{\rm puff}$",
@@ -1182,8 +1228,10 @@ def plot_particle_balance_history(case):
                                                             "cells, for every output time.")
     result.add_formula(r"\frac{dN}{dt} = \frac{d}{dt} \sum_i (n_{e,i} + n_{d,i})\,\Delta V_i")
     result.add_formula(r"\Gamma_{\rm net}(t) = \Gamma_{\rm puff} + \Gamma_{\rm pump}"
-                       r" - \frac{1-R}{R}\,\Gamma_{\rm recycle}")
-    for variable_name in ["Ne", "Nd", "Sd_src", "Sd_pump", "Sd_target_recycle", "dv", "t"]:
+                       r" - \frac{1-R}{R}\,\Gamma_{\rm recycle}"
+                       r" + (\Gamma_{\rm core,n} + \Gamma_{\rm core,i})")
+    for variable_name in ["Ne", "Nd", "Sd_src", "Sd_pump", "Sd_target_recycle",
+                          CORE_IONISING_NEUTRAL_SINK, CORE_IONISING_ION_SOURCE, "dv", "t"]:
         result.add_variable(variable_name, FROM_RESULT, "see formula", "")
     result.add_variable(f"{RECYCLING_ION_SECTION}:target_recycle_multiplier", FROM_INPUT,
                         "recycling coefficient $R$", "")
@@ -1199,6 +1247,8 @@ def plot_particle_balance_history(case):
     puff_rate = sum_over_domain_versus_time(ds_all_times, "Sd_src")
     pump_rate = sum_over_domain_versus_time(ds_all_times, "Sd_pump")
     target_recycle = sum_over_domain_versus_time(ds_all_times, "Sd_target_recycle")
+    core_neutral_sink = sum_over_domain_versus_time(ds_all_times, CORE_IONISING_NEUTRAL_SINK)
+    core_ion_source = sum_over_domain_versus_time(ds_all_times, CORE_IONISING_ION_SOURCE)
     recycle_multiplier = get_input_number(case.input_options,
                                           f"{RECYCLING_ION_SECTION}:target_recycle_multiplier")
 
@@ -1222,7 +1272,14 @@ def plot_particle_balance_history(case):
         if recycle_multiplier is not None:
             target_loss = (1 - recycle_multiplier) / recycle_multiplier * target_recycle
             net_balance = net_balance - target_loss
-    axis.plot(time, net_balance, label="Net = puff + pump - target loss", linestyle=":", lw=3,
+    # Core ionising: neutral sink and ion source, which cancel in Ne + Nd
+    if core_neutral_sink is not None:
+        axis.plot(time, core_neutral_sink, label=f"Core ionising ({CORE_IONISING_NEUTRAL_SINK})",
+                  linestyle="--", lw=2)
+        net_balance = net_balance + core_neutral_sink
+    if core_ion_source is not None:
+        net_balance = net_balance + core_ion_source
+    axis.plot(time, net_balance, label="Net = puff + pump - target loss + core ionising", linestyle=":", lw=3,
               color="magenta")
     final_value_rows.append({"Quantity": r"$\Gamma_{\rm net}$ at last time",
                              "Value": format_number(float(net_balance[-1])), "Unit": "s$^{-1}$"})

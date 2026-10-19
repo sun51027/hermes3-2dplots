@@ -472,13 +472,13 @@ def setup_matplotlib(font: str = "sans") -> None:
     # Base DPI and font
     plt.rcParams["figure.dpi"] = 120
     plt.rcParams["savefig.dpi"] = 300
-    plt.rcParams["font.size"] = 15
+    plt.rcParams["font.size"] = 14
     plt.rcParams.update(FONT_PRESETS[font])
 
     # Axes and lines
     plt.rcParams["axes.grid"] = False  # you turn grid on per-axis
-    plt.rcParams["axes.labelsize"] = 15
-    plt.rcParams["axes.titlesize"] = 15
+    plt.rcParams["axes.labelsize"] = 14
+    plt.rcParams["axes.titlesize"] = 14
     plt.rcParams["lines.linewidth"] = 1.5
     # If compare multiple files
     plt.rcParams["axes.prop_cycle"] = plt.cycler(color=H3_COLORS)
@@ -486,5 +486,5 @@ def setup_matplotlib(font: str = "sans") -> None:
 
     # Legend
     plt.rcParams["legend.frameon"] = True  # do you want the frame or not
-    plt.rcParams["legend.fontsize"] =  15
+    plt.rcParams["legend.fontsize"] =  14
 

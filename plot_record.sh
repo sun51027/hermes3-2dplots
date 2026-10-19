@@ -120,6 +120,15 @@
 #   -o 261013_1e21_cx100\
 #   -m benchmark polygon \
 #   --solps \
+#   --same_limit
+
+# python3 make_plot.py -i  261001_highrsl_fixplsbg_fromsolps_cx100_1e21_roomT_gd 261001_highrsl_fixplsbg_fromsolps_1e21_roomT_gd \
+#   -in 1e21_cx100 1e21_original \
+#   -si SOLPS_1e21_cx100 SOLPS_origin_1e21 \
+#   -sin 1e21_cx100 1e21_original \
+#   -o 261013_1e21_cx100vsOrginal\
+#   -m benchmark polygon \
+#   --solps \
 #   --same_limit 
 # python3 make_plot.py -i 261001_highrsl_fixplsbg_fromsolps_cx100_1e22_roomT_gd \
 #   -in 1e22_cx100 \
@@ -129,12 +138,12 @@
 #   -m benchmark polygon \
 #   --solps \
 #   --same_limit
-python3 make_plot.py -i 261001_highrsl_fixplsbg_fromsolps_cx100_1e21_roomT_gd 261001_highrsl_fixplsbg_fromsolps_cx100_1e22_roomT_gd \
-  -in 1e21_cx100 1e22_cx100 \
-  -si SOLPS_1e21_cx100 SOLPS_1e22_cx100 \
-  -sin 1e21_cx100 1e22_cx100 \
-  -o 261013_all_cx100\
-  -m benchmark
+# python3 make_plot.py -i 261001_highrsl_fixplsbg_fromsolps_cx100_1e21_roomT_gd 261001_highrsl_fixplsbg_fromsolps_cx100_1e22_roomT_gd \
+#   -in 1e21_cx100 1e22_cx100 \
+#   -si SOLPS_1e21_cx100 SOLPS_1e22_cx100 \
+#   -sin 1e21_cx100 1e22_cx100 \
+#   -o 261013_all_cx100\
+#   -m benchmark
 
 # python3 make_plot.py -i 260706_highrsl_1e21_corebc_OO 260717_highrsl_6e20_coreOO \
 #   -in 1e21 6e20 \
@@ -152,6 +161,17 @@ python3 make_plot.py -i 261001_highrsl_fixplsbg_fromsolps_cx100_1e21_roomT_gd 26
 # python analyse_penetration.py --case 261001_highrsl_fixplsbg_fromsolps_1e21_roomT_gd --solps ../SOLPS_origin_1e21 -o 261005_fixplsbg_poster
 # python analyse_penetration.py --case 261001_highrsl_fixplsbg_fromsolps_cx100_1e21_roomT_gd --solps ../SOLPS_1e21_cx100 -o 261013_1e21_cx100
 # python analyse_penetration.py --case 261001_highrsl_fixplsbg_fromsolps_cx100_1e22_roomT_gd --solps ../SOLPS_1e22_cx100 -o 261013_1e22_cx100
+
+python3 make_plot.py -i  261001_highrsl_fixplsbg_fromsolps_1e21_roomT_gd 261014_highrsl_fixplsbg_fromsolps_nofastRecRef_1e21 \
+  -in  original nofastRecRef\
+  -si SOLPS_origin_1e21\
+  -sin original_1e21 \
+  -o 261014_nofastRecRef_1e21\
+  -m benchmark polygon \
+  --solps \
+  --same_limit
+
+
 
 ######### Multiple SOLPS files ########
 # python3 make_plot.py -m benchmark \
